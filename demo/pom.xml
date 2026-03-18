@@ -60,6 +60,11 @@
             <artifactId>aspectow-console</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.aspectran</groupId>
+            <artifactId>aspectow-appmon</artifactId>
+            <version>${aspectow.appmon.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -115,6 +115,7 @@
         <javadoc.locale>en_US</javadoc.locale>
 
         <aspectran.version>9.4.3</aspectran.version>
+        <aspectow.appmon.version>3.2.0</aspectow.appmon.version>
         <jakarta.websocket.api.version>2.2.0</jakarta.websocket.api.version>
     </properties>
 
