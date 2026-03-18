@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2008-present The Aspectran Project
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.aspectran</groupId>
+    <artifactId>aspectow-console-project</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Aspectow Console Project</name>
+    <description>Aspectow Management Console is a central control system for Aspectran-based applications, providing integrated observability, controllability, and governance.</description>
+    <url>https://aspectran.com/aspectow-console</url>
+    <inceptionYear>2026</inceptionYear>
+
+    <organization>
+        <name>The Aspectran Project</name>
+        <url>https://aspectran.com/</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Juho Jeong</name>
+            <email>aspectran@gmail.com</email>
+            <url>https://aspectran.com/</url>
+            <organization>The Aspectran Project</organization>
+            <organizationUrl>https://aspectran.com/</organizationUrl>
+            <roles>
+                <role>Owner</role>
+                <role>Founder</role>
+                <role>Committer</role>
+            </roles>
+            <timezone>+9</timezone>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/aspectran/aspectow-console</url>
+        <connection>scm:git:ssh://git@github.com/aspectran/aspectow-console.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/aspectran/aspectow-console.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issue Management</system>
+        <url>https://github.com/aspectran/aspectow-console/issues</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>GitHub Workflows</system>
+        <url>https://github.com/aspectran/aspectow-console/actions</url>
+    </ciManagement>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>central-portal-snapshots</id>
+            <name>Central Portal Snapshots</name>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>central-portal-snapshots</id>
+            <name>Central Portal Snapshots</name>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <modules>
+        <module>console</module>
+        <module>demo</module>
+    </modules>
+
+    <properties>
+        <main.basedir>${project.basedir}</main.basedir>
+        <automatic.module.name />
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Sets the Java compiler to version 21 and preserves parameter names,
+        which is critical for Aspectran's runtime argument mapping. -->
+        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
+
+        <javadoc.title>${project.name} API Reference (${project.version})</javadoc.title>
+        <javadoc.locale>en_US</javadoc.locale>
+
+        <aspectran.version>9.4.3</aspectran.version>
+        <jakarta.websocket.api.version>2.2.0</jakarta.websocket.api.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>6.0.3</version>
+                <optional>true</optional>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>com.mycila</groupId>
+                    <artifactId>license-maven-plugin</artifactId>
+                    <version>5.0.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>3.6.2</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.15.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.4.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.12.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>3.3.1</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>3.2.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.8.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>3.10.0</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>3.1.4</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>3.1.4</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>6.0.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>3.6.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.14</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-java</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[21,)</version>
+                                    <message>[ERROR] OLD JDK in use. Aspectran Release ${project.version} MUST use JDK 21 or newer</message>
+                                </requireJavaVersion>
+                                <requireMavenVersion>
+                                    <version>[3.9.4,)</version>
+                                    <message>[ERROR] OLD MAVEN in use, Aspectran ${project.version} requires Maven 3.9.4 or newer</message>
+                                </requireMavenVersion>
+                                <requireProperty>
+                                    <property>project.build.sourceEncoding</property>
+                                    <regex>UTF-8</regex>
+                                    <message>[ERROR] The project encoding must be UTF-8.</message>
+                                </requireProperty>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-Xlint:-try,-path</arg>
+                    </compilerArgs>
+                    <showDeprecation>true</showDeprecation>
+                    <showWarnings>true</showWarnings>
+                    <meminitial>256m</meminitial>
+                    <maxmem>1024m</maxmem>
+                    <excludes>
+                        <exclude>**/package-info.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <index>true</index>
+                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                        <manifestEntries>
+                            <Automatic-Module-Name>${automatic.module.name}</Automatic-Module-Name>
+                        </manifestEntries>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Bundle-Name>${project.name}</Bundle-Name>
+                            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}.source</Bundle-SymbolicName>
+                            <Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
+                            <Bundle-Version>${project.version}</Bundle-Version>
+                            <Eclipse-SourceBundle>${project.groupId}.${project.artifactId};version="${project.version}";roots:="."</Eclipse-SourceBundle>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <doctitle>${javadoc.title}</doctitle>
+                    <windowtitle>${javadoc.title}</windowtitle>
+                    <locale>${javadoc.locale}</locale>
+                    <doclint>none</doclint>
+                    <failOnError>false</failOnError>
+                    <detectLinks>false</detectLinks>
+                    <detectOfflineLinks>false</detectOfflineLinks>
+                    <detectJavaApiLink>false</detectJavaApiLink>
+                    <additionalOptions>-html5</additionalOptions>
+                    <legacyMode>true</legacyMode>
+                    <stylesheetfile>${main.basedir}/.javadoc/stylesheet.css</stylesheetfile>
+                    <overview>${main.basedir}/.javadoc/overview.html</overview>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>javadoc</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <releaseProfiles>release,skip-test</releaseProfiles>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <noWarningProjectTypes>pom</noWarningProjectTypes>
+                    <instructions>
+                        <Export-Package>*;-noimport:=true</Export-Package>
+                    </instructions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory" />
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>license</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.mycila</groupId>
+                        <artifactId>license-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>format</goal>
+                                </goals>
+                                <configuration>
+                                    <aggregate>true</aggregate>
+                                    <failIfMissing>true</failIfMissing>
+                                    <failIfUnknown>true</failIfUnknown>
+                                    <strictCheck>true</strictCheck>
+                                    <mapping>
+                                        <java>SLASHSTAR_STYLE</java>
+                                    </mapping>
+                                    <properties>
+                                        <copyright-range>${project.inceptionYear}-present</copyright-range>
+                                    </properties>
+                                    <licenseSets>
+                                        <licenseSet>
+                                            <header>${main.basedir}/header.txt</header>
+                                            <includes>
+                                                <include>**/*.java</include>
+                                            </includes>
+                                            <excludes>
+                                                <exclude>.mvn/wrapper/**</exclude>
+                                            </excludes>
+                                        </licenseSet>
+                                    </licenseSets>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.8</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.10.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>fast</id>
+            <properties>
+                <maven.javadoc.skip>true</maven.javadoc.skip>
+                <maven.source.skip>true</maven.source.skip>
+            </properties>
+        </profile>
+        <profile>
+            <id>skip-test</id>
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
+        </profile>
+    </profiles>
+</project>

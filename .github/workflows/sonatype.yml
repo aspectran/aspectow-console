@@ -1,0 +1,24 @@
+name: Sonatype
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    if: "!contains(github.event.head_commit.message, '[maven-release-plugin]')"
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: sonatype
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Set up JDK 21 temurin
+        uses: actions/setup-java@v5
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: maven
+      - name: Deploy snapshot artifacts
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: ./mvnw deploy -B -V -U -ntp --batch-mode --settings .mvn/settings.xml -DskipTests=true -D"license.skip=true"

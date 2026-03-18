@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE aspectran PUBLIC "-//ASPECTRAN//DTD Aspectran 9.0//EN"
+        "https://aspectran.com/dtd/aspectran-9.dtd">
+<aspectran>
+
+    <description>
+        Aspectran configuration to configure the web environment.
+        Note that names of translets that match the request URI always start with a forward slash (/).
+    </description>
+
+    <bean id="jspViewDispatcher" class="com.aspectran.web.support.view.JspViewDispatcher">
+        <description>
+            Register a JSP View Dispatcher.
+        </description>
+        <properties>
+            <item name="prefix">/WEB-INF/jsp/</item>
+            <item name="suffix">.jsp</item>
+        </properties>
+    </bean>
+
+    <aspect id="webTransletSettings">
+        <description>
+            This aspect is for injecting default settings into translets running in the web environment.
+        </description>
+        <joinpoint>
+            pointcut: {
+                +: /**
+            }
+        </joinpoint>
+        <settings>
+            <setting name="characterEncoding" value="utf-8"/>
+            <setting name="viewDispatcher" value="jspViewDispatcher"/>
+            <setting name="proxyProtocolAware" value="true"/>
+        </settings>
+    </aspect>
+
+    <bean class="com.aspectran.appmon.engine.config.AppMonConfigResolver">
+        <properties profile="!prod">
+            <item name="configLocation">/config/appmon/appmon-config.apon</item>
+        </properties>
+        <properties profile="prod">
+            <item name="configLocation">/config/appmon/appmon-config-prod.apon</item>
+        </properties>
+    </bean>
+
+    <translet name="/">
+        <redirect path="/monitoring/"/>
+    </translet>
+
+    <bean id="appMonCookieIssuer" class="com.aspectran.appmon.common.auth.AppMonCookieIssuer"/>
+
+    <translet name="/monitoring/${instances}">
+        <action bean="appMonCookieIssuer" method="issueCookie">
+            <argument>/appmon</argument>
+            <argument valueType="int">3600</argument>
+        </action>
+        <redirect path="/appmon/dashboard/"/>
+    </translet>
+
+</aspectran>
