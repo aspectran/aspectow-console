@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{templates/default}">
+<head>
+    <title>Monitoring - Aspectow Console</title>
+    <style>
+        .monitoring-container {
+            width: 100%;
+            height: calc(100vh - 120px); /* Adjust based on top bar height */
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #appmon-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content" class="p-0">
+        <div class="monitoring-container">
+            <iframe id="appmon-iframe" th:src="${page.appmonUrl}" title="AppMon Dashboard"></iframe>
+        </div>
+    </div>
+</body>
+</html>

@@ -3,7 +3,7 @@
       xmlns:th="https://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8"/>
     <script>
         (() => {
             const getStoredTheme = () => localStorage.getItem('theme');
@@ -21,13 +21,15 @@
             setTheme(getPreferredTheme());
         })();
     </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="google" content="notranslate"/>
     <title th:text="${page.title}">Aspectow Console</title>
     <link rel="icon" type="image/png" sizes="32x32" href="https://assets.aspectran.com/img/favicon-32x32.png"/>
     <link rel="stylesheet" type="text/css" href="https://assets.aspectran.com/bootstrap@5.3.8/css/aspectran.css?v=20260224"/>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,700;1,400&display=swap">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,700;1,400&amp;display=swap"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"/>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         :root {
             --sidebar-width: 240px;
@@ -125,7 +127,7 @@
     <aside id="sidebar">
         <div class="logo-container">
             <a th:href="@{/}" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
-                <img src="https://assets.aspectran.com/img/aspectran-logo.svg" class="logo-img me-2" alt="Aspectran">
+                <img src="https://assets.aspectran.com/img/aspectran-logo.svg" class="logo-img me-2" alt="Aspectran"/>
                 <span class="fw-bold" style="font-size: 1.1rem;">Console</span>
             </a>
         </div>
@@ -133,19 +135,41 @@
             <a th:href="@{/}" class="nav-link" th:classappend="${page.include == 'home' ? 'active' : ''}">
                 <i class="bi bi-house-door"></i> Home
             </a>
+            
+            <div class="mt-4 px-3 small text-muted text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Management</div>
+            
             <a href="#" class="nav-link">
                 <i class="bi bi-shield-lock"></i> Security
             </a>
-            <a href="#" class="nav-link">
-                <i class="bi bi-diagram-3"></i> Framework
-            </a>
-            <a href="#" class="nav-link">
+
+            <!-- Framework Group -->
+            <div class="nav-group">
+                <a class="nav-link d-flex justify-content-between align-items-center" th:classappend="${page.style == 'anatomy-page' ? 'active' : 'collapsed'}"
+                   data-bs-toggle="collapse" href="#framework-menu" role="button" aria-expanded="false">
+                    <span><i class="bi bi-diagram-3"></i> Framework</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </a>
+                <div class="collapse" th:classappend="${page.style == 'anatomy-page' ? 'show' : ''}" id="framework-menu">
+                    <a th:href="@{/anatomy/}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'anatomy/viewer' ? 'active' : ''}">
+                        Anatomy
+                    </a>
+                    <a href="#" class="nav-link ps-5 py-2 small">
+                        Configuration
+                    </a>
+                    <a href="#" class="nav-link ps-5 py-2 small">
+                        Beans
+                    </a>
+                </div>
+            </div>
+
+            <a th:href="@{/monitoring/}" class="nav-link" th:classappend="${page.style == 'monitoring-page' ? 'active' : ''}">
                 <i class="bi bi-activity"></i> Monitoring
             </a>
             <a href="#" class="nav-link">
                 <i class="bi bi-calendar-check"></i> Scheduler
             </a>
-            <div class="mt-4 px-3 small text-muted text-uppercase fw-bold">Governance</div>
+
+            <div class="mt-4 px-3 small text-muted text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Governance</div>
             <a href="#" class="nav-link">
                 <i class="bi bi-people"></i> Users
             </a>
@@ -185,14 +209,15 @@
         </header>
 
         <main id="content-area">
-            <div class="container-fluid">
+            <th:block th:if="${page.headinclude != null}">
+                <div th:insert="~{${page.headinclude}}"></div>
+            </th:block>
+            <div class="container-fluid mt-3">
                 <th:block layout:fragment="content"/>
             </div>
         </main>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://assets.aspectran.com/js/theme-toggler.js"></script>
 </body>
 </html>

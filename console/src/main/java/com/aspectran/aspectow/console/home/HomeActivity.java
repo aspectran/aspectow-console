@@ -11,7 +11,7 @@ import java.util.Map;
 public class HomeActivity {
 
     @Request("/")
-    @Dispatch("templates/default")
+    @Dispatch("home/home")
     @Action("page")
     public Map<String, String> home() {
         return Map.of(
