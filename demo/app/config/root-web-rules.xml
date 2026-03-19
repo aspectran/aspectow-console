@@ -12,10 +12,8 @@
         <description>
             Register a JSP View Dispatcher.
         </description>
-        <properties>
-            <item name="prefix">/WEB-INF/jsp/</item>
-            <item name="suffix">.jsp</item>
-        </properties>
+        <property name="prefix">/WEB-INF/jsp/</property>
+        <property name="suffix">.jsp</property>
     </bean>
 
     <aspect id="webTransletSettings">
@@ -44,7 +42,7 @@
     </bean>
 
     <translet name="/">
-        <redirect path="/monitoring/"/>
+        <redirect path="/console/"/>
     </translet>
 
     <bean id="appMonCookieIssuer" class="com.aspectran.appmon.common.auth.AppMonCookieIssuer"/>

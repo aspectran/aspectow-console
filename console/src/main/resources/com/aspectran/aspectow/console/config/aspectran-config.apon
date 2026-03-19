@@ -1,0 +1,20 @@
+context: {
+    name: console
+    rules: classpath:com/aspectran/aspectow/console/config/rules/root.xml
+    scan: [
+        com.aspectran.aspectow.console
+    ]
+    profiles: {
+        base: [
+            h2
+        ]
+        default: [
+            dev
+        ]
+    }
+}
+scheduler: {
+    startDelaySeconds: 2
+    waitOnShutdown: true
+    enabled: true
+}
