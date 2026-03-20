@@ -15,7 +15,7 @@
  */
 package com.aspectran.aspectow.console.monitoring;
 
-import com.aspectran.appmon.common.auth.AppMonCookieIssuer;
+import com.aspectran.aspectow.appmon.common.auth.AppMonCookieIssuer;
 import com.aspectran.core.activity.Translet;
 import com.aspectran.core.component.bean.annotation.Action;
 import com.aspectran.core.component.bean.annotation.Bean;

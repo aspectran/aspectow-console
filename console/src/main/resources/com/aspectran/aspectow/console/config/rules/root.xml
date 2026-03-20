@@ -20,4 +20,7 @@
     <append resource="com/aspectran/aspectow/console/config/rules/db.xml"/>
     <append resource="com/aspectran/aspectow/console/config/rules/web.xml"/>
 
+    <append resource="com/aspectran/aspectow/appmon/config/rules/scheduler.xml"/>
+    <append resource="com/aspectran/aspectow/appmon/config/rules/db.xml"/>
+
 </aspectran>

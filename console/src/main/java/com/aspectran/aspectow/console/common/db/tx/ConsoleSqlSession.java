@@ -17,24 +17,23 @@ package com.aspectran.aspectow.console.common.db.tx;
 
 import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.core.component.bean.annotation.Profile;
 import com.aspectran.mybatis.SqlSessionAgent;
 
 /**
  * A {@link SqlSessionAgent} for handling simple, auto-committing database sessions.
- * This agent is advised by {@link SimpleTxAspect} to manage transactions.
+ * This agent is advised by {@link ConsoleTxAspect} to manage transactions.
  *
  * <p>Created: 2025. 2. 15.</p>
  */
 @Component
-@Bean(id = "simpleSqlSession", lazyDestroy = true)
-public class SimpleSqlSession extends SqlSessionAgent {
+@Bean(id = "consoleSqlSession", lazyDestroy = true)
+public class ConsoleSqlSession extends SqlSessionAgent {
 
     /**
-     * Instantiates a new SimpleSqlSession, targeting the "simpleTxAspect".
+     * Instantiates a new SimpleSqlSession, targeting the "consoleTxAspect".
      */
-    public SimpleSqlSession() {
-        super("simpleTxAspect");
+    public ConsoleSqlSession() {
+        super("consoleTxAspect");
     }
 
 }

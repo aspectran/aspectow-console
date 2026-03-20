@@ -71,9 +71,7 @@ public class AnatomyActivity {
             contextName = "0";
         }
         return Map.of(
-                "title", "Anatomy - Aspectow Console",
-                "headline", "Framework Anatomy",
-                "headinclude", "anatomy/_contexts",
+                "title", "Framework Anatomy",
                 "include", "anatomy/viewer",
                 "style", "anatomy-page",
                 "allContextNames", allContextNames,

@@ -55,6 +55,18 @@
 </head>
 <body>
     <div layout:fragment="content">
+        <div class="anatomy-tabs mt-2" xmlns:th="https://www.thymeleaf.org">
+            <ul class="nav nav-tabs">
+                <li class="nav-item" th:each="name : ${page.allContextNames}">
+                    <a class="nav-link"
+                       th:href="@{/anatomy/{name}(name=${name})}"
+                       th:classappend="${page.contextName == name} ? 'active' : ''">
+                        <i class="bi bi-pc-display-horizontal me-1"></i>
+                        <span th:text="${name}">Context Name</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
         <div class="row anatomy-container g-3 mt-1">
             <div class="col-md-4 left-panel">
                 <div class="card h-100 border shadow-sm">

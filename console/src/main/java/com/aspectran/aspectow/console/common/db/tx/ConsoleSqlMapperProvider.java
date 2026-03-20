@@ -18,7 +18,6 @@ package com.aspectran.aspectow.console.common.db.tx;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.core.component.bean.annotation.Profile;
 import com.aspectran.mybatis.SqlMapperProvider;
 import org.apache.ibatis.session.SqlSession;
 
@@ -30,12 +29,12 @@ import org.apache.ibatis.session.SqlSession;
  */
 @Component
 @Bean(lazyDestroy = true)
-public class DefaultSqlMapperProvider implements SqlMapperProvider {
+public class ConsoleSqlMapperProvider implements SqlMapperProvider {
 
     private final SqlSession simpleSqlSession;
 
     @Autowired
-    public DefaultSqlMapperProvider(SimpleSqlSession simpleSqlSession) {
+    public ConsoleSqlMapperProvider(ConsoleSqlSession simpleSqlSession) {
         this.simpleSqlSession = simpleSqlSession;
     }
 

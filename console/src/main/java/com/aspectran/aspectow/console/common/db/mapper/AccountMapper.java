@@ -15,11 +15,11 @@
  */
 package com.aspectran.aspectow.console.common.db.mapper;
 
+import com.aspectran.aspectow.console.common.db.tx.ConsoleSqlMapperProvider;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.mybatis.SqlMapperAccess;
-import com.aspectran.mybatis.SqlMapperProvider;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -42,7 +42,7 @@ public interface AccountMapper {
          * @param sqlMapperProvider the SQL mapper provider
          */
         @Autowired
-        public Dao(SqlMapperProvider sqlMapperProvider) {
+        public Dao(ConsoleSqlMapperProvider sqlMapperProvider) {
             super(sqlMapperProvider, AccountMapper.class);
         }
 

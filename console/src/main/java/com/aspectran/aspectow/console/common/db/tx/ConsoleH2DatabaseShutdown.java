@@ -19,7 +19,6 @@ import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Destroy;
-import com.aspectran.core.component.bean.annotation.Profile;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.jspecify.annotations.NonNull;
@@ -37,9 +36,9 @@ import java.sql.SQLException;
  */
 @Component
 @Bean(lazyDestroy = true)
-public final class H2DatabaseShutdown {
+public final class ConsoleH2DatabaseShutdown {
 
-    private static final Logger logger = LoggerFactory.getLogger(H2DatabaseShutdown.class);
+    private static final Logger logger = LoggerFactory.getLogger(ConsoleH2DatabaseShutdown.class);
 
     private final SqlSessionFactory sqlSessionFactory;
 
@@ -48,7 +47,7 @@ public final class H2DatabaseShutdown {
      * @param sqlSessionFactory the MyBatis SqlSessionFactory
      */
     @Autowired(required = false)
-    public H2DatabaseShutdown(SqlSessionFactory sqlSessionFactory) {
+    public ConsoleH2DatabaseShutdown(SqlSessionFactory sqlSessionFactory) {
         this.sqlSessionFactory = sqlSessionFactory;
     }
 

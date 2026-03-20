@@ -20,7 +20,7 @@ context: {
         /lib/ext
     ]
     scan: [
-        com.aspectran.appmon.demo
+        com.aspectran.aspectow.console.demo
     ]
     profiles: {
         default: [

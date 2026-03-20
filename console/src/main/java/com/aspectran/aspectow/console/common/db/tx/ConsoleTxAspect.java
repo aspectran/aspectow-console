@@ -23,7 +23,7 @@ import com.aspectran.core.component.bean.annotation.Before;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Finally;
 import com.aspectran.core.component.bean.annotation.Joinpoint;
-import com.aspectran.core.component.bean.annotation.Profile;
+import com.aspectran.core.component.bean.annotation.Qualifier;
 import com.aspectran.core.component.bean.annotation.Scope;
 import com.aspectran.core.context.rule.type.ScopeType;
 import com.aspectran.mybatis.SqlSessionAdvice;
@@ -46,18 +46,18 @@ import org.apache.ibatis.session.SqlSessionFactory;
 @Bean(lazyDestroy = true)
 @Scope(ScopeType.PROTOTYPE)
 @Aspect(
-        id = "simpleTxAspect",
+        id = "consoleTxAspect",
         order = 0
 )
 @Joinpoint(
         pointcut = {
-                "+: **@simpleSqlSession"
+                "+: **@consoleSqlSession"
         }
 )
-public class SimpleTxAspect extends SqlSessionAdvice {
+public class ConsoleTxAspect extends SqlSessionAdvice {
 
     @Autowired
-    public SimpleTxAspect(SqlSessionFactory sqlSessionFactory) {
+    public ConsoleTxAspect(@Qualifier("consoleSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
         super(sqlSessionFactory);
         setAutoCommit(true);
     }

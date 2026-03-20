@@ -9,7 +9,7 @@
 
     <environment>
         <property name="tow.context.appmon.name">appmon</property>
-        <property name="tow.context.appmon.config">classpath:com/aspectran/appmon/config/aspectran-config.apon</property>
+        <property name="tow.context.appmon.config">classpath:com/aspectran/aspectow/appmon/config/aspectran-config.apon</property>
     </environment>
 
     <bean id="tow.context.appmon.servletContext"
@@ -46,14 +46,6 @@
                     <value>/</value>
                 </property>
                 <property name="loadOnStartup" valueType="int">1</property>
-            </bean>
-        </property>
-        <property name="servletContainerInitializers" type="array">
-            <bean class="com.aspectran.undertow.server.servlet.TowJasperInitializer">
-                <property name="tldResources" type="array">
-                    <value>classpath:com/aspectran/web/support/tags/aspectran.tld</value>
-                    <value>/webapps/%{tow.context.appmon.name}/WEB-INF/taglibs/</value>
-                </property>
             </bean>
         </property>
         <property name="webSocketServerContainerInitializer">
