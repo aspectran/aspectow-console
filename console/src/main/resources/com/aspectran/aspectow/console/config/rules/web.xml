@@ -46,6 +46,4 @@
         </settings>
     </aspect>
 
-    <append resource="com/aspectran/aspectow/console/config/rules/home/home.xml"/>
-
 </aspectran>

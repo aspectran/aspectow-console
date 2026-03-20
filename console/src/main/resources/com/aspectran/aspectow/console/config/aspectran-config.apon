@@ -1,6 +1,9 @@
 context: {
     name: console
-    rules: classpath:com/aspectran/aspectow/console/config/rules/root.xml
+    rules: [
+        classpath:com/aspectran/aspectow/console/config/rules/root.xml
+        /config/appmon/appmon-rules.xml
+    ]
     scan: [
         com.aspectran.aspectow.appmon
         com.aspectran.aspectow.console

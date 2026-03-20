@@ -19,4 +19,16 @@
         </properties>
     </bean>
 
+    <bean class="com.aspectran.aspectow.appmon.engine.config.AppMonConfigResolver">
+        <properties profile="!prod">
+            <item name="configLocation">/config/appmon/appmon-config.apon</item>
+        </properties>
+        <properties profile="prod">
+            <item name="configLocation">/config/appmon/appmon-config-prod.apon</item>
+        </properties>
+    </bean>
+
+    <append resource="com/aspectran/aspectow/appmon/config/rules/scheduler.xml"/>
+    <append resource="com/aspectran/aspectow/appmon/config/rules/db.xml"/>
+
 </aspectran>
