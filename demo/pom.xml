@@ -62,11 +62,6 @@
         </dependency>
         <dependency>
             <groupId>com.aspectran</groupId>
-            <artifactId>aspectow-appmon</artifactId>
-            <version>${aspectow.appmon.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.aspectran</groupId>
             <artifactId>aspectran-with-thymeleaf</artifactId>
             <version>${aspectran.version}</version>
         </dependency>

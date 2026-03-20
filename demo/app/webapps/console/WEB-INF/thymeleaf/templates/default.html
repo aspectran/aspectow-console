@@ -134,7 +134,6 @@
             filter: none;
         }
     </style>
-    <style layout:fragment="style"></style>
 </head>
 <body th:class="${page.style}">
     <aside id="sidebar">
@@ -225,7 +224,7 @@
             <th:block th:if="${page.headinclude != null}">
                 <div th:insert="~{${page.headinclude}}"></div>
             </th:block>
-            <div class="container-fluid mt-3">
+            <div class="container-fluid my-3">
                 <th:block layout:fragment="content"/>
             </div>
         </main>
