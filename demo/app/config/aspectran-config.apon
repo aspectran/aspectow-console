@@ -15,7 +15,11 @@ system: {
 }
 context: {
     name: root
-    rules: /config/aspectran-rules.xml
+    rules: [
+        /config/app-description.xml
+        /config/aspectran-rules.xml
+        /config/server/server.xml
+    ]
     resources: [
         /lib/ext
     ]

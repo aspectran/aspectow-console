@@ -8,7 +8,7 @@
     </description>
 
     <environment>
-        <property name="tow.server.listener.http.port" valueType="int">8083</property>
+        <property name="tow.server.listener.http.port" valueType="int">8082</property>
         <property name="tow.server.listener.http.host">0.0.0.0</property>
     </environment>
 
@@ -77,18 +77,12 @@
                 <entry name="console">
                     +: /console/**
                 </entry>
-                <entry name="appmon">
-                    +: /appmon/**
-                </entry>
             </item>
         </properties>
         <properties profile="prod">
             <item name="pathPatternsByGroupName" type="map">
                 <entry name="console">
                     +: /console/**
-                </entry>
-                <entry name="appmon">
-                    +: /appmon/**
                 </entry>
             </item>
         </properties>

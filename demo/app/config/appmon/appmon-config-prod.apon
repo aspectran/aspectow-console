@@ -69,28 +69,29 @@ instance: {
     }
 }
 instance: {
-    name: appmon
-    title: AppMon
+    name: console
+    title: Console
     event: {
         name: activity
-        target: appmon
+        target: console
         parameters: {
             +: /**
+            -: /backend/polling/**
         }
     }
     event: {
         name: session
-        target: tow.server/appmon
+        target: tow.server/console
     }
     log: {
         name: app
-        file: /logs/appmon.log
+        file: /logs/console.log
         sampleInterval: 300
         lastLines: 1000
     }
     log: {
         name: access
-        file: /logs/appmon-access.log
+        file: /logs/console-access.log
         sampleInterval: 300
         lastLines: 1000
     }
