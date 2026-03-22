@@ -55,11 +55,11 @@
 </head>
 <body>
     <div layout:fragment="content">
-        <div class="anatomy-tabs mt-2" xmlns:th="https://www.thymeleaf.org">
+        <div class="anatomy-tabs mt-2">
             <ul class="nav nav-tabs">
                 <li class="nav-item" th:each="name : ${page.allContextNames}">
                     <a class="nav-link"
-                       th:href="@{/anatomy/{name}(name=${name})}"
+                       th:href="@{/framework/anatomy/{name}(name=${name})}"
                        th:classappend="${page.contextName == name} ? 'active' : ''">
                         <i class="bi bi-pc-display-horizontal me-1"></i>
                         <span th:text="${name}">Context Name</span>
@@ -101,7 +101,7 @@
 
         <script th:inline="javascript">
             $(function() {
-                const dataUrl = [[@{/anatomy/{name}/data(name=${page.contextName})}]];
+                const dataUrl = [[@{/framework/anatomy/{name}/data(name=${page.contextName})}]];
                 const $componentTree = $('#component-tree');
                 const $detailsContent = $('#details-content');
 

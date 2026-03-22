@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.anatomy;
+package com.aspectran.aspectow.console.framework;
 
 import com.aspectran.core.component.bean.annotation.Action;
 import com.aspectran.core.component.bean.annotation.Autowired;
@@ -42,7 +42,7 @@ import java.util.Set;
 /**
  * A controller that provides framework anatomy data for the viewer.
  */
-@Component("/anatomy")
+@Component("/framework/anatomy")
 @Bean("anatomyActivity")
 public class AnatomyActivity {
 

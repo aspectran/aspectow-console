@@ -16,4 +16,4 @@
 /**
  * Provides classes for displaying the internal anatomy of the Aspectran Framework.
  */
-package com.aspectran.aspectow.console.anatomy;
+package com.aspectran.aspectow.console.framework;

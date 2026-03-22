@@ -74,7 +74,7 @@
                     <h5 class="card-title text-success">Framework Introspection</h5>
                     <p class="card-desc">Analyze Translets, Beans, and Aspects. Live explore the internal structure.</p>
                     <div class="mt-3">
-                        <a href="#" class="btn btn-sm btn-outline-success text-white">Explore Beans <i class="bi bi-arrow-right"></i></a>
+                        <a th:href="@{/framework/anatomy/}" class="btn btn-sm btn-outline-success text-white">Explore Beans <i class="bi bi-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
@@ -88,7 +88,7 @@
                     <h5 class="card-title text-info">Operations & Monitoring</h5>
                     <p class="card-desc">Real-time logs, metrics, and traffic monitoring. Control dynamic configurations.</p>
                     <div class="mt-3">
-                        <a href="#" class="btn btn-sm btn-outline-info">View Metrics <i class="bi bi-arrow-right"></i></a>
+                        <a th:href="@{/appmon/dashboard/}" class="btn btn-sm btn-outline-info">View Metrics <i class="bi bi-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
