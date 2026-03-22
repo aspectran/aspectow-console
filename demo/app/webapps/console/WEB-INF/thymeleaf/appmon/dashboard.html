@@ -2,7 +2,7 @@
 <html lang="en"
       xmlns:th="https://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{templates/default}">
+      layout:decorate="~{templates/__${page.layout}__}">
 <head>
     <link rel="stylesheet" th:href="|${#{appmonAssets}.url}/css/appmon.css?v=${#{appmonAssets}.cacheBustingVersion}|"/>
     <link rel="stylesheet" th:href="|${#{appmonAssets}.url}/css/appmon-dark.css?v=${#{appmonAssets}.cacheBustingVersion}|"/>
@@ -33,7 +33,7 @@
 <body>
     <div layout:fragment="content">
         <div class="row">
-            <div class="container">
+            <div class="container mb-2 mb-md-0">
                 <ul class="domain tabs nav nav-tabs">
                     <li class="tabs-title nav-item">
                         <a class="nav-link">
@@ -75,6 +75,9 @@
                 </div>
                 <div class="speed-options btn-group d-none" title="Speed options">
                     <a class="btn bi bi-fast-forward faster" title="Set to poll every second. Turn this option on only when absolutely necessary.">Faster polling interval</a>
+                </div>
+                <div class="popup-options btn-group ms-1 d-none d-md-inline-block" th:if="${page.layout != 'popup'}">
+                    <button type="button" class="btn bi bi-box-arrow-up-right open-popup" title="Open in Popup"></button>
                 </div>
             </div>
         </div>
@@ -178,19 +181,28 @@
                 <pre class="console"></pre>
             </div>
         </div>
-    </div>
 
-    <th:block layout:fragment="script">
-        <script th:inline="javascript">
-        $(function () {
-            const BASE_PATH = [[@{/}]].replace(/\/$/, '') + "/appmon";
-            const INSTANCES = [[${page.instances}]];
-            const options = {
-                // flagsUrl: "https://cdn.jsdelivr.net/gh/aspectran/aspectran-assets@main/assets/countries/flags/"
-            };
-            new DashboardBuilder(options).build(BASE_PATH, INSTANCES);
-        });
-        </script>
-    </th:block>
+        <div id="appmon-popup-message" class="text-center my-5 p-5 border rounded bg-light-subtle" style="display: none;">
+            <i class="bi bi-window-stack display-1 text-muted mb-4"></i>
+            <h3>Application Monitoring is running in a popup window</h3>
+            <p class="text-muted">Monitoring has been suspended in this window to save resources.</p>
+            <button type="button" class="btn btn-primary mt-3 resume-here">
+                <i class="bi bi-play-fill"></i> Resume monitoring here
+            </button>
+        </div>
+    </div>
+<th:block layout:fragment="script">
+    <script th:inline="javascript">
+    $(function () {
+        const BASE_PATH = [[@{/}]].replace(/\/$/, '') + "/appmon";
+        const INSTANCES = [[${page.instances}]];
+        const options = {
+            // flagsUrl: "https://cdn.jsdelivr.net/gh/aspectran/aspectran-assets@main/assets/countries/flags/"
+        };
+        new DashboardBuilder(options).build(BASE_PATH, INSTANCES);
+    });
+    </script>
+</th:block>
+
 </body>
 </html>

@@ -66,7 +66,25 @@ public class DashboardActivity {
         return Map.of(
                 "title", "Application Monitoring",
                 "style", "monitoring-page",
-                "instances", StringUtils.nullToEmpty(instances)
+                "instances", StringUtils.nullToEmpty(instances),
+                "layout", "default"
+        );
+    }
+
+    /**
+     * Displays the monitoring page as a popup.
+     * @param instances the comma-separated list of instances to monitor
+     * @return a map of attributes for rendering the view
+     */
+    @Request("/dashboard/popup/${instances}")
+    @Dispatch("appmon/dashboard")
+    @Action("page")
+    public Map<String, String> dashboardPopup(String instances) {
+        return Map.of(
+                "title", "Application Monitoring",
+                "style", "monitoring-page",
+                "instances", StringUtils.nullToEmpty(instances),
+                "layout", "popup"
         );
     }
 

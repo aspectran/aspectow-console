@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="~{templates/base-head :: head}">
+    <title>Aspectow Console</title>
+</head>
+<head>
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            background: var(--bs-body-bg);
+        }
+        #content-area {
+            background: var(--bs-body-bg);
+        }
+    </style>
+</head>
+<body th:class="${page.style}">
+    <main id="content-area">
+        <div class="container-fluid my-3">
+            <th:block layout:fragment="content"/>
+        </div>
+    </main>
+    <th:block layout:fragment="script"></th:block>
+</body>
+</html>
