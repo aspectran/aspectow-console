@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="https://www.thymeleaf.org">
-<head th:fragment="head">
-    <meta charset="utf-8"/>
+<!-- Theme configuration script - should be placed as high as possible in <head> -->
+<th:block th:fragment="theme-script">
     <script>
         (() => {
             const getStoredTheme = () => localStorage.getItem('theme');
@@ -19,9 +19,11 @@
             setTheme(getPreferredTheme());
         })();
     </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+</th:block>
+
+<!-- Common external assets -->
+<th:block th:fragment="common-assets">
     <meta name="google" content="notranslate"/>
-    <title th:text="${page.title != null ? page.title + ' - Aspectow Console' : 'Aspectow Console'}">Aspectow Console</title>
     <link rel="icon" type="image/png" sizes="32x32" href="https://assets.aspectran.com/img/favicon-32x32.png"/>
     <link rel="stylesheet" type="text/css" href="https://assets.aspectran.com/bootstrap@5.3.8/css/aspectran.css?v=20260321"/>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,700;1,400&amp;display=swap"/>
@@ -39,5 +41,5 @@
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.20/plugin/localizedFormat.js"></script>
     <script>dayjs.extend(window.dayjs_plugin_utc)</script>
     <script>dayjs.extend(window.dayjs_plugin_localizedFormat)</script>
-</head>
+</th:block>
 </html>
