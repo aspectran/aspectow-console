@@ -7,7 +7,7 @@ pollingConfig: {
     # The initial capacity of the shared message buffer
     initialBufferSize: 9999
 }
-counterPersistInterval: 1
+counterPersistInterval: 5
 domain: {
     name: backend1
     title: Localhost(Websocket Mode)

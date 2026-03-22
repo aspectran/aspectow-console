@@ -15,6 +15,10 @@
  */
 package com.aspectran.aspectow.console.common.db.mapper;
 
+import com.aspectran.aspectow.console.common.db.model.LoginHistory;
+import com.aspectran.aspectow.console.common.db.model.Permission;
+import com.aspectran.aspectow.console.common.db.model.Role;
+import com.aspectran.aspectow.console.common.db.model.User;
 import com.aspectran.aspectow.console.common.db.tx.ConsoleSqlMapperProvider;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Bean;
@@ -22,12 +26,116 @@ import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.mybatis.SqlMapperAccess;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
- * The MyBatis mapper interface for event count data.
- * Defines methods for CRUD operations on event count records in the database.
+ * The MyBatis mapper interface for user accounts and RBAC data.
  */
 @Mapper
 public interface AccountMapper {
+
+    /**
+     * Retrieves a user by their ID.
+     * @param userId the user ID
+     * @return the user, or null if not found
+     */
+    User getUserById(Long userId);
+
+    /**
+     * Retrieves a user by their username.
+     * @param username the username
+     * @return the user, or null if not found
+     */
+    User getUserByUsername(String username);
+
+    /**
+     * Retrieves a list of all users.
+     * @return the list of users
+     */
+    List<User> getUserList();
+
+    /**
+     * Inserts a new user record into the database.
+     * @param user the user to insert
+     * @return the number of affected rows
+     */
+    int insertUser(User user);
+
+    /**
+     * Updates an existing user's information.
+     * @param user the user with updated info
+     * @return the number of affected rows
+     */
+    int updateUser(User user);
+
+    /**
+     * Deletes a user by their ID.
+     * @param userId the user ID
+     * @return the number of affected rows
+     */
+    int deleteUser(Long userId);
+
+    /**
+     * Updates the last login timestamp for a user.
+     * @param username the username
+     * @return the number of affected rows
+     */
+    int updateLastLogin(String username);
+
+    /**
+     * Retrieves all roles assigned to a specific user.
+     * @param userId the user ID
+     * @return the list of roles
+     */
+    List<Role> getRolesByUserId(Long userId);
+
+    /**
+     * Retrieves a list of all defined roles.
+     * @return the list of roles
+     */
+    List<Role> getRoleList();
+
+    /**
+     * Maps a role to a specific user.
+     * @param userId the user ID
+     * @param roleId the role ID
+     * @return the number of affected rows
+     */
+    int insertUserRole(Long userId, Long roleId);
+
+    /**
+     * Removes all role assignments for a specific user.
+     * @param userId the user ID
+     * @return the number of affected rows
+     */
+    int deleteUserRoles(Long userId);
+
+    /**
+     * Retrieves all permissions associated with a specific role.
+     * @param roleId the role ID
+     * @return the list of permissions
+     */
+    List<Permission> getPermissionsByRoleId(Long roleId);
+
+    /**
+     * Retrieves a list of all defined permissions.
+     * @return the list of permissions
+     */
+    List<Permission> getPermissionList();
+
+    /**
+     * Records a login attempt in the history log.
+     * @param history the login history record
+     * @return the number of affected rows
+     */
+    int insertLoginHistory(LoginHistory history);
+
+    /**
+     * Retrieves the login history for a specific user.
+     * @param username the username
+     * @return the list of login history records
+     */
+    List<LoginHistory> getLoginHistoryList(String username);
 
     /**
      * Data Access Object (DAO) for {@link AccountMapper}.
@@ -46,6 +154,80 @@ public interface AccountMapper {
             super(sqlMapperProvider, AccountMapper.class);
         }
 
+        @Override
+        public User getUserById(Long userId) {
+            return simple().getUserById(userId);
+        }
+
+        @Override
+        public User getUserByUsername(String username) {
+            return simple().getUserByUsername(username);
+        }
+
+        @Override
+        public List<User> getUserList() {
+            return simple().getUserList();
+        }
+
+        @Override
+        public int insertUser(User user) {
+            return simple().insertUser(user);
+        }
+
+        @Override
+        public int updateUser(User user) {
+            return simple().updateUser(user);
+        }
+
+        @Override
+        public int deleteUser(Long userId) {
+            return simple().deleteUser(userId);
+        }
+
+        @Override
+        public int updateLastLogin(String username) {
+            return simple().updateLastLogin(username);
+        }
+
+        @Override
+        public List<Role> getRolesByUserId(Long userId) {
+            return simple().getRolesByUserId(userId);
+        }
+
+        @Override
+        public List<Role> getRoleList() {
+            return simple().getRoleList();
+        }
+
+        @Override
+        public int insertUserRole(Long userId, Long roleId) {
+            return simple().insertUserRole(userId, roleId);
+        }
+
+        @Override
+        public int deleteUserRoles(Long userId) {
+            return simple().deleteUserRoles(userId);
+        }
+
+        @Override
+        public List<Permission> getPermissionsByRoleId(Long roleId) {
+            return simple().getPermissionsByRoleId(roleId);
+        }
+
+        @Override
+        public List<Permission> getPermissionList() {
+            return simple().getPermissionList();
+        }
+
+        @Override
+        public int insertLoginHistory(LoginHistory history) {
+            return simple().insertLoginHistory(history);
+        }
+
+        @Override
+        public List<LoginHistory> getLoginHistoryList(String username) {
+            return simple().getLoginHistoryList(username);
+        }
     }
 
 }

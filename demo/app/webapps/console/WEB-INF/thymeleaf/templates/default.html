@@ -68,6 +68,18 @@
             </a>
         </nav>
         <div class="p-3 border-top">
+            <div class="d-flex align-items-center gap-2 mb-2" th:if="${session.USER_INFO != null}">
+                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <span th:text="${#strings.substring(session.USER_INFO.nickname ?: session.USER_INFO.username, 0, 1).toUpperCase()}">U</span>
+                </div>
+                <div class="small flex-grow-1 overflow-hidden">
+                    <div class="fw-bold text-truncate" th:text="${session.USER_INFO.nickname ?: session.USER_INFO.username}">User</div>
+                    <div class="text-muted text-truncate" style="font-size: 0.75rem;" th:text="${session.USER_INFO.username}">username</div>
+                </div>
+                <a th:href="@{/auth/logout}" class="text-muted" title="Logout">
+                    <i class="bi bi-box-arrow-right fs-5"></i>
+                </a>
+            </div>
             <div class="small text-muted">Aspectow Console v1.0.0</div>
         </div>
     </aside>
