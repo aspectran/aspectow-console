@@ -8,16 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title th:text="${page.title != null ? page.title + ' - Aspectow Console' : 'Aspectow Console'}">Aspectow Console</title>
     <th:block th:replace="~{templates/base-head :: common-assets}"></th:block>
-    <style>
-        body {
-            font-family: 'Open Sans', sans-serif;
-            margin: 0;
-            background: var(--bs-body-bg);
-        }
-        #content-area {
-            background: var(--bs-body-bg);
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/assets/css/console.css}"/>
 </head>
 <body th:class="${page.style}">
     <main id="content-area">
