@@ -60,9 +60,24 @@
             </a>
 
             <div class="mt-4 px-3 small text-muted text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Governance</div>
-            <a href="#" class="nav-link">
-                <i class="bi bi-people"></i> Users
-            </a>
+            
+            <!-- Accounts Group -->
+            <div class="nav-group">
+                <a class="nav-link d-flex justify-content-between align-items-center" th:classappend="${page.style == 'user-page' ? 'active' : 'collapsed'}"
+                   data-bs-toggle="collapse" href="#user-menu" role="button" aria-expanded="false">
+                    <span><i class="bi bi-person-badge"></i> Accounts</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </a>
+                <div class="collapse" th:classappend="${page.style == 'user-page' ? 'show' : ''}" id="user-menu">
+                    <a th:href="@{/user}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'user' ? 'active' : ''}">
+                        Users
+                    </a>
+                    <a th:href="@{/user/login-history}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'login-history' ? 'active' : ''}">
+                        Login History
+                    </a>
+                </div>
+            </div>
+
             <a href="#" class="nav-link">
                 <i class="bi bi-gear"></i> Settings
             </a>
