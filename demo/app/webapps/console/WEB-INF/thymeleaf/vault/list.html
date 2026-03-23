@@ -44,7 +44,7 @@
                         </td>
                         <td>
                             <div class="input-group input-group-sm" style="max-width: 400px;">
-                                <input type="password" class="form-control font-monospace bg-light" th:value="${v.encryptedValue}" readonly th:id="'val_' + ${v.vaultId}">
+                                <input type="password" class="form-control font-monospace" th:value="${v.encryptedValue}" readonly th:id="'val_' + ${v.vaultId}">
                                 <button class="btn btn-outline-secondary" type="button" th:onclick="copyToClipboard('val_' + [[${v.vaultId}]])" title="Copy to clipboard">
                                     <i class="bi bi-clipboard"></i>
                                 </button>
