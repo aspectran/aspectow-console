@@ -15,13 +15,18 @@
  */
 package com.aspectran.aspectow.console.common.db.model;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * Entity representing a user in the system.
  */
-public class User {
+public class User implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -2429813955681652494L;
 
     private Long userId;
     private String username;

@@ -3,9 +3,6 @@
       xmlns:th="https://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{templates/default}">
-<head>
-    <title>Users</title>
-</head>
 <body>
 <th:block layout:fragment="content">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -48,13 +45,15 @@
                         </td>
                         <td class="small text-muted" th:text="${user.lastLoginAt != null ? #temporals.format(user.lastLoginAt, 'yyyy-MM-dd HH:mm:ss') : '-'}">2023-10-01</td>
                         <td class="text-end pe-3">
-                            <button class="btn btn-sm btn-outline-secondary me-1"
-                                    th:onclick="openUserModal([[${user.userId}]], [[${user.username}]], [[${user.nickname}]], [[${user.email}]], [[${user.status}]], [[${user.roles != null ? user.roles.![roleId] : null}]])">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" th:onclick="deleteUser([[${user.userId}]])" th:disabled="${user.username == 'admin'}">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            <div class="d-flex justify-content-end flex-wrap gap-1">
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        th:onclick="openUserModal([[${user.userId}]], [[${user.username}]], [[${user.nickname}]], [[${user.email}]], [[${user.status}]], [[${user.roles != null ? user.roles.![roleId] : null}]])">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" th:onclick="deleteUser([[${user.userId}]])" th:disabled="${user.username == 'admin'}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(page.userList)}">
@@ -132,15 +131,16 @@
         let userModal;
         
         $(function() {
-            userModal = new bootstrap.Modal(document.getElementById('userModal'));
+            userModal = new bootstrap.Modal('#userModal');
             
-            $('#userForm').on('submit', function(e) {
+            const $userForm = $('#userForm');
+            $userForm.on('submit', function(e) {
                 e.preventDefault();
                 $.ajax({
-                    url: $(this).attr('action'),
+                    url: $userForm.attr('action'),
                     type: 'POST',
-                    data: $(this).serialize(),
-                    success: function(res) {
+                    data: $userForm.serialize(),
+                    success: function() {
                         userModal.hide();
                         location.reload();
                     },
@@ -152,33 +152,29 @@
         });
 
         function openUserModal(id, username, nickname, email, status, roleIds) {
-            document.getElementById('userForm').reset();
-            document.getElementById('userId').value = id || '';
-            document.getElementById('username').value = username || '';
-            document.getElementById('username').readOnly = !!id;
-            document.getElementById('password').required = !id;
-            document.getElementById('nickname').value = nickname || '';
-            document.getElementById('email').value = email || '';
-            document.getElementById('status').value = status || 'NORMAL';
+            const $form = $('#userForm');
+            $form[0].reset();
             
-            // Clear all checkboxes
-            document.querySelectorAll('.role-checkbox').forEach(cb => cb.checked = false);
+            $('#userId').val(id || '');
+            $('#username').val(username || '').prop('readonly', !!id);
+            $('#password').prop('required', !id);
+            $('#nickname').val(nickname || '');
+            $('#email').val(email || '');
+            $('#status').val(status || 'NORMAL');
             
-            // Check mapped roles
+            // Clear and set checkboxes
+            $('.role-checkbox').prop('checked', false);
             if (roleIds) {
-                let ids = [];
-                if (Array.isArray(roleIds)) {
-                    ids = roleIds;
-                } else if (typeof roleIds === 'string') {
+                let ids = Array.isArray(roleIds) ? roleIds : [];
+                if (typeof roleIds === 'string') {
                     try { ids = JSON.parse(roleIds); } catch(e) {}
                 }
                 ids.forEach(roleId => {
-                    const cb = document.getElementById('role_' + roleId);
-                    if (cb) cb.checked = true;
+                    $(`#role_${roleId}`).prop('checked', true);
                 });
             }
             
-            document.getElementById('userModalLabel').textContent = id ? 'Edit User' : 'New User';
+            $('#userModalLabel').text(id ? 'Edit User' : 'New User');
             userModal.show();
         }
 
@@ -192,7 +188,7 @@
                         location.reload();
                     },
                     error: function(xhr) {
-                        alert('Error deleting user.');
+                        alert('Error deleting user: ' + (xhr.responseJSON?.message || xhr.statusText));
                     }
                 });
             }

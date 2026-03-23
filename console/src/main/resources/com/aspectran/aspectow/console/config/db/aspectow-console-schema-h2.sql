@@ -1,5 +1,6 @@
+-- H2 MariaDB mode compatible
 -- Set the current schema
-SET SCHEMA appmon;
+-- SET SCHEMA console;
 
 -- User accounts
 create table if not exists asc_user (
@@ -71,49 +72,6 @@ create table if not exists asc_login_history (
 );
 
 comment on table asc_login_history is 'Login History';
-
--- Raw event count data (typically 5-minute intervals)
-create table if not exists asc_appmon_event_count (
-    domain varchar(30) not null,
-    instance varchar(30) not null,
-    event varchar(30) not null,
-    datetime timestamp not null,
-    total int not null,
-    delta int not null,
-    error int not null,
-    primary key (domain, instance, event, datetime)
-);
-
-comment on table asc_appmon_event_count is 'Raw event count data';
-
--- Hourly aggregated event count data
-create table if not exists asc_appmon_event_count_hourly (
-    domain varchar(30) not null,
-    instance varchar(30) not null,
-    event varchar(30) not null,
-    datetime timestamp not null,
-    total int not null,
-    delta int not null,
-    error int not null,
-    primary key (domain, instance, event, datetime)
-);
-
-comment on table asc_appmon_event_count_hourly is 'Hourly aggregated event count data';
-
--- Most recent event count state for incremental updates
-create table if not exists asc_appmon_event_count_last (
-    domain varchar(30) not null,
-    instance varchar(30) not null,
-    event varchar(30) not null,
-    datetime timestamp not null,
-    total int not null,
-    delta int not null,
-    error int not null,
-    reg_dt timestamp default current_timestamp not null,
-    primary key (domain, instance, event)
-);
-
-comment on table asc_appmon_event_count_last is 'Most recent event count state';
 
 -- Initial data for testing
 insert IGNORE into asc_role (role_name, description) values ('SUPER_ADMIN', 'Super administrator with full access');

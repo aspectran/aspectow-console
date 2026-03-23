@@ -75,4 +75,12 @@ public class UserInfo implements Serializable {
         this.permissions = permissions;
     }
 
+    public boolean hasRole(String role) {
+        return (roles != null && roles.contains(role));
+    }
+
+    public boolean hasPermission(String permission) {
+        return (permissions != null && permissions.contains(permission));
+    }
+
 }

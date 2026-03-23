@@ -15,6 +15,8 @@
  */
 package com.aspectran.aspectow.console.common.service;
 
+import com.aspectran.aspectow.console.common.db.model.LoginHistory;
+import com.aspectran.aspectow.console.common.db.model.Role;
 import com.aspectran.aspectow.console.common.db.model.User;
 
 import java.util.List;
@@ -30,12 +32,16 @@ public interface UserService {
 
     List<User> getUserList();
 
-    void createUser(User user);
+    List<Role> getRoleList();
 
-    void updateUser(User user);
+    void createUser(User user, List<Long> roleIds);
+
+    void updateUser(User user, List<Long> roleIds);
 
     void deleteUser(Long userId);
 
     void recordLogin(String username, String ipAddress, String userAgent, boolean success);
+
+    List<LoginHistory> getLoginHistoryList(String username);
 
 }

@@ -16,7 +16,7 @@ public class HomeActivity {
     public Map<String, String> home() {
         return Map.of(
                 "title", "Aspectow Console",
-                "headline", "Aspectow Console Management",
+                "headline", "Aspectow Management Console",
                 "include", "home",
                 "style", "dashboard-page"
                 );

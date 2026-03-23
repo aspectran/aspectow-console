@@ -15,10 +15,16 @@
  */
 package com.aspectran.aspectow.console.common.db.model;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 /**
  * Entity representing a granular permission in the system.
  */
-public class Permission {
+public class Permission implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -2429813955681652495L;
 
     private Long permId;
     private String permCode;

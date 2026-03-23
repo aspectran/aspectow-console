@@ -17,6 +17,7 @@ package com.aspectran.aspectow.console.common.service;
 
 import com.aspectran.aspectow.console.common.db.mapper.AccountMapper;
 import com.aspectran.aspectow.console.common.db.model.LoginHistory;
+import com.aspectran.aspectow.console.common.db.model.Role;
 import com.aspectran.aspectow.console.common.db.model.User;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
@@ -52,13 +53,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createUser(User user) {
-        accountMapper.insertUser(user);
+    public List<Role> getRoleList() {
+        return accountMapper.getRoleList();
     }
 
     @Override
-    public void updateUser(User user) {
+    public void createUser(User user, List<Long> roleIds) {
+        accountMapper.insertUser(user);
+        if (roleIds != null && user.getUserId() != null) {
+            for (Long roleId : roleIds) {
+                accountMapper.insertUserRole(user.getUserId(), roleId);
+            }
+        }
+    }
+
+    @Override
+    public void updateUser(User user, List<Long> roleIds) {
         accountMapper.updateUser(user);
+        if (roleIds != null) {
+            accountMapper.deleteUserRoles(user.getUserId());
+            for (Long roleId : roleIds) {
+                accountMapper.insertUserRole(user.getUserId(), roleId);
+            }
+        }
     }
 
     @Override
@@ -77,6 +94,11 @@ public class UserServiceImpl implements UserService {
         if (success) {
             accountMapper.updateLastLogin(username);
         }
+    }
+
+    @Override
+    public List<LoginHistory> getLoginHistoryList(String username) {
+        return accountMapper.getLoginHistoryList(username);
     }
 
 }

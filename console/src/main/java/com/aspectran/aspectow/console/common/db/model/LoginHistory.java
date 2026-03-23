@@ -15,12 +15,17 @@
  */
 package com.aspectran.aspectow.console.common.db.model;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * Entity representing a login history record.
  */
-public class LoginHistory {
+public class LoginHistory implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = -2429813955681652496L;
 
     private Long historyId;
     private String username;

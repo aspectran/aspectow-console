@@ -102,7 +102,9 @@
 
     <select id="getLoginHistoryList" parameterType="string" resultType="com.aspectran.aspectow.console.common.db.model.LoginHistory">
         select * from asc_login_history
-        where username = #{username}
+        <if test="username != null and username != ''">
+            where username = #{username}
+        </if>
         order by history_id desc
     </select>
 

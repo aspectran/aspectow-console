@@ -15,12 +15,17 @@
  */
 package com.aspectran.aspectow.console.common.db.model;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * Entity representing a user role in the system.
  */
-public class Role {
+public class Role implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 5824905139046648187L;
 
     private Long roleId;
     private String roleName;
