@@ -73,6 +73,21 @@ create table if not exists asc_login_history (
 
 comment on table asc_login_history is 'Login History';
 
+-- Vault (Encrypted Tokens)
+create table if not exists asc_vault (
+    vault_id bigint not null auto_increment,
+    label varchar(100) not null,
+    token_type varchar(20) default 'SIMPLE' not null, -- SIMPLE, PERSISTENT, TIME_LIMITED
+    encrypted_value varchar(500) not null,
+    description varchar(500),
+    valid_until timestamp,
+    created_at timestamp default current_timestamp not null,
+    updated_at timestamp default current_timestamp not null,
+    primary key (vault_id)
+);
+
+comment on table asc_vault is 'Vault (Encrypted Tokens)';
+
 -- Initial data for testing
 insert IGNORE into asc_role (role_name, description) values ('SUPER_ADMIN', 'Super administrator with full access');
 insert IGNORE into asc_role (role_name, description) values ('ADMIN', 'Administrator with limited management access');

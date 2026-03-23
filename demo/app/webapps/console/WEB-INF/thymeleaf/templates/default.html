@@ -28,9 +28,19 @@
             
             <div class="mt-4 px-3 small text-muted text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Management</div>
             
-            <a href="#" class="nav-link">
-                <i class="bi bi-shield-lock"></i> Security
-            </a>
+            <!-- Security Group -->
+            <div class="nav-group">
+                <a class="nav-link d-flex justify-content-between align-items-center" th:classappend="${page.style == 'vault-page' ? 'active' : 'collapsed'}"
+                   data-bs-toggle="collapse" href="#security-menu" role="button" aria-expanded="false">
+                    <span><i class="bi bi-shield-lock"></i> Security</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </a>
+                <div class="collapse" th:classappend="${page.style == 'vault-page' ? 'show' : ''}" id="security-menu">
+                    <a th:href="@{/vault}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'vault' ? 'active' : ''}">
+                        Vault
+                    </a>
+                </div>
+            </div>
 
             <!-- Framework Group -->
             <div class="nav-group">
