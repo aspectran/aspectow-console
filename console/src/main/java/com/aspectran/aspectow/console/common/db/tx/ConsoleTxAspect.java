@@ -21,6 +21,7 @@ import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Before;
 import com.aspectran.core.component.bean.annotation.Component;
+import com.aspectran.core.component.bean.annotation.ExceptionThrown;
 import com.aspectran.core.component.bean.annotation.Finally;
 import com.aspectran.core.component.bean.annotation.Joinpoint;
 import com.aspectran.core.component.bean.annotation.Qualifier;
@@ -31,7 +32,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 
 /**
  * An aspect for handling simple database transactions.
- * It advises methods annotated with {@code @simpleSqlSession} to manage the lifecycle
+ * It advises methods annotated with {@code @consoleSqlSession} to manage the lifecycle
  * of a {@link org.apache.ibatis.session.SqlSession}.
  * <ul>
  * <li>A transaction scope will be started (i.e., NOT auto-commit).</li>
@@ -41,6 +42,8 @@ import org.apache.ibatis.session.SqlSessionFactory;
  *     data source.</li>
  * <li>No PreparedStatements will be reused, and no updates will be batched.</li>
  * </ul>
+ *
+ * <p>Created: 2025. 2. 15.</p>
  */
 @Component
 @Bean(lazyDestroy = true)
@@ -59,7 +62,6 @@ public class ConsoleTxAspect extends SqlSessionAdvice {
     @Autowired
     public ConsoleTxAspect(@Qualifier("consoleSqlSessionFactory") SqlSessionFactory sqlSessionFactory) {
         super(sqlSessionFactory);
-        setAutoCommit(true);
     }
 
     @Before
@@ -70,6 +72,14 @@ public class ConsoleTxAspect extends SqlSessionAdvice {
     @After
     public void commit() {
         super.commit();
+    }
+
+    /**
+     * Rolls back the transaction if an exception occurs during execution.
+     */
+    @ExceptionThrown
+    public void rollback() {
+        super.rollback();
     }
 
     @Finally

@@ -151,7 +151,7 @@ public interface AccountMapper {
          */
         @Autowired
         public Dao(ConsoleSqlMapperProvider sqlMapperProvider) {
-            super(sqlMapperProvider, AccountMapper.class);
+            super(sqlMapperProvider);
         }
 
         @Override

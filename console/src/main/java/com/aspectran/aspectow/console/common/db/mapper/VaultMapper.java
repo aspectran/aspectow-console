@@ -50,7 +50,7 @@ public interface VaultMapper {
 
         @Autowired
         public Dao(ConsoleSqlMapperProvider sqlMapperProvider) {
-            super(sqlMapperProvider, VaultMapper.class);
+            super(sqlMapperProvider);
         }
 
         @Override
