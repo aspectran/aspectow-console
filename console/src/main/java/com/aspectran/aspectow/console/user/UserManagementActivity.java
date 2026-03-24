@@ -67,7 +67,7 @@ public class UserManagementActivity {
     @Request("/login-history")
     @Dispatch("user/login-history")
     @Action("page")
-    public Map<String, Object> loginHistory(Translet translet, String username) {
+    public Map<String, Object> loginHistory(@NonNull Translet translet, String username) {
         UserInfo userInfo = translet.getSessionAdapter().getAttribute(UserInfo.USERINFO_KEY);
         String targetUsername = username;
 
