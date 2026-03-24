@@ -24,10 +24,10 @@ import com.aspectran.utils.StringUtils;
 import com.aspectran.utils.apon.AponParseException;
 import com.aspectran.utils.apon.AponReader;
 import com.aspectran.utils.apon.Parameters;
-import com.aspectran.utils.apon.VariableParameters;
 import com.aspectran.utils.security.PBTokenIssuer;
 import com.aspectran.utils.security.TimeLimitedPBTokenIssuer;
 import org.jasypt.properties.PropertyValueEncryptionUtils;
+import org.jspecify.annotations.NonNull;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -67,14 +67,17 @@ public class VaultServiceImpl implements VaultService {
     }
 
     @Override
-    public void updateVault(Vault vault, String plainText) {
+    public void updateVault(Vault vault, String plainText, String existingEncryptedValue) {
         if (StringUtils.hasText(plainText)) {
-            vault.setEncryptedValue(encrypt(vault, plainText));
+            String oldPlainText = decrypt(existingEncryptedValue, vault.getTokenType());
+            if (!plainText.equals(oldPlainText)) {
+                vault.setEncryptedValue(encrypt(vault, plainText));
+            }
         }
         vaultMapper.updateVault(vault);
     }
 
-    private String encrypt(Vault vault, String plainText) {
+    private String encrypt(@NonNull Vault vault, String plainText) {
         String type = vault.getTokenType();
         if ("SIMPLE".equals(type) || type == null) {
             return PBEncryptionUtils.encrypt(plainText);

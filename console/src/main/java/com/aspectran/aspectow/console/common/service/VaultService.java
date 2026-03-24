@@ -30,7 +30,7 @@ public interface VaultService {
 
     void createVault(Vault vault, String plainText);
 
-    void updateVault(Vault vault, String plainText);
+    void updateVault(Vault vault, String plainText, String existingEncryptedValue);
 
     void deleteVault(Long vaultId);
 

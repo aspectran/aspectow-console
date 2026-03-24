@@ -20,19 +20,19 @@ import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.mybatis.SqlSessionAgent;
 
 /**
- * A {@link SqlSessionAgent} for handling simple.
+ * A {@link SqlSessionAgent} for handling batch.
  *
  * <p>Created: 2025. 2. 15.</p>
  */
 @Component
-@Bean(id = "consoleSqlSession", lazyDestroy = true)
-public class ConsoleSqlSession extends SqlSessionAgent {
+@Bean(id = "consoleReuseSqlSession", lazyDestroy = true)
+public class ConsoleBatchSqlSession extends SqlSessionAgent {
 
     /**
-     * Instantiates a new ConsoleSqlSession, targeting the "consoleTxAspect".
+     * Instantiates a new ConsoleBatchSqlSession, targeting the "consoleBatchTxAspect".
      */
-    public ConsoleSqlSession() {
-        super("consoleTxAspect");
+    public ConsoleBatchSqlSession() {
+        super("consoleBatchTxAspect");
         setSqlSessionFactoryBeanId("consoleSqlSessionFactory");
     }
 

@@ -4,8 +4,6 @@
 
 <mapper namespace="com.aspectran.aspectow.console.common.db.mapper.VaultMapper">
 
-    <cache />
-
     <resultMap id="VaultResultMap" type="com.aspectran.aspectow.console.common.db.model.Vault">
         <id property="vaultId" column="vault_id" />
         <result property="label" column="label" />
@@ -34,7 +32,9 @@
         update asc_vault
         set label = #{label},
             token_type = #{tokenType},
+            <if test="encryptedValue != null and encryptedValue != ''">
             encrypted_value = #{encryptedValue},
+            </if>
             description = #{description},
             valid_until = #{validUntil},
             updated_at = current_timestamp

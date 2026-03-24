@@ -77,7 +77,7 @@ public class VaultActivity {
                 if (existing == null) {
                     return new FailureResponse().setError("not_found", "Token not found.");
                 }
-                vaultService.updateVault(vault, plainText);
+                vaultService.updateVault(vault, plainText, existing.getEncryptedValue());
                 return new SuccessResponse("Updated").ok();
             } else {
                 // Create
