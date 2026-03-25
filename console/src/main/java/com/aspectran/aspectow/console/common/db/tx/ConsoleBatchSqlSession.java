@@ -25,7 +25,7 @@ import com.aspectran.mybatis.SqlSessionAgent;
  * <p>Created: 2025. 2. 15.</p>
  */
 @Component
-@Bean(id = "consoleReuseSqlSession", lazyDestroy = true)
+@Bean(id = "consoleBatchSqlSession", lazyDestroy = true)
 public class ConsoleBatchSqlSession extends SqlSessionAgent {
 
     /**

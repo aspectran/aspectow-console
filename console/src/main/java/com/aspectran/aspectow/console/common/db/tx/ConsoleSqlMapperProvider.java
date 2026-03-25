@@ -31,26 +31,35 @@ import org.apache.ibatis.session.SqlSession;
 @Bean(lazyDestroy = true)
 public class ConsoleSqlMapperProvider implements SqlMapperProvider {
 
-    private final SqlSession simpleSqlSession;
+    private final SqlSession consoleSqlSession;
+
+    private final SqlSession consoleBatchSqlSession;
+
+    private final SqlSession consoleReuseSqlSession;
 
     @Autowired
-    public ConsoleSqlMapperProvider(ConsoleSqlSession simpleSqlSession) {
-        this.simpleSqlSession = simpleSqlSession;
+    public ConsoleSqlMapperProvider(
+            ConsoleSqlSession consoleSqlSession,
+            ConsoleBatchSqlSession consoleBatchSqlSession,
+            ConsoleReuseSqlSession consoleReuseSqlSession) {
+        this.consoleSqlSession = consoleSqlSession;
+        this.consoleBatchSqlSession = consoleBatchSqlSession;
+        this.consoleReuseSqlSession = consoleReuseSqlSession;
     }
 
     @Override
     public SqlSession getSimpleSqlSession() {
-        return simpleSqlSession;
+        return consoleSqlSession;
     }
 
     @Override
     public SqlSession getBatchSqlSession() {
-        throw new UnsupportedOperationException("Batch operation is not supported");
+        return consoleBatchSqlSession;
     }
 
     @Override
     public SqlSession getReuseSqlSession() {
-        throw new UnsupportedOperationException("Reuse operation is not supported");
+        return consoleReuseSqlSession;
     }
 
 }
