@@ -156,77 +156,77 @@ public interface AccountMapper {
 
         @Override
         public User getUserById(Long userId) {
-            return simple().getUserById(userId);
+            return mapper().getUserById(userId);
         }
 
         @Override
         public User getUserByUsername(String username) {
-            return simple().getUserByUsername(username);
+            return mapper().getUserByUsername(username);
         }
 
         @Override
         public List<User> getUserList() {
-            return simple().getUserList();
+            return mapper().getUserList();
         }
 
         @Override
         public int insertUser(User user) {
-            return simple().insertUser(user);
+            return mapper().insertUser(user);
         }
 
         @Override
         public int updateUser(User user) {
-            return simple().updateUser(user);
+            return mapper().updateUser(user);
         }
 
         @Override
         public int deleteUser(Long userId) {
-            return simple().deleteUser(userId);
+            return mapper().deleteUser(userId);
         }
 
         @Override
         public int updateLastLogin(String username) {
-            return simple().updateLastLogin(username);
+            return mapper().updateLastLogin(username);
         }
 
         @Override
         public List<Role> getRolesByUserId(Long userId) {
-            return simple().getRolesByUserId(userId);
+            return mapper().getRolesByUserId(userId);
         }
 
         @Override
         public List<Role> getRoleList() {
-            return simple().getRoleList();
+            return mapper().getRoleList();
         }
 
         @Override
         public int insertUserRole(Long userId, Long roleId) {
-            return simple().insertUserRole(userId, roleId);
+            return mapper().insertUserRole(userId, roleId);
         }
 
         @Override
         public int deleteUserRoles(Long userId) {
-            return simple().deleteUserRoles(userId);
+            return mapper().deleteUserRoles(userId);
         }
 
         @Override
         public List<Permission> getPermissionsByRoleId(Long roleId) {
-            return simple().getPermissionsByRoleId(roleId);
+            return mapper().getPermissionsByRoleId(roleId);
         }
 
         @Override
         public List<Permission> getPermissionList() {
-            return simple().getPermissionList();
+            return mapper().getPermissionList();
         }
 
         @Override
         public int insertLoginHistory(LoginHistory history) {
-            return simple().insertLoginHistory(history);
+            return mapper().insertLoginHistory(history);
         }
 
         @Override
         public List<LoginHistory> getLoginHistoryList(String username) {
-            return simple().getLoginHistoryList(username);
+            return mapper().getLoginHistoryList(username);
         }
     }
 

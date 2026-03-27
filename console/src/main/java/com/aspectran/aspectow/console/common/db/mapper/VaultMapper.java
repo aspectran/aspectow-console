@@ -55,27 +55,27 @@ public interface VaultMapper {
 
         @Override
         public Vault getVaultById(Long vaultId) {
-            return simple().getVaultById(vaultId);
+            return mapper().getVaultById(vaultId);
         }
 
         @Override
         public List<Vault> getVaultList() {
-            return simple().getVaultList();
+            return mapper().getVaultList();
         }
 
         @Override
         public int insertVault(Vault vault) {
-            return simple().insertVault(vault);
+            return mapper().insertVault(vault);
         }
 
         @Override
         public int updateVault(Vault vault) {
-            return simple().updateVault(vault);
+            return mapper().updateVault(vault);
         }
 
         @Override
         public int deleteVault(Long vaultId) {
-            return simple().deleteVault(vaultId);
+            return mapper().deleteVault(vaultId);
         }
     }
 
