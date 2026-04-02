@@ -96,97 +96,98 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <script th:inline="javascript">
-            $(function() {
-                const dataUrl = [[@{/framework/anatomy/{name}/data(name=${page.contextName})}]];
-                const $componentTree = $('#component-tree');
-                const $detailsContent = $('#details-content');
+    <script layout:fragment="script" th:inline="javascript">
+        $(function () {
+            const dataUrl = [[@{/framework/anatomy / {name}/data(name=${page.contextName})}]];
+            const $componentTree = $('#component-tree');
+            const $detailsContent = $('#details-content');
 
-                $.getJSON(dataUrl, function(data) {
-                    const anatomyData = data.anatomyData;
-                    if (!anatomyData) {
-                        $componentTree.html('<div class="p-3 text-danger">Failed to load data.</div>');
-                        return;
+            $.getJSON(dataUrl, function (data) {
+                const anatomyData = data.anatomyData;
+                if (!anatomyData) {
+                    $componentTree.html('<div class="p-3 text-danger">Failed to load data.</div>');
+                    return;
+                }
+
+                $componentTree.empty();
+
+                $.each(anatomyData, function (componentKey, rules) {
+                    const componentId = 'comp-' + componentKey.replace(/\s+/g, '-').toLowerCase();
+
+                    const $header = $('<div/>', {
+                        'class': 'component-header collapsed',
+                        'data-bs-toggle': 'collapse',
+                        'data-bs-target': '#' + componentId,
+                        'html': `<span>${componentKey}</span> <span class="badge rounded-pill bg-secondary small">${rules.length}</span>`
+                    });
+
+                    const $ruleList = $('<div/>', {
+                        'id': componentId,
+                        'class': 'collapse list-group list-group-flush border-bottom'
+                    });
+
+                    if (rules.length > 0) {
+                        $.each(rules, function (index, rule) {
+                            const ruleName = rule.name || rule.id || rule.className || 'Unnamed Rule';
+                            const $ruleItem = $('<div/>', {
+                                'class': 'list-group-item rule-item',
+                                'text': ruleName,
+                                'data-apon': rule.apon
+                            });
+
+                            $ruleItem.on('click', function () {
+                                $('.rule-item').removeClass('active');
+                                $(this).addClass('active');
+                                $detailsContent.text(rule.apon);
+                            });
+
+                            $ruleList.append($ruleItem);
+                        });
+                    } else {
+                        $ruleList.append('<div class="list-group-item text-muted small px-3">No rules defined.</div>');
                     }
 
-                    $componentTree.empty();
-
-                    $.each(anatomyData, function(componentKey, rules) {
-                        const componentId = 'comp-' + componentKey.replace(/\s+/g, '-').toLowerCase();
-                        
-                        const $header = $('<div/>', {
-                            'class': 'component-header collapsed',
-                            'data-bs-toggle': 'collapse',
-                            'data-bs-target': '#' + componentId,
-                            'html': `<span>${componentKey}</span> <span class="badge rounded-pill bg-secondary small">${rules.length}</span>`
-                        });
-
-                        const $ruleList = $('<div/>', {
-                            'id': componentId,
-                            'class': 'collapse list-group list-group-flush border-bottom'
-                        });
-
-                        if (rules.length > 0) {
-                            $.each(rules, function(index, rule) {
-                                const ruleName = rule.name || rule.id || rule.className || 'Unnamed Rule';
-                                const $ruleItem = $('<div/>', {
-                                    'class': 'list-group-item rule-item',
-                                    'text': ruleName,
-                                    'data-apon': rule.apon
-                                });
-
-                                $ruleItem.on('click', function() {
-                                    $('.rule-item').removeClass('active');
-                                    $(this).addClass('active');
-                                    $detailsContent.text(rule.apon);
-                                });
-
-                                $ruleList.append($ruleItem);
-                            });
-                        } else {
-                            $ruleList.append('<div class="list-group-item text-muted small px-3">No rules defined.</div>');
-                        }
-
-                        $componentTree.append($header).append($ruleList);
-                    });
-                });
-
-                $('#rule-filter').on('keyup', function() {
-                    const filterText = $(this).val().toLowerCase();
-                    $('.component-header').each(function() {
-                        const $header = $(this);
-                        const $list = $header.next('.collapse');
-                        let hasMatch = false;
-
-                        $list.find('.rule-item').each(function() {
-                            const $item = $(this);
-                            if ($item.text().toLowerCase().includes(filterText)) {
-                                $item.show();
-                                hasMatch = true;
-                            } else {
-                                $item.hide();
-                            }
-                        });
-
-                        if (hasMatch || filterText === '') {
-                            $header.show();
-                        } else {
-                            $header.hide();
-                        }
-                    });
-                });
-
-                $('#copy-btn').on('click', function() {
-                    const text = $detailsContent.text();
-                    navigator.clipboard.writeText(text).then(() => {
-                        const $icon = $(this).find('i');
-                        $icon.removeClass('bi-clipboard').addClass('bi-check-lg text-success');
-                        setTimeout(() => $icon.removeClass('bi-check-lg text-success').addClass('bi-clipboard'), 2000);
-                    });
+                    $componentTree.append($header).append($ruleList);
                 });
             });
-        </script>
-    </div>
+
+            $('#rule-filter').on('keyup', function () {
+                const filterText = $(this).val().toLowerCase();
+                $('.component-header').each(function () {
+                    const $header = $(this);
+                    const $list = $header.next('.collapse');
+                    let hasMatch = false;
+
+                    $list.find('.rule-item').each(function () {
+                        const $item = $(this);
+                        if ($item.text().toLowerCase().includes(filterText)) {
+                            $item.show();
+                            hasMatch = true;
+                        } else {
+                            $item.hide();
+                        }
+                    });
+
+                    if (hasMatch || filterText === '') {
+                        $header.show();
+                    } else {
+                        $header.hide();
+                    }
+                });
+            });
+
+            $('#copy-btn').on('click', function () {
+                const text = $detailsContent.text();
+                navigator.clipboard.writeText(text).then(() => {
+                    const $icon = $(this).find('i');
+                    $icon.removeClass('bi-clipboard').addClass('bi-check-lg text-success');
+                    setTimeout(() => $icon.removeClass('bi-check-lg text-success').addClass('bi-clipboard'), 2000);
+                });
+            });
+        })
+            ;
+    </script>
 </body>
 </html>

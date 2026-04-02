@@ -181,7 +181,6 @@
                 <pre class="console"></pre>
             </div>
         </div>
-
         <div id="appmon-popup-message" class="text-center my-5 p-5 border rounded bg-light-subtle" style="display: none;">
             <i class="bi bi-window-stack display-1 text-muted mb-4"></i>
             <h3>Application Monitoring is running in a popup window</h3>
@@ -191,8 +190,7 @@
             </button>
         </div>
     </div>
-<th:block layout:fragment="script">
-    <script th:inline="javascript">
+    <script layout:fragment="script" th:inline="javascript">
     $(function () {
         const BASE_PATH = [[@{/}]].replace(/\/$/, '') + "/appmon";
         const INSTANCES = [[${page.instances}]];
@@ -202,7 +200,6 @@
         new DashboardBuilder(options).build(BASE_PATH, INSTANCES);
     });
     </script>
-</th:block>
 
 </body>
 </html>
