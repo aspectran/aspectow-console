@@ -23,7 +23,7 @@ import com.aspectran.core.component.bean.annotation.Action;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Dispatch;
-import com.aspectran.core.component.bean.annotation.Profile;
+import com.aspectran.core.component.bean.annotation.Hint;
 import com.aspectran.core.component.bean.annotation.Request;
 import com.aspectran.core.component.bean.annotation.RequestToGet;
 import com.aspectran.utils.StringUtils;
@@ -79,7 +79,7 @@ public class DashboardActivity {
     @Request("/dashboard/popup/${instances}")
     @Dispatch("appmon/dashboard")
     @Action("page")
-    @Hint("layout: popup")
+    @Hint(type = "layout", value = "layout: popup")
     public Map<String, String> dashboardPopup(String instances) {
         return Map.of(
                 "title", "Application Monitoring",

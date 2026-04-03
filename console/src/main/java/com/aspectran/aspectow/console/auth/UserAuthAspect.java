@@ -15,13 +15,13 @@
  */
 package com.aspectran.aspectow.console.auth;
 
+import com.aspectran.core.activity.HintParameters;
 import com.aspectran.core.activity.Translet;
 import com.aspectran.core.adapter.SessionAdapter;
 import com.aspectran.core.component.bean.annotation.Aspect;
 import com.aspectran.core.component.bean.annotation.Before;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Joinpoint;
-import com.aspectran.utils.apon.Parameters;
 import com.aspectran.web.support.http.MediaType;
 import com.aspectran.web.support.rest.response.FailureResponse;
 import com.aspectran.web.support.util.WebUtils;
@@ -57,8 +57,8 @@ public class UserAuthAspect {
     }
 
     private void authRequired(@NonNull Translet translet) {
-        Parameters hint = translet.peekHint("layout");
-        if ("layout".equals(hint.getString("layout"))) {
+        HintParameters hint = translet.peekHint("layout");
+        if (hint != null && "popup".equals(hint.getString("layout"))) {
             translet.transform(new FailureResponse().forbidden());
             return;
         }
