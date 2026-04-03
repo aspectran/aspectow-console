@@ -21,7 +21,7 @@ import com.aspectran.core.component.bean.annotation.Aspect;
 import com.aspectran.core.component.bean.annotation.Before;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Joinpoint;
-import com.aspectran.web.activity.response.DefaultRestResponse;
+import com.aspectran.utils.apon.Parameters;
 import com.aspectran.web.support.http.MediaType;
 import com.aspectran.web.support.rest.response.FailureResponse;
 import com.aspectran.web.support.util.WebUtils;
@@ -57,6 +57,11 @@ public class UserAuthAspect {
     }
 
     private void authRequired(@NonNull Translet translet) {
+        Parameters hint = translet.peekHint("layout");
+        if ("layout".equals(hint.getString("layout"))) {
+            translet.transform(new FailureResponse().forbidden());
+            return;
+        }
         if (WebUtils.isAcceptContentTypes(translet, MediaType.TEXT_HTML)) {
             translet.redirect("/auth/login", Map.of("referrer", translet.getRequestName()));
         } else {

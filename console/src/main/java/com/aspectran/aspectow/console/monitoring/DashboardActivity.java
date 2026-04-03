@@ -79,6 +79,7 @@ public class DashboardActivity {
     @Request("/dashboard/popup/${instances}")
     @Dispatch("appmon/dashboard")
     @Action("page")
+    @Hint("layout: popup")
     public Map<String, String> dashboardPopup(String instances) {
         return Map.of(
                 "title", "Application Monitoring",
