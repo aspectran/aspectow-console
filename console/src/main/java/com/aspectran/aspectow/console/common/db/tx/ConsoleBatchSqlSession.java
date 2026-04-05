@@ -17,16 +17,17 @@ package com.aspectran.aspectow.console.common.db.tx;
 
 import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.mybatis.SqlSessionAgent;
+import com.aspectran.mybatis.DefaultSqlSessionAgent;
+import org.apache.ibatis.session.ExecutorType;
 
 /**
- * A {@link SqlSessionAgent} for handling batch.
+ * A {@link DefaultSqlSessionAgent} for handling batch.
  *
  * <p>Created: 2025. 2. 15.</p>
  */
 @Component
 @Bean(id = "consoleBatchSqlSession", lazyDestroy = true)
-public class ConsoleBatchSqlSession extends SqlSessionAgent {
+public class ConsoleBatchSqlSession extends DefaultSqlSessionAgent {
 
     /**
      * Instantiates a new ConsoleBatchSqlSession, targeting the "consoleBatchTxAspect".
@@ -34,6 +35,7 @@ public class ConsoleBatchSqlSession extends SqlSessionAgent {
     public ConsoleBatchSqlSession() {
         super("consoleBatchTxAspect");
         setSqlSessionFactoryBeanId("consoleSqlSessionFactory");
+        setExecutorType(ExecutorType.BATCH);
     }
 
 }

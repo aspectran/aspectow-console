@@ -17,16 +17,16 @@ package com.aspectran.aspectow.console.common.db.tx;
 
 import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.mybatis.SqlSessionAgent;
+import com.aspectran.mybatis.DefaultSqlSessionAgent;
 
 /**
- * A {@link SqlSessionAgent} for handling simple.
+ * A {@link DefaultSqlSessionAgent} for handling simple.
  *
  * <p>Created: 2025. 2. 15.</p>
  */
 @Component
 @Bean(id = "consoleSqlSession", lazyDestroy = true)
-public class ConsoleSqlSession extends SqlSessionAgent {
+public class ConsoleSqlSession extends DefaultSqlSessionAgent {
 
     /**
      * Instantiates a new ConsoleSqlSession, targeting the "consoleTxAspect".

@@ -17,16 +17,17 @@ package com.aspectran.aspectow.console.common.db.tx;
 
 import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.mybatis.SqlSessionAgent;
+import com.aspectran.mybatis.DefaultSqlSessionAgent;
+import org.apache.ibatis.session.ExecutorType;
 
 /**
- * A {@link SqlSessionAgent} for handling reuse.
+ * A {@link DefaultSqlSessionAgent} for handling reuse.
  *
  * <p>Created: 2025. 2. 15.</p>
  */
 @Component
 @Bean(id = "consoleReuseSqlSession", lazyDestroy = true)
-public class ConsoleReuseSqlSession extends SqlSessionAgent {
+public class ConsoleReuseSqlSession extends DefaultSqlSessionAgent {
 
     /**
      * Instantiates a new ConsoleReuseSqlSession, targeting the "consoleReuseTxAspect".
@@ -34,6 +35,7 @@ public class ConsoleReuseSqlSession extends SqlSessionAgent {
     public ConsoleReuseSqlSession() {
         super("consoleReuseTxAspect");
         setSqlSessionFactoryBeanId("consoleSqlSessionFactory");
+        setExecutorType(ExecutorType.REUSE);
     }
 
 }
