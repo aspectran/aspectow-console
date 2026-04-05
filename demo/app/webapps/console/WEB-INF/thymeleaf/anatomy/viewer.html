@@ -99,12 +99,12 @@
     </div>
 
     <script layout:fragment="script" th:inline="javascript">
-        $(function () {
-            const dataUrl = [[@{/framework/anatomy / {name}/data(name=${page.contextName})}]];
+        $(function() {
+            const dataUrl = [[@{/framework/anatomy/{name}/data(name=${page.contextName})}]];
             const $componentTree = $('#component-tree');
             const $detailsContent = $('#details-content');
 
-            $.getJSON(dataUrl, function (data) {
+            $.getJSON(dataUrl, function(data) {
                 const anatomyData = data.anatomyData;
                 if (!anatomyData) {
                     $componentTree.html('<div class="p-3 text-danger">Failed to load data.</div>');
@@ -113,7 +113,7 @@
 
                 $componentTree.empty();
 
-                $.each(anatomyData, function (componentKey, rules) {
+                $.each(anatomyData, function(componentKey, rules) {
                     const componentId = 'comp-' + componentKey.replace(/\s+/g, '-').toLowerCase();
 
                     const $header = $('<div/>', {
@@ -129,7 +129,7 @@
                     });
 
                     if (rules.length > 0) {
-                        $.each(rules, function (index, rule) {
+                        $.each(rules, function(index, rule) {
                             const ruleName = rule.name || rule.id || rule.className || 'Unnamed Rule';
                             const $ruleItem = $('<div/>', {
                                 'class': 'list-group-item rule-item',
@@ -137,7 +137,7 @@
                                 'data-apon': rule.apon
                             });
 
-                            $ruleItem.on('click', function () {
+                            $ruleItem.on('click', function() {
                                 $('.rule-item').removeClass('active');
                                 $(this).addClass('active');
                                 $detailsContent.text(rule.apon);
@@ -153,14 +153,14 @@
                 });
             });
 
-            $('#rule-filter').on('keyup', function () {
+            $('#rule-filter').on('keyup', function() {
                 const filterText = $(this).val().toLowerCase();
-                $('.component-header').each(function () {
+                $('.component-header').each(function() {
                     const $header = $(this);
                     const $list = $header.next('.collapse');
                     let hasMatch = false;
 
-                    $list.find('.rule-item').each(function () {
+                    $list.find('.rule-item').each(function() {
                         const $item = $(this);
                         if ($item.text().toLowerCase().includes(filterText)) {
                             $item.show();
@@ -178,7 +178,7 @@
                 });
             });
 
-            $('#copy-btn').on('click', function () {
+            $('#copy-btn').on('click', function() {
                 const text = $detailsContent.text();
                 navigator.clipboard.writeText(text).then(() => {
                     const $icon = $(this).find('i');
@@ -186,8 +186,7 @@
                     setTimeout(() => $icon.removeClass('bi-check-lg text-success').addClass('bi-clipboard'), 2000);
                 });
             });
-        })
-            ;
+        });
     </script>
 </body>
 </html>
