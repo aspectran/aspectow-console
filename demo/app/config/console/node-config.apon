@@ -1,0 +1,16 @@
+node: {
+    name: node1
+    title: Node-1
+    endpoint: {
+        mode: auto
+        url: /console/node1
+    }
+}
+node: {
+    name: node2
+    title: Node-2
+    endpoint: {
+        mode: auto
+        url: /console/node2
+    }
+}
