@@ -47,7 +47,13 @@ public class NodeInfo extends DefaultParameters {
         endpoints = new ParameterKey("endpoints", ValueType.VARIABLE); // For flexible map-like structure
 
         parameterKeys = new ParameterKey[] {
-                name, group, title, host, port, heartbeatInterval, endpoints
+                name,
+                group,
+                title,
+                host,
+                port,
+                heartbeatInterval,
+                endpoints
         };
     }
 
@@ -71,7 +77,6 @@ public class NodeInfo extends DefaultParameters {
         return getLong(heartbeatInterval, defaultValue);
     }
 
-    @SuppressWarnings("unchecked")
     public Parameters getEndpoints() {
         return getParameters(endpoints);
     }

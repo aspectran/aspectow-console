@@ -35,7 +35,10 @@ public class PbeConfig extends DefaultParameters {
         password = new ParameterKey("password", ValueType.STRING);
         salt = new ParameterKey("salt", ValueType.STRING);
 
-        parameterKeys = new ParameterKey[] { password, salt };
+        parameterKeys = new ParameterKey[] {
+                password,
+                salt
+        };
     }
 
     public PbeConfig() {

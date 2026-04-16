@@ -20,7 +20,7 @@ import com.aspectran.utils.apon.ParameterKey;
 import com.aspectran.utils.apon.ValueType;
 
 /**
- * ClusterConfig defines cluster-wide settings, including the cluster name 
+ * ClusterConfig defines cluster-wide settings, including the cluster name
  * and PBE (Password-Based Encryption) configuration for secure communication.
  *
  * <p>Created: 2026-04-16</p>
@@ -36,7 +36,10 @@ public class ClusterConfig extends DefaultParameters {
         name = new ParameterKey("name", ValueType.STRING);
         pbe = new ParameterKey("pbe", PbeConfig.class);
 
-        parameterKeys = new ParameterKey[] { name, pbe };
+        parameterKeys = new ParameterKey[] {
+                name,
+                pbe
+        };
     }
 
     public ClusterConfig() {
