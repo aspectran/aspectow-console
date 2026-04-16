@@ -1,0 +1,132 @@
+/*
+ * Copyright (c) 2026-present The Aspectran Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.aspectran.aspectow.node.manager;
+
+import com.aspectran.aspectow.node.config.NodeConfig;
+import com.aspectran.aspectow.node.config.NodeInfo;
+import com.aspectran.aspectow.node.redis.RedisConnectionPool;
+import com.aspectran.core.component.bean.annotation.Autowired;
+import com.aspectran.core.component.bean.annotation.Component;
+import io.lettuce.core.api.StatefulRedisConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * NodeRegistry provides an API for the Console to retrieve information 
+ * about registered nodes from the Redis storage.
+ *
+ * <p>Created: 2026-04-16</p>
+ */
+@Component
+public class NodeRegistry {
+
+    private static final Logger logger = LoggerFactory.getLogger(NodeRegistry.class);
+
+    private static final String NODES_HASH_KEY_PREFIX = "aspectow:cluster:nodes:";
+
+    private final String clusterName;
+
+    private final RedisConnectionPool connectionPool;
+
+    @Autowired
+    public NodeRegistry(NodeConfig nodeConfig, RedisConnectionPool connectionPool) {
+        this.clusterName = nodeConfig.getClusterConfig().getName();
+        this.connectionPool = connectionPool;
+    }
+
+    /**
+     * Retrieves all registered nodes as NodeInfo objects.
+     * @return a list of NodeInfo objects
+     */
+    public List<NodeInfo> getNodes() {
+        Map<String, String> rawNodes = getAllNodes();
+        List<NodeInfo> nodes = new ArrayList<>(rawNodes.size());
+        for (String aponData : rawNodes.values()) {
+            try {
+                NodeInfo nodeInfo = new NodeInfo();
+                nodeInfo.readFrom(aponData);
+                nodes.add(nodeInfo);
+            } catch (IOException e) {
+                logger.warn("Failed to parse node info APON data", e);
+            }
+        }
+        return nodes;
+    }
+
+    /**
+     * Retrieves all registered nodes from Redis as raw APON strings.
+     * @return a map of node IDs to their metadata (APON strings)
+     */
+    public Map<String, String> getAllNodes() {
+        String key = NODES_HASH_KEY_PREFIX + clusterName;
+        logger.debug("Retrieving all nodes from Redis hash: {}", key);
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
+            return connection.sync().hgetall(key);
+        }
+    }
+
+    /**
+     * Retrieves the last pulse timestamps for all nodes.
+     * @return a map of node IDs to their last pulse timestamps
+     */
+    public Map<String, String> getAllPulses() {
+        String key = NODES_HASH_KEY_PREFIX + clusterName + ":pulse";
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
+            return connection.sync().hgetall(key);
+        }
+    }
+
+    /**
+     * Retrieves a specific node's information.
+     * @param nodeId the node ID
+     * @return the node metadata string, or null if not found
+     */
+    public String getNode(String nodeId) {
+        String key = NODES_HASH_KEY_PREFIX + clusterName;
+        logger.debug("Retrieving node info for: {} from {}", nodeId, key);
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
+            return connection.sync().hget(key, nodeId);
+        }
+    }
+
+    /**
+     * Checks if a node is considered 'live' based on its last pulse timestamp.
+     * @param nodeId the node ID
+     * @param timeoutMillis the timeout threshold in milliseconds
+     * @return true if the node is live, false otherwise
+     */
+    public boolean isLive(String nodeId, long timeoutMillis) {
+        String key = NODES_HASH_KEY_PREFIX + clusterName + ":pulse";
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
+            String pulse = connection.sync().hget(key, nodeId);
+            if (pulse != null) {
+                try {
+                    long lastPulse = Long.parseLong(pulse);
+                    return (System.currentTimeMillis() - lastPulse <= timeoutMillis);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+}

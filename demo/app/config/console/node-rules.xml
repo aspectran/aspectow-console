@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE aspectran PUBLIC "-//ASPECTRAN//DTD Aspectran 9.0//EN"
+        "https://aspectran.com/dtd/aspectran-9.dtd">
+<aspectran>
+
+    <bean class="com.aspectran.aspectow.node.config.NodeConfigResolver">
+        <properties>
+            <item name="configLocation">/config/console/node-config.apon</item>
+        </properties>
+    </bean>
+
+</aspectran>

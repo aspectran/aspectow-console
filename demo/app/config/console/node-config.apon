@@ -1,16 +1,34 @@
-node: {
-    name: node1
-    title: Node-1
-    endpoint: {
-        mode: auto
-        url: /console/node1
+# Cluster-wide settings
+cluster: {
+    name: aspectow-cluster
+    pbe: {
+        password: "your-node-management-password"
+        # salt: "optional-salt"
     }
 }
+
+# Default node settings (used as template or for self-registration)
 node: {
-    name: node2
-    title: Node-2
-    endpoint: {
-        mode: auto
-        url: /console/node2
+    name: server-01
+    group: backend-api
+    title: Backend API Server 01
+    heartbeatInterval: 5000
+    endpoints: {
+        appmon: /appmon
+        commander: /commander
     }
 }
+
+# Pre-defined nodes (optional, useful for seed nodes or static management)
+#node: {
+#    name: server-01
+#    group: backend-api
+#    host: "127.0.0.1"
+#    port: 8080
+#}
+#node: {
+#    name: server-02
+#    group: backend-api
+#    host: "127.0.0.1"
+#    port: 8081
+#}
