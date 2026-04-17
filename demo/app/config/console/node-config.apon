@@ -6,30 +6,28 @@ cluster: {
         password: "your-node-management-password"
         # salt: "optional-salt"
     }
+    heartbeatInterval: 5000
+    endpoint: {  # for direct mode
+        mode: auto  # or websocket or polling
+        url: /node
+    }
 }
-
-# Default node settings (used as template or for self-registration)
+# No node declaration is necessary in autoscaling mode
 node: {
     name: node01
     group: backend-api
     title: Backend API Server 01
-    heartbeatInterval: 5000
-    endpoints: {
-        appmon: /appmon
-        commander: /commander
+    endpoint: {  # for direct mode
+        mode: auto  # or websocket or polling
+        url: /node01
     }
 }
-
-# Pre-defined nodes (optional, useful for seed nodes or static management)
-#node: {
-#    name: node01
-#    group: backend-api
-#    host: "127.0.0.1"
-#    port: 8080
-#}
-#node: {
-#    name: node02
-#    group: backend-api
-#    host: "127.0.0.1"
-#    port: 8081
-#}
+node: {
+    name: node02
+    group: backend-api
+    title: Backend API Server 02
+    endpoint: {  # for direct mode
+        mode: auto  # or websocket or polling
+        url: /node02
+    }
+}

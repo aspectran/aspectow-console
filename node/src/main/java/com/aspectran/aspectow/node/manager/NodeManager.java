@@ -32,8 +32,6 @@ import java.util.List;
  * This class orchestrates the entire monitoring application, including configuration,
  * exporters, persistence, and lifecycle management.
  * It also provides access to the core components of Aspectran's ActivityContext.
- *
- * <p>Created: 4/3/2024</p>
  */
 public class NodeManager extends InstantActivitySupport {
 

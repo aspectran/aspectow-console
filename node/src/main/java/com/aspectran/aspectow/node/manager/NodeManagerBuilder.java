@@ -30,6 +30,8 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
+
 public abstract class NodeManagerBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(NodeManagerBuilder.class);
@@ -45,18 +47,6 @@ public abstract class NodeManagerBuilder {
         Assert.notNull(context, "context must not be null");
         Assert.notNull(nodeConfig, "nodeConfig must not be null");
 
-        NodeInfoHolder nodeInfoHolder = new NodeInfoHolder(nodeConfig.getNodeInfoList());
-
-        String nodeId = resolveMyNodeId();
-        logger.info("Current Node: {}", nodeId);
-
-        NodeInfo nodeInfo = nodeInfoHolder.getNodeInfo(nodeId);
-        if (nodeInfo == null) {
-            nodeInfo = new NodeInfo();
-            nodeInfo.setName(nodeId);
-            nodeConfig.putNodeInfo(nodeInfo);
-        }
-
         ClusterConfig clusterConfig = nodeConfig.getClusterConfig();
         if (clusterConfig == null) {
             clusterConfig = new ClusterConfig();
@@ -68,6 +58,28 @@ public abstract class NodeManagerBuilder {
             clusterConfig.setName(DEFAULT_CLUSTER_ID);
         }
 
+        String nodeId;
+        NodeInfo nodeInfo;
+        NodeInfoHolder nodeInfoHolder;
+        if (clusterConfig.isAutoscalingMode()) {
+            nodeId = UUID.randomUUID().toString();
+            nodeInfoHolder = new NodeInfoHolder();
+            nodeInfo = new NodeInfo();
+            nodeInfo.setName(nodeId);
+            nodeInfoHolder.putNodeInfo(nodeInfo);
+        } else {
+            nodeId = resolveMyNodeId();
+            nodeInfoHolder = new NodeInfoHolder(nodeConfig.getNodeInfoList());
+            nodeInfo = nodeInfoHolder.getNodeInfo(nodeId);
+            if (nodeInfo == null) {
+                nodeInfo = new NodeInfo();
+                nodeInfo.setName(nodeId);
+                nodeInfoHolder.putNodeInfo(nodeInfo);
+            }
+        }
+
+        logger.info("Current Node: {}", nodeId);
+
         if (!context.getBeanRegistry().containsBean(RedisConnectionPool.class)) {
             throw new Exception("RedisConnectionPool bean not found in the context");
         }
@@ -78,8 +90,7 @@ public abstract class NodeManagerBuilder {
         RedisMessagePublisher redisMessagePublisher = null;
         RedisMessageSubscriber redisMessageSubscriber = null;
 
-        String clusterMode = clusterConfig.getMode();
-        if ("gateway".equals(clusterMode) || "autoscaling".equals(clusterMode)) {
+        if (clusterConfig.isGatewayMode() || clusterConfig.isAutoscalingMode()) {
             redisMessagePublisher = new RedisMessagePublisher(clusterName, nodeId, connectionPool);
             redisMessageSubscriber = new RedisMessageSubscriber(clusterName, nodeId, connectionPool);
         }

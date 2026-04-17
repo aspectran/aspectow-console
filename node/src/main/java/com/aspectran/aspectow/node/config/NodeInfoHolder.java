@@ -32,6 +32,9 @@ public class NodeInfoHolder {
 
     private final Map<String, NodeInfo> nodeInfoMap = new LinkedHashMap<>();
 
+    public NodeInfoHolder() {
+    }
+
     /**
      * Instantiates a new NodeInfoHolder.
      * @param nodeInfoList the list of node information to hold
@@ -61,6 +64,10 @@ public class NodeInfoHolder {
 
     public NodeInfo getNodeInfo(String nodeId) {
         return nodeInfoMap.get(nodeId);
+    }
+
+    public void putNodeInfo(NodeInfo nodeInfo) {
+        nodeInfoMap.put(nodeInfo.getName(), nodeInfo);
     }
 
 }

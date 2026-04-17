@@ -65,6 +65,18 @@ public class ClusterConfig extends DefaultParameters {
         putValue(ClusterConfig.mode, mode);
     }
 
+    public boolean isDirectMode() {
+        return "direct".equals(getString(mode));
+    }
+
+    public boolean isGatewayMode() {
+        return "gateway".equals(getString(mode));
+    }
+
+    public boolean isAutoscalingMode() {
+        return "autoscaling".equals(getString(mode));
+    }
+
     public PbeConfig getPbeConfig() {
         return getParameters(pbe);
     }
