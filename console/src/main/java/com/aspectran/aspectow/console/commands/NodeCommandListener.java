@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.node.manager;
+package com.aspectran.aspectow.console.commands;
 
-import com.aspectran.aspectow.node.config.NodeConfig;
 import com.aspectran.aspectow.node.redis.RedisConnectionPool;
 import com.aspectran.core.component.bean.ablility.DisposableBean;
 import com.aspectran.core.component.bean.ablility.InitializableBean;
@@ -53,9 +52,9 @@ public class NodeCommandListener extends RedisPubSubAdapter<String, String>
     private DaemonService daemonService;
 
     @Autowired
-    public NodeCommandListener(NodeConfig nodeConfig, RedisConnectionPool connectionPool) {
-        this.clusterName = nodeConfig.getClusterConfig().getName();
-        this.nodeId = nodeConfig.getNodeInfo().getName();
+    public NodeCommandListener(String clusterName, String nodeId, RedisConnectionPool connectionPool) {
+        this.clusterName = clusterName;
+        this.nodeId = nodeId;
         this.connectionPool = connectionPool;
     }
 

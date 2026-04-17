@@ -28,16 +28,19 @@ import com.aspectran.utils.apon.ValueType;
 public class ClusterConfig extends DefaultParameters {
 
     private static final ParameterKey name;
+    private static final ParameterKey mode;
     private static final ParameterKey pbe;
 
     private static final ParameterKey[] parameterKeys;
 
     static {
         name = new ParameterKey("name", ValueType.STRING);
+        mode = new ParameterKey("mode", ValueType.STRING);
         pbe = new ParameterKey("pbe", PbeConfig.class);
 
         parameterKeys = new ParameterKey[] {
                 name,
+                mode,
                 pbe
         };
     }
@@ -48,6 +51,18 @@ public class ClusterConfig extends DefaultParameters {
 
     public String getName() {
         return getString(name);
+    }
+
+    public void setName(String name) {
+        putValue(ClusterConfig.name, name);
+    }
+
+    public String getMode() {
+        return getString(mode);
+    }
+
+    public void setMode(String mode) {
+        putValue(ClusterConfig.mode, mode);
     }
 
     public PbeConfig getPbeConfig() {

@@ -15,7 +15,6 @@
  */
 package com.aspectran.aspectow.node.redis;
 
-import com.aspectran.aspectow.node.config.NodeConfig;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Destroy;
@@ -32,12 +31,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * RedisMessageSubscriber listens to Redis Pub/Sub channels
  * and notifies registered listeners.
  */
-@Component
 public class RedisMessageSubscriber extends RedisPubSubAdapter<String, String> {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisMessageSubscriber.class);
 
-    private static final String CHANNEL_PATTERN = "aspectow:cluster:";
+    private static final String CHANNEL_PREFIX = "aspectow:cluster:";
 
     private final String clusterName;
 
@@ -49,35 +47,14 @@ public class RedisMessageSubscriber extends RedisPubSubAdapter<String, String> {
 
     private StatefulRedisPubSubConnection<String, String> pubSubConnection;
 
-    @Autowired
-    public RedisMessageSubscriber(NodeConfig nodeConfig, RedisConnectionPool connectionPool) {
-        this.clusterName = nodeConfig.getClusterConfig().getName();
-        this.nodeId = nodeConfig.getNodeInfo().getName();
+    public RedisMessageSubscriber(String clusterName, String nodeId, RedisConnectionPool connectionPool) {
+        this.clusterName = clusterName;
+        this.nodeId = nodeId;
         this.connectionPool = connectionPool;
     }
 
     public String getNodeId() {
         return nodeId;
-    }
-
-    @Initialize
-    public void initialize() {
-        this.pubSubConnection = connectionPool.getPubSubConnection();
-        this.pubSubConnection.addListener(this);
-
-        // Subscribe to all log channels for this cluster using pattern
-        String pattern = CHANNEL_PATTERN + clusterName + ":*";
-        this.pubSubConnection.sync().psubscribe(pattern);
-        logger.info("RedisMessageSubscriber initialized and subscribed to pattern: {}", pattern);
-    }
-
-    @Destroy
-    public void destroy() {
-        if (pubSubConnection != null) {
-            pubSubConnection.removeListener(this);
-            pubSubConnection.sync().punsubscribe();
-            pubSubConnection.close();
-        }
     }
 
     public void addListener(RedisMessageListener listener) {
@@ -99,12 +76,30 @@ public class RedisMessageSubscriber extends RedisPubSubAdapter<String, String> {
         String senderNodeId = channel.substring(lastColonIndex + 1);
 
         // Skip messages from self to avoid infinite loops
-        if (senderNodeId.equals(this.nodeId)) {
+        if (senderNodeId.equals(nodeId)) {
             return;
         }
 
         for (RedisMessageListener listener : listeners) {
             listener.onMessage(senderNodeId, message);
+        }
+    }
+
+    public void start() {
+        this.pubSubConnection = connectionPool.getPubSubConnection();
+        this.pubSubConnection.addListener(this);
+
+        // Subscribe to all log channels for this cluster using pattern
+        String pattern = CHANNEL_PREFIX + clusterName + ":*";
+        this.pubSubConnection.sync().psubscribe(pattern);
+        logger.info("RedisMessageSubscriber initialized and subscribed to pattern: {}", pattern);
+    }
+
+    public void stop() {
+        if (pubSubConnection != null) {
+            pubSubConnection.removeListener(this);
+            pubSubConnection.sync().punsubscribe();
+            pubSubConnection.close();
         }
     }
 

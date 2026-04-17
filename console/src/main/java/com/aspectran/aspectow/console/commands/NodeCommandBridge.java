@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.node.manager;
+package com.aspectran.aspectow.console.commands;
 
 import com.aspectran.aspectow.node.config.NodeConfig;
 import com.aspectran.aspectow.node.redis.RedisConnectionPool;
@@ -51,7 +51,7 @@ public class NodeCommandBridge {
      * @param nodeId the target node ID
      * @param command the command in APON or plain text format
      */
-    public void sendCommand(String nodeId, String command) {
+    public void sendCommand(String nodeId, String command) throws Exception {
         String channel = getChannelName(nodeId);
         logger.debug("Sending command to node {}: {}", nodeId, command);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
@@ -63,7 +63,7 @@ public class NodeCommandBridge {
      * Sends a command to all nodes in the cluster.
      * @param command the command to broadcast
      */
-    public void broadcastCommand(String command) {
+    public void broadcastCommand(String command) throws Exception {
         String channel = getChannelName("all");
         logger.debug("Broadcasting command to all nodes in cluster {}: {}", clusterName, command);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {

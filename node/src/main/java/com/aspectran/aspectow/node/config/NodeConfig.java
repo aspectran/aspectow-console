@@ -65,12 +65,16 @@ public class NodeConfig extends DefaultParameters {
         return getParameters(cluster);
     }
 
-    public NodeInfo getNodeInfo() {
-        return getParameters(node);
+    public void setClusterConfig(ClusterConfig clusterConfig) {
+        putValue(cluster, clusterConfig);
     }
 
     public List<NodeInfo> getNodeInfoList() {
         return getParametersList(node);
+    }
+
+    public void putNodeInfo(NodeInfo nodeInfo) {
+        putValue(node, nodeInfo);
     }
 
 }

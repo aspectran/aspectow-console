@@ -1,6 +1,7 @@
 # Cluster-wide settings
 cluster: {
-    name: aspectow-cluster
+    name: cluster
+    mode: gateway  # direct or gateway or autoscaling
     pbe: {
         password: "your-node-management-password"
         # salt: "optional-salt"
@@ -9,7 +10,7 @@ cluster: {
 
 # Default node settings (used as template or for self-registration)
 node: {
-    name: server-01
+    name: node01
     group: backend-api
     title: Backend API Server 01
     heartbeatInterval: 5000
@@ -21,13 +22,13 @@ node: {
 
 # Pre-defined nodes (optional, useful for seed nodes or static management)
 #node: {
-#    name: server-01
+#    name: node01
 #    group: backend-api
 #    host: "127.0.0.1"
 #    port: 8080
 #}
 #node: {
-#    name: server-02
+#    name: node02
 #    group: backend-api
 #    host: "127.0.0.1"
 #    port: 8081

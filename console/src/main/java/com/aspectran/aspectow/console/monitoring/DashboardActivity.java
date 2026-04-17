@@ -16,9 +16,9 @@
 package com.aspectran.aspectow.console.monitoring;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
-import com.aspectran.aspectow.appmon.engine.config.DomainInfo;
 import com.aspectran.aspectow.appmon.engine.config.InstanceInfo;
 import com.aspectran.aspectow.appmon.engine.manager.AppMonManager;
+import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.core.component.bean.annotation.Action;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
@@ -100,7 +100,7 @@ public class DashboardActivity {
                 "counterPersistInterval", appMonManager.getCounterPersistInterval()
         );
 
-        List<DomainInfo> domainInfoList = appMonManager.getDomainInfoList();
+        List<NodeInfo> nodeInfoList = appMonManager.getNodeInfoList();
 
         String[] instanceNames = StringUtils.splitWithComma(instances);
         instanceNames = appMonManager.getVerifiedInstanceNames(instanceNames);
@@ -109,7 +109,7 @@ public class DashboardActivity {
         Map<String, Object> data = Map.of(
                 "token", AppMonTokenIssuer.issueToken(30),
                 "settings", settings,
-                "domains", domainInfoList,
+                "nodes", nodeInfoList,
                 "instances", instanceInfoList
         );
         return new DefaultRestResponse(data).nullWritable(false).ok();

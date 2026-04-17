@@ -35,7 +35,6 @@ import java.util.Map;
  *
  * <p>Created: 2026-04-16</p>
  */
-@Component
 public class NodeRegistry {
 
     private static final Logger logger = LoggerFactory.getLogger(NodeRegistry.class);
@@ -46,9 +45,8 @@ public class NodeRegistry {
 
     private final RedisConnectionPool connectionPool;
 
-    @Autowired
-    public NodeRegistry(NodeConfig nodeConfig, RedisConnectionPool connectionPool) {
-        this.clusterName = nodeConfig.getClusterConfig().getName();
+    public NodeRegistry(String clusterName, RedisConnectionPool connectionPool) {
+        this.clusterName = clusterName;
         this.connectionPool = connectionPool;
     }
 

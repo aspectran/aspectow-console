@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026-present The Aspectran Project
+ * Copyright (c) 2019-present The Aspectran Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,72 +17,65 @@ package com.aspectran.aspectow.node.redis;
 
 import com.aspectran.core.component.bean.ablility.DisposableBean;
 import com.aspectran.core.component.bean.ablility.InitializableBean;
-import com.aspectran.core.component.bean.annotation.Bean;
-import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.core.component.bean.aware.EnvironmentAware;
-import com.aspectran.core.context.env.Environment;
-import com.aspectran.utils.StringUtils;
+import com.aspectran.utils.Assert;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
-import org.jspecify.annotations.NonNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.lettuce.core.support.ConnectionPoolSupport;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 /**
- * RedisConnectionPool manages the Redis client and provides connections 
- * for synchronous, asynchronous, and pub/sub operations using Lettuce.
+ * Redis connection pool based on Lettuce.
  *
- * <p>Created: 2026-04-16</p>
+ * <p>Created: 2019/12/08</p>
  */
-@Component
-@Bean(id = "redisConnectionPool")
-public class RedisConnectionPool implements InitializableBean, DisposableBean, EnvironmentAware {
+public class RedisConnectionPool implements InitializableBean, DisposableBean {
 
-    private static final Logger logger = LoggerFactory.getLogger(RedisConnectionPool.class);
+    private final RedisConnectionPoolConfig poolConfig;
 
-    private String redisUri;
+    private RedisClient client;
 
-    private RedisClient redisClient;
+    private GenericObjectPool<StatefulRedisConnection<String, String>> pool;
 
-    @Override
-    public void setEnvironment(@NonNull Environment environment) {
-        // Retrieve Redis URI from environment properties
-        redisUri = environment.getProperty("aspectow.redis.uri");
-        if (StringUtils.isEmpty(redisUri)) {
-            // Default to localhost if not specified
-            redisUri = "redis://localhost:6379";
-        }
+    public RedisConnectionPool(RedisConnectionPoolConfig poolConfig) {
+        this.poolConfig = poolConfig;
     }
 
-    @Override
-    public void initialize() throws Exception {
-        logger.info("Initializing RedisClient with URI: {}", redisUri);
-        redisClient = RedisClient.create(redisUri);
+    public StatefulRedisConnection<String, String> getConnection() throws Exception {
+        Assert.state(pool != null, "No RedisConnectionPool configured");
+        return pool.borrowObject();
     }
 
-    @Override
-    public void destroy() throws Exception {
-        if (redisClient != null) {
-            logger.info("Shutting down RedisClient");
-            redisClient.shutdown();
-        }
-    }
-
-    /**
-     * Gets a new stateful Redis connection.
-     * @return the stateful Redis connection
-     */
-    public StatefulRedisConnection<String, String> getConnection() {
-        return redisClient.connect();
-    }
-
-    /**
-     * Gets a new stateful Redis Pub/Sub connection.
-     * @return the stateful Redis Pub/Sub connection
-     */
     public StatefulRedisPubSubConnection<String, String> getPubSubConnection() {
-        return redisClient.connectPubSub();
+        Assert.state(client != null, "No RedisClient configured");
+        return client.connectPubSub();
+    }
+
+    @Override
+    public void initialize() {
+        Assert.state(client == null, "RedisConnectionPool is already initialized");
+        RedisURI redisURI = poolConfig.getRedisURI();
+        if (redisURI == null) {
+            throw new IllegalArgumentException("redisURI must not be null");
+        }
+        client = RedisClient.create(redisURI);
+        if (poolConfig.getClientOptions() != null) {
+            client.setOptions(poolConfig.getClientOptions());
+        }
+        pool = ConnectionPoolSupport
+                .createGenericObjectPool(()
+                        -> client.connect(), poolConfig);
+    }
+
+    @Override
+    public void destroy() {
+        if (pool != null) {
+            pool.close();
+        }
+        if (client != null) {
+            client.shutdown();
+        }
     }
 
 }

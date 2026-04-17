@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.monitoring;
+package com.aspectran.aspectow.console.commands;
 
 import com.aspectran.aspectow.node.config.NodeInfo;
-import com.aspectran.aspectow.node.manager.NodeCommandBridge;
 import com.aspectran.aspectow.node.manager.NodeRegistry;
 import com.aspectran.core.activity.Translet;
-import com.aspectran.core.activity.request.ParameterMap;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Request;
@@ -36,7 +34,7 @@ import java.util.Map;
  *
  * <p>Created: 2026-04-16</p>
  */
-@Component("/monitoring/nodes")
+@Component("/commands")
 public class NodeManagerActivity {
 
     private final NodeRegistry nodeRegistry;
@@ -86,7 +84,6 @@ public class NodeManagerActivity {
 
     /**
      * Sends a command to a specific node or all nodes.
-     * @param params request parameters containing 'nodeId' and 'command'
      * @return a success message
      */
     @Request("/command")

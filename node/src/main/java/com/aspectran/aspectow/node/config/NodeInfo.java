@@ -65,6 +65,10 @@ public class NodeInfo extends DefaultParameters {
         return getString(name);
     }
 
+    public void setName(String name) {
+        putValue(NodeInfo.name, name);
+    }
+
     public String getGroup() {
         return getString(group);
     }

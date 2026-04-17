@@ -47,6 +47,11 @@
             <artifactId>aspectran-daemon</artifactId>
             <version>${aspectran.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+            <version>2.13.1</version>
+        </dependency>
         <!-- Redis Client -->
         <dependency>
             <groupId>io.lettuce</groupId>

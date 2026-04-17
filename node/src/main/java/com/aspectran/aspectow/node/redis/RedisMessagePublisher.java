@@ -15,11 +15,6 @@
  */
 package com.aspectran.aspectow.node.redis;
 
-import com.aspectran.aspectow.node.config.NodeConfig;
-import com.aspectran.core.component.bean.annotation.Autowired;
-import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.core.component.bean.annotation.Destroy;
-import com.aspectran.core.component.bean.annotation.Initialize;
 import io.lettuce.core.api.StatefulRedisConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +23,11 @@ import org.slf4j.LoggerFactory;
  * RedisMessagePublisher sends messages to a Redis Pub/Sub channel 
  * for remote monitoring or command delivery.
  */
-@Component
 public class RedisMessagePublisher {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisMessagePublisher.class);
 
-    private static final String LOG_CHANNEL_PREFIX = "aspectow:cluster:logs:";
+    private static final String CHANNEL_PREFIX = "aspectow:cluster:";
 
     private final String clusterName;
 
@@ -41,37 +35,19 @@ public class RedisMessagePublisher {
 
     private final RedisConnectionPool connectionPool;
 
-    private StatefulRedisConnection<String, String> connection;
-
-    @Autowired
-    public RedisMessagePublisher(NodeConfig nodeConfig, RedisConnectionPool connectionPool) {
-        this.clusterName = nodeConfig.getClusterConfig().getName();
-        this.nodeId = nodeConfig.getNodeInfo().getName();
+    public RedisMessagePublisher(String clusterName, String nodeId, RedisConnectionPool connectionPool) {
+        this.clusterName = clusterName;
+        this.nodeId = nodeId;
         this.connectionPool = connectionPool;
-    }
-
-    @Initialize
-    public void initialize() {
-        this.connection = connectionPool.getConnection();
-        logger.info("RedisMessagePublisher initialized for node: {}", nodeId);
-    }
-
-    @Destroy
-    public void destroy() {
-        if (connection != null) {
-            connection.close();
-        }
     }
 
     /**
      * Publishes a message to the cluster log channel.
      * @param message the message to publish
      */
-    public void publishLog(String message) {
-        String channel = LOG_CHANNEL_PREFIX + clusterName + ":" + nodeId;
-        if (connection != null) {
-            connection.async().publish(channel, message);
-        }
+    public void publish(String message) throws Exception {
+        String channel = CHANNEL_PREFIX + clusterName + ":" + nodeId;
+        publish(channel, message);
     }
 
     /**
@@ -79,8 +55,8 @@ public class RedisMessagePublisher {
      * @param channel the channel to publish to
      * @param message the message to publish
      */
-    public void publish(String channel, String message) {
-        if (connection != null) {
+    public void publish(String channel, String message) throws Exception {
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             connection.async().publish(channel, message);
         }
     }

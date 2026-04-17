@@ -15,15 +15,8 @@
  */
 package com.aspectran.aspectow.node.manager;
 
-import com.aspectran.aspectow.node.config.NodeConfig;
 import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.redis.RedisConnectionPool;
-import com.aspectran.core.component.bean.ablility.DisposableBean;
-import com.aspectran.core.component.bean.ablility.InitializableBean;
-import com.aspectran.core.component.bean.annotation.Autowired;
-import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.core.component.bean.annotation.Destroy;
-import com.aspectran.core.component.bean.annotation.Initialize;
 import com.aspectran.utils.apon.AponWriter;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -41,18 +34,15 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>Created: 2026-04-16</p>
  */
-@Component
-public class NodeReporter implements InitializableBean, DisposableBean {
+public class NodeReporter {
 
     private static final Logger logger = LoggerFactory.getLogger(NodeReporter.class);
 
     private static final String NODES_HASH_KEY_PREFIX = "aspectow:cluster:nodes:";
 
-    private final NodeConfig nodeConfig;
+    private final NodeInfo nodeInfo;
 
     private final String clusterName;
-
-    private final String nodeId;
 
     private final RedisConnectionPool connectionPool;
 
@@ -60,18 +50,14 @@ public class NodeReporter implements InitializableBean, DisposableBean {
 
     private StatefulRedisConnection<String, String> connection;
 
-    @Autowired
-    public NodeReporter(NodeConfig nodeConfig, RedisConnectionPool connectionPool) {
-        this.nodeConfig = nodeConfig;
+    public NodeReporter(String clusterName, NodeInfo nodeInfo, RedisConnectionPool connectionPool) {
+        this.clusterName = clusterName;
+        this.nodeInfo = nodeInfo;
         this.connectionPool = connectionPool;
-        this.clusterName = nodeConfig.getClusterConfig().getName();
-        this.nodeId = nodeConfig.getNodeInfo().getName();
     }
 
-    @Initialize
-    @Override
-    public void initialize() throws Exception {
-        logger.info("Initializing NodeReporter for cluster: {}, node: {}", clusterName, nodeId);
+    public void start() throws Exception {
+        logger.info("Initializing NodeReporter for cluster: {}, node: {}", clusterName, nodeInfo.getName());
         
         // Establish Redis connection
         this.connection = connectionPool.getConnection();
@@ -80,14 +66,12 @@ public class NodeReporter implements InitializableBean, DisposableBean {
         registerNode();
 
         // 2. Start periodic pulse update
-        long interval = nodeConfig.getNodeInfo().getHeartbeatInterval(5000);
+        long interval = nodeInfo.getHeartbeatInterval(5000);
         scheduler.scheduleAtFixedRate(this::sendPulse, 0, interval, TimeUnit.MILLISECONDS);
     }
 
-    @Destroy
-    @Override
-    public void destroy() throws Exception {
-        logger.info("Destroying NodeReporter for node: {}", nodeId);
+    public void stop() throws Exception {
+        logger.info("Stopping NodeReporter for node: {}", nodeInfo.getName());
         scheduler.shutdown();
         unregisterNode();
         if (connection != null) {
@@ -97,30 +81,28 @@ public class NodeReporter implements InitializableBean, DisposableBean {
 
     private void registerNode() throws IOException {
         String key = NODES_HASH_KEY_PREFIX + clusterName;
-        NodeInfo nodeInfo = nodeConfig.getNodeInfo();
-        
         // Convert NodeInfo to APON string for storage
         String aponData = new AponWriter().nullWritable(false).write(nodeInfo).toString();
         
-        logger.debug("Registering node {} in Redis hash {}: \n{}", nodeId, key, aponData);
+        logger.debug("Registering node {} in Redis hash {}:\n{}", nodeInfo.getName(), key, aponData);
         RedisCommands<String, String> sync = connection.sync();
-        sync.hset(key, nodeId, aponData);
+        sync.hset(key, nodeInfo.getName(), aponData);
     }
 
     private void sendPulse() {
         String key = NODES_HASH_KEY_PREFIX + clusterName + ":pulse";
         long timestamp = System.currentTimeMillis();
         
-        logger.trace("Sending pulse for node {} to {}: {}", nodeId, key, timestamp);
+        logger.trace("Sending pulse for node {} to {}: {}", nodeInfo.getName(), key, timestamp);
         RedisCommands<String, String> sync = connection.sync();
-        sync.hset(key, nodeId, String.valueOf(timestamp));
+        sync.hset(key, nodeInfo.getName(), String.valueOf(timestamp));
     }
 
     private void unregisterNode() {
         String key = NODES_HASH_KEY_PREFIX + clusterName;
-        logger.debug("Unregistering node {} from Redis hash {}", nodeId, key);
+        logger.debug("Unregistering node {} from Redis hash {}", nodeInfo.getName(), key);
         RedisCommands<String, String> sync = connection.sync();
-        sync.hdel(key, nodeId);
+        sync.hdel(key, nodeInfo.getName());
     }
 
 }

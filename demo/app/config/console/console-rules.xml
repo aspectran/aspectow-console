@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE aspectran PUBLIC "-//ASPECTRAN//DTD Aspectran 9.0//EN"
+        "https://aspectran.com/dtd/aspectran-9.dtd">
+<aspectran>
+
+    <bean class="com.aspectran.aspectow.node.config.NodeConfigResolver">
+        <properties>
+            <item name="configLocation">/config/console/node-config.apon</item>
+        </properties>
+    </bean>
+
+    <bean class="com.aspectran.aspectow.node.redis.RedisConnectionPool" lazyDestroy="true">
+        <argument>
+            <bean class="com.aspectran.aspectow.node.redis.RedisConnectionPoolConfig">
+                <argument>
+                    <bean class="com.aspectran.core.support.PropertiesFactoryBean">
+                        <properties>
+                            <item name="ignoreInvalidResource" valueType="boolean">false</item>
+                        </properties>
+                        <properties profile="prod">
+                            <item name="locations" type="array">
+                                <value>/config/console/redis-prod.properties</value>
+                            </item>
+                        </properties>
+                        <properties profile="!prod">
+                            <item name="locations" type="array">
+                                <value>/config/console/redis-dev.properties</value>
+                            </item>
+                        </properties>
+                    </bean>
+                </argument>
+            </bean>
+        </argument>
+    </bean>
+
+    <bean id="nodeManager" class="com.aspectran.aspectow.node.manager.NodeManagerFactoryBean" lazyDestroy="true"/>
+
+</aspectran>
