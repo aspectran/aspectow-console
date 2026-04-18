@@ -4,7 +4,10 @@
 <aspectran>
 
     <bean class="com.aspectran.aspectow.node.config.NodeConfigResolver">
-        <properties>
+        <properties profile="prod">
+            <item name="configLocation">/config/console/node-config-prod.apon</item>
+        </properties>
+        <properties profile="!prod">
             <item name="configLocation">/config/console/node-config.apon</item>
         </properties>
     </bean>

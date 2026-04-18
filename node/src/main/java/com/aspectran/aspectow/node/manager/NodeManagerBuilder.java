@@ -52,18 +52,15 @@ public abstract class NodeManagerBuilder {
         Assert.notNull(context, "context must not be null");
         Assert.notNull(nodeConfig, "nodeConfig must not be null");
 
-        ClusterConfig clusterConfig = nodeConfig.getClusterConfig();
-        if (clusterConfig == null) {
-            clusterConfig = new ClusterConfig();
-            nodeConfig.setClusterConfig(clusterConfig);
-        }
-
+        ClusterConfig clusterConfig = nodeConfig.touchClusterConfig();
         String clusterId = clusterConfig.getId();
         if (!StringUtils.hasText(clusterId)) {
             clusterConfig.setId(DEFAULT_CLUSTER_ID);
             clusterId = DEFAULT_CLUSTER_ID;
         }
-
+        if (clusterConfig.isDirectMode() && !"direct".equals(clusterConfig.getMode())) {
+            clusterConfig.setMode("direct");
+        }
         if (!clusterConfig.isDirectMode()) {
             validateSecretConfig(clusterConfig.getSecretConfig());
         }
@@ -109,32 +106,25 @@ public abstract class NodeManagerBuilder {
 
         logger.info("Current Node: {} (Host: {})", nodeId, nodeInfo.getHost());
 
-        if (!context.getBeanRegistry().containsBean(RedisConnectionPool.class)) {
-            throw new IllegalStateException("RedisConnectionPool bean not found in the context");
-        }
-        RedisConnectionPool connectionPool = context.getBeanRegistry().getBean(RedisConnectionPool.class);
-
-        NodeRegistry nodeRegistry = null;
-        NodeReporter nodeReporter = null;
-        RedisMessagePublisher redisMessagePublisher = null;
-        RedisMessageSubscriber redisMessageSubscriber = null;
-
-        if (!clusterConfig.isDirectMode()) {
-            nodeRegistry = new NodeRegistry(clusterId, connectionPool);
-            nodeReporter = new NodeReporter(clusterConfig, nodeInfo, connectionPool);
-        }
-
-        if (clusterConfig.isGatewayMode() || clusterConfig.isAutoscalingMode()) {
-            redisMessagePublisher = new RedisMessagePublisher(clusterId, nodeId, connectionPool);
-            redisMessageSubscriber = new RedisMessageSubscriber(clusterId, nodeId, connectionPool);
-        }
-
         NodeManager nodeManager = new NodeManager(nodeId, clusterConfig, nodeInfoHolder);
         nodeManager.setActivityContext(context);
-        nodeManager.setNodeRegistry(nodeRegistry);
-        nodeManager.setNodeReporter(nodeReporter);
-        nodeManager.setRedisMessagePublisher(redisMessagePublisher);
-        nodeManager.setRedisMessageSubscriber(redisMessageSubscriber);
+
+        if (!clusterConfig.isDirectMode()) {
+            if (!context.getBeanRegistry().containsBean(RedisConnectionPool.class)) {
+                throw new IllegalStateException("RedisConnectionPool bean not found in the context");
+            }
+            RedisConnectionPool connectionPool = context.getBeanRegistry().getBean(RedisConnectionPool.class);
+
+            NodeRegistry nodeRegistry = new NodeRegistry(clusterId, connectionPool);
+            NodeReporter nodeReporter = new NodeReporter(clusterConfig, nodeInfo, connectionPool);
+            RedisMessagePublisher redisMessagePublisher = new RedisMessagePublisher(clusterId, nodeId, connectionPool);
+            RedisMessageSubscriber redisMessageSubscriber = new RedisMessageSubscriber(clusterId, nodeId, connectionPool);
+
+            nodeManager.setNodeRegistry(nodeRegistry);
+            nodeManager.setNodeReporter(nodeReporter);
+            nodeManager.setRedisMessagePublisher(redisMessagePublisher);
+            nodeManager.setRedisMessageSubscriber(redisMessageSubscriber);
+        }
         return nodeManager;
     }
 

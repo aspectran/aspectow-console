@@ -64,6 +64,10 @@ public class NodeConfig extends DefaultParameters {
         return getParameters(cluster);
     }
 
+    public  ClusterConfig touchClusterConfig() {
+        return touchParameters(cluster);
+    }
+
     public void setClusterConfig(ClusterConfig clusterConfig) {
         putValue(cluster, clusterConfig);
     }

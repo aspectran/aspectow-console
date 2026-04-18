@@ -34,7 +34,7 @@
     <div layout:fragment="content">
         <div class="row">
             <div class="container mb-2 mb-md-0">
-                <ul class="domain tabs nav nav-tabs">
+                <ul class="node tabs nav nav-tabs">
                     <li class="tabs-title nav-item">
                         <a class="nav-link">
                             <i class="bi bi-server"></i><span class="number"></span> <span class="title">Server-1</span>
@@ -43,7 +43,7 @@
                     </li>
                 </ul>
             </div>
-            <div class="domain metrics-bar">
+            <div class="node metrics-bar full-width">
                 <div class="title">
                     <i class="bi bi-pc-display-horizontal"></i><span class="number"></span>
                 </div>
@@ -192,7 +192,7 @@
     </div>
     <script layout:fragment="script" th:inline="javascript">
     $(function () {
-        const BASE_PATH = [[@{/}]].replace(/\/$/, '') + "/appmon";
+        const BASE_PATH = [[@{/}]].replace(/\/$/, '');
         const INSTANCES = [[${page.instances}]];
         const options = {
             // flagsUrl: "https://cdn.jsdelivr.net/gh/aspectran/aspectran-assets@main/assets/countries/flags/"
@@ -200,6 +200,5 @@
         new DashboardBuilder(options).build(BASE_PATH, INSTANCES);
     });
     </script>
-
 </body>
 </html>

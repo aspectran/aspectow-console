@@ -4,9 +4,17 @@ cluster: {
     mode: direct  # direct or gateway or autoscaling
 }
 node: {
-    id: node
-    group: group1
+    id: node1
+    group: appmon
     title: Node-1
+    endpoint: {
+        mode: auto
+    }
+}
+node: {
+    id: node2
+    group: appmon
+    title: Node-2
     endpoint: {
         mode: auto
     }

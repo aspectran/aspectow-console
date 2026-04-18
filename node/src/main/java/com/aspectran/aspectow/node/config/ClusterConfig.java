@@ -72,7 +72,7 @@ public class ClusterConfig extends DefaultParameters {
     }
 
     public boolean isDirectMode() {
-        return "direct".equals(getString(mode));
+        return (!isGatewayMode() && !isAutoscalingMode());
     }
 
     public boolean isGatewayMode() {
