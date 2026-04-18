@@ -17,7 +17,6 @@ package com.aspectran.aspectow.node.config;
 
 import com.aspectran.utils.apon.DefaultParameters;
 import com.aspectran.utils.apon.ParameterKey;
-import com.aspectran.utils.apon.Parameters;
 import com.aspectran.utils.apon.ValueType;
 
 /**
@@ -27,33 +26,36 @@ import com.aspectran.utils.apon.ValueType;
  */
 public class NodeInfo extends DefaultParameters {
 
-    private static final ParameterKey name;
+    private static final ParameterKey id;
     private static final ParameterKey group;
     private static final ParameterKey title;
     private static final ParameterKey host;
     private static final ParameterKey port;
     private static final ParameterKey heartbeatInterval;
-    private static final ParameterKey endpoints;
+    private static final ParameterKey endpoint;
+    private static final ParameterKey token;
 
     private static final ParameterKey[] parameterKeys;
 
     static {
-        name = new ParameterKey("name", ValueType.STRING);
+        id = new ParameterKey("id", ValueType.STRING);
         group = new ParameterKey("group", ValueType.STRING);
         title = new ParameterKey("title", ValueType.STRING);
         host = new ParameterKey("host", ValueType.STRING);
         port = new ParameterKey("port", ValueType.INT);
         heartbeatInterval = new ParameterKey("heartbeatInterval", ValueType.LONG);
-        endpoints = new ParameterKey("endpoints", ValueType.VARIABLE); // For flexible map-like structure
+        endpoint = new ParameterKey("endpoint", EndpointConfig.class);
+        token = new ParameterKey("token", ValueType.STRING);
 
         parameterKeys = new ParameterKey[] {
-                name,
+                id,
                 group,
                 title,
                 host,
                 port,
                 heartbeatInterval,
-                endpoints
+                endpoint,
+                token
         };
     }
 
@@ -61,28 +63,72 @@ public class NodeInfo extends DefaultParameters {
         super(parameterKeys);
     }
 
-    public String getName() {
-        return getString(name);
+    public String getNodeId() {
+        return getString(id);
     }
 
-    public void setName(String name) {
-        putValue(NodeInfo.name, name);
+    public void setNodeId(String nodeId) {
+        putValue(id, nodeId);
     }
 
     public String getGroup() {
         return getString(group);
     }
 
+    public void setGroup(String group) {
+        putValue(NodeInfo.group, group);
+    }
+
     public String getTitle() {
         return getString(title);
+    }
+
+    public void setTitle(String title) {
+        putValue(NodeInfo.title, title);
+    }
+
+    public String getHost() {
+        return getString(host);
+    }
+
+    public void setHost(String host) {
+        putValue(NodeInfo.host, host);
+    }
+
+    public Integer getPort() {
+        return getInt(port);
+    }
+
+    public void setPort(Integer port) {
+        putValue(NodeInfo.port, port);
+    }
+
+    public Long getHeartbeatInterval() {
+        return getLong(heartbeatInterval);
     }
 
     public long getHeartbeatInterval(long defaultValue) {
         return getLong(heartbeatInterval, defaultValue);
     }
 
-    public Parameters getEndpoints() {
-        return getParameters(endpoints);
+    public void setHeartbeatInterval(Long heartbeatInterval) {
+        putValue(NodeInfo.heartbeatInterval, heartbeatInterval);
+    }
+
+    public EndpointConfig getEndpointConfig() {
+        return getParameters(endpoint);
+    }
+
+    public void setEndpointConfig(EndpointConfig endpointConfig) {
+        putValue(endpoint, endpointConfig);
+    }
+
+    public String getToken() {
+        return getString(token);
+    }
+
+    public void setToken(String token) {
+        putValue(NodeInfo.token, token);
     }
 
 }

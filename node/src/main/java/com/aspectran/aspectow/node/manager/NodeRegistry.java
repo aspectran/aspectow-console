@@ -15,22 +15,20 @@
  */
 package com.aspectran.aspectow.node.manager;
 
-import com.aspectran.aspectow.node.config.NodeConfig;
 import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.redis.RedisConnectionPool;
-import com.aspectran.core.component.bean.annotation.Autowired;
-import com.aspectran.core.component.bean.annotation.Component;
 import io.lettuce.core.api.StatefulRedisConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
- * NodeRegistry provides an API for the Console to retrieve information 
+ * NodeRegistry provides an API for the Console to retrieve information
  * about registered nodes from the Redis storage.
  *
  * <p>Created: 2026-04-16</p>
@@ -41,12 +39,12 @@ public class NodeRegistry {
 
     private static final String NODES_HASH_KEY_PREFIX = "aspectow:cluster:nodes:";
 
-    private final String clusterName;
+    private final String clusterId;
 
     private final RedisConnectionPool connectionPool;
 
-    public NodeRegistry(String clusterName, RedisConnectionPool connectionPool) {
-        this.clusterName = clusterName;
+    public NodeRegistry(String clusterId, RedisConnectionPool connectionPool) {
+        this.clusterId = clusterId;
         this.connectionPool = connectionPool;
     }
 
@@ -74,10 +72,13 @@ public class NodeRegistry {
      * @return a map of node IDs to their metadata (APON strings)
      */
     public Map<String, String> getAllNodes() {
-        String key = NODES_HASH_KEY_PREFIX + clusterName;
+        String key = NODES_HASH_KEY_PREFIX + clusterId;
         logger.debug("Retrieving all nodes from Redis hash: {}", key);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             return connection.sync().hgetall(key);
+        } catch (Exception e) {
+            logger.error("Failed to retrieve nodes from Redis registry", e);
+            return Collections.emptyMap();
         }
     }
 
@@ -86,9 +87,12 @@ public class NodeRegistry {
      * @return a map of node IDs to their last pulse timestamps
      */
     public Map<String, String> getAllPulses() {
-        String key = NODES_HASH_KEY_PREFIX + clusterName + ":pulse";
+        String key = NODES_HASH_KEY_PREFIX + clusterId + ":pulse";
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             return connection.sync().hgetall(key);
+        } catch (Exception e) {
+            logger.error("Failed to retrieve node pulses from Redis registry", e);
+            return Collections.emptyMap();
         }
     }
 
@@ -98,10 +102,13 @@ public class NodeRegistry {
      * @return the node metadata string, or null if not found
      */
     public String getNode(String nodeId) {
-        String key = NODES_HASH_KEY_PREFIX + clusterName;
+        String key = NODES_HASH_KEY_PREFIX + clusterId;
         logger.debug("Retrieving node info for: {} from {}", nodeId, key);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             return connection.sync().hget(key, nodeId);
+        } catch (Exception e) {
+            logger.error("Failed to retrieve node info for {} from Redis registry", nodeId, e);
+            return null;
         }
     }
 
@@ -112,7 +119,7 @@ public class NodeRegistry {
      * @return true if the node is live, false otherwise
      */
     public boolean isLive(String nodeId, long timeoutMillis) {
-        String key = NODES_HASH_KEY_PREFIX + clusterName + ":pulse";
+        String key = NODES_HASH_KEY_PREFIX + clusterId + ":pulse";
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             String pulse = connection.sync().hget(key, nodeId);
             if (pulse != null) {
@@ -123,6 +130,8 @@ public class NodeRegistry {
                     return false;
                 }
             }
+        } catch (Exception e) {
+            logger.error("Failed to check liveness for node {} from Redis registry", nodeId, e);
         }
         return false;
     }

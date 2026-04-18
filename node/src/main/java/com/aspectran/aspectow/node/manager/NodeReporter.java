@@ -15,9 +15,16 @@
  */
 package com.aspectran.aspectow.node.manager;
 
+import com.aspectran.aspectow.node.config.ClusterConfig;
 import com.aspectran.aspectow.node.config.NodeInfo;
+import com.aspectran.aspectow.node.config.SecretConfig;
 import com.aspectran.aspectow.node.redis.RedisConnectionPool;
+import com.aspectran.utils.PBEncryptionUtils;
+import com.aspectran.utils.StringUtils;
+import com.aspectran.utils.SystemUtils;
 import com.aspectran.utils.apon.AponWriter;
+import com.aspectran.utils.apon.VariableParameters;
+import com.aspectran.utils.security.TimeLimitedPBTokenIssuer;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import org.slf4j.Logger;
@@ -40,69 +47,98 @@ public class NodeReporter {
 
     private static final String NODES_HASH_KEY_PREFIX = "aspectow:cluster:nodes:";
 
-    private final NodeInfo nodeInfo;
+    private static final long DEFAULT_HEARTBEAT_INTERVAL = 5000L;
 
-    private final String clusterName;
+    private final ClusterConfig clusterConfig;
+
+    private final NodeInfo nodeInfo;
 
     private final RedisConnectionPool connectionPool;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private StatefulRedisConnection<String, String> connection;
-
-    public NodeReporter(String clusterName, NodeInfo nodeInfo, RedisConnectionPool connectionPool) {
-        this.clusterName = clusterName;
+    public NodeReporter(ClusterConfig clusterConfig, NodeInfo nodeInfo, RedisConnectionPool connectionPool) {
+        this.clusterConfig = clusterConfig;
         this.nodeInfo = nodeInfo;
         this.connectionPool = connectionPool;
     }
 
     public void start() throws Exception {
-        logger.info("Initializing NodeReporter for cluster: {}, node: {}", clusterName, nodeInfo.getName());
+        logger.info("Initializing NodeReporter for cluster: {}, node: {}", 
+                clusterConfig.getId(), nodeInfo.getNodeId());
         
-        // Establish Redis connection
-        this.connection = connectionPool.getConnection();
-
         // 1. Register the node in Redis Hash
         registerNode();
 
         // 2. Start periodic pulse update
-        long interval = nodeInfo.getHeartbeatInterval(5000);
+        long interval = nodeInfo.getHeartbeatInterval(clusterConfig.getHeartbeatInterval(DEFAULT_HEARTBEAT_INTERVAL));
         scheduler.scheduleAtFixedRate(this::sendPulse, 0, interval, TimeUnit.MILLISECONDS);
     }
 
-    public void stop() throws Exception {
-        logger.info("Stopping NodeReporter for node: {}", nodeInfo.getName());
+    public void stop() {
+        logger.info("Stopping NodeReporter for node: {}", nodeInfo.getNodeId());
         scheduler.shutdown();
         unregisterNode();
-        if (connection != null) {
-            connection.close();
-        }
     }
 
     private void registerNode() throws IOException {
-        String key = NODES_HASH_KEY_PREFIX + clusterName;
+        String key = NODES_HASH_KEY_PREFIX + clusterConfig.getId();
+
+        // Generate and set authentication token
+        nodeInfo.setToken(generateToken());
+
         // Convert NodeInfo to APON string for storage
         String aponData = new AponWriter().nullWritable(false).write(nodeInfo).toString();
         
-        logger.debug("Registering node {} in Redis hash {}:\n{}", nodeInfo.getName(), key, aponData);
-        RedisCommands<String, String> sync = connection.sync();
-        sync.hset(key, nodeInfo.getName(), aponData);
+        logger.debug("Registering node {} in Redis hash {}:\n{}", nodeInfo.getNodeId(), key, aponData);
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
+            RedisCommands<String, String> sync = connection.sync();
+            sync.hset(key, nodeInfo.getNodeId(), aponData);
+        } catch (Exception e) {
+            logger.error("Failed to register node {} in Redis registry", nodeInfo.getNodeId(), e);
+        }
+    }
+
+    private String generateToken() {
+        SecretConfig secretConfig = clusterConfig.getSecretConfig();
+        String password = (secretConfig != null ? secretConfig.getPassword() : null);
+        if (password == null) {
+            password = PBEncryptionUtils.getPassword();
+        }
+        if (password == null) {
+            throw new IllegalStateException("Encryption password not found for token generation");
+        }
+        String salt = (secretConfig != null ? secretConfig.getSalt() : PBEncryptionUtils.getSalt());
+
+        VariableParameters payload = new VariableParameters();
+        payload.putValue("nodeId", nodeInfo.getNodeId());
+        payload.putValue("clusterId", clusterConfig.getId());
+
+        return TimeLimitedPBTokenIssuer.createToken(payload, 30000L, password, salt);
     }
 
     private void sendPulse() {
-        String key = NODES_HASH_KEY_PREFIX + clusterName + ":pulse";
+        String key = NODES_HASH_KEY_PREFIX + clusterConfig.getId() + ":pulse";
         long timestamp = System.currentTimeMillis();
         
-        logger.trace("Sending pulse for node {} to {}: {}", nodeInfo.getName(), key, timestamp);
-        RedisCommands<String, String> sync = connection.sync();
-        sync.hset(key, nodeInfo.getName(), String.valueOf(timestamp));
+        logger.trace("Sending pulse for node {} to {}: {}", nodeInfo.getNodeId(), key, timestamp);
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
+            RedisCommands<String, String> sync = connection.sync();
+            sync.hset(key, nodeInfo.getNodeId(), String.valueOf(timestamp));
+        } catch (Exception e) {
+            logger.error("Failed to send pulse for node {} to Redis registry", nodeInfo.getNodeId(), e);
+        }
     }
 
     private void unregisterNode() {
-        String key = NODES_HASH_KEY_PREFIX + clusterName;
-        logger.debug("Unregistering node {} from Redis hash {}", nodeInfo.getName(), key);
-        RedisCommands<String, String> sync = connection.sync();
-        sync.hdel(key, nodeInfo.getName());
+        String key = NODES_HASH_KEY_PREFIX + clusterConfig.getId();
+        logger.debug("Unregistering node {} from Redis hash {}", nodeInfo.getNodeId(), key);
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
+            RedisCommands<String, String> sync = connection.sync();
+            sync.hdel(key, nodeInfo.getNodeId());
+        } catch (Exception e) {
+            logger.error("Failed to unregister node {} from Redis registry", nodeInfo.getNodeId(), e);
+        }
     }
 
 }

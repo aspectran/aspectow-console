@@ -15,14 +15,20 @@
  */
 package com.aspectran.aspectow.node.manager;
 
+import com.aspectran.aspectow.node.config.ClusterConfig;
 import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.config.NodeInfoHolder;
+import com.aspectran.aspectow.node.config.SecretConfig;
 import com.aspectran.aspectow.node.redis.RedisMessagePublisher;
 import com.aspectran.aspectow.node.redis.RedisMessageSubscriber;
 import com.aspectran.core.activity.InstantAction;
 import com.aspectran.core.activity.InstantActivitySupport;
 import com.aspectran.core.adapter.ApplicationAdapter;
 import com.aspectran.core.context.ActivityContext;
+import com.aspectran.utils.PBEncryptionUtils;
+import com.aspectran.utils.apon.VariableParameters;
+import com.aspectran.utils.security.InvalidPBTokenException;
+import com.aspectran.utils.security.TimeLimitedPBTokenIssuer;
 import org.jspecify.annotations.NonNull;
 
 import java.util.List;
@@ -37,6 +43,8 @@ public class NodeManager extends InstantActivitySupport {
 
     private final String nodeId;
 
+    private final ClusterConfig clusterConfig;
+
     private final NodeInfoHolder nodeInfoHolder;
 
     private NodeRegistry nodeRegistry;
@@ -47,8 +55,9 @@ public class NodeManager extends InstantActivitySupport {
 
     private RedisMessageSubscriber redisMessageSubscriber;
 
-    public NodeManager(String nodeId, NodeInfoHolder nodeInfoHolder) {
+    public NodeManager(String nodeId, ClusterConfig clusterConfig, NodeInfoHolder nodeInfoHolder) {
         this.nodeId = nodeId;
+        this.clusterConfig = clusterConfig;
         this.nodeInfoHolder = nodeInfoHolder;
     }
 
@@ -65,11 +74,19 @@ public class NodeManager extends InstantActivitySupport {
     }
 
     /**
-     * Gets the name of the current domain.
-     * @return the current domain name
+     * Gets the ID of the current node.
+     * @return the node ID
      */
     public String getNodeId() {
         return nodeId;
+    }
+
+    /**
+     * Gets the cluster configuration.
+     * @return the cluster configuration
+     */
+    public ClusterConfig getClusterConfig() {
+        return clusterConfig;
     }
 
     public NodeInfoHolder getNodeInfoHolder() {
@@ -100,6 +117,14 @@ public class NodeManager extends InstantActivitySupport {
         return nodeReporter;
     }
 
+    /**
+     * Sets the node reporter.
+     * @param nodeReporter the node reporter
+     */
+    public void setNodeReporter(NodeReporter nodeReporter) {
+        this.nodeReporter = nodeReporter;
+    }
+
     public RedisMessagePublisher getRedisMessagePublisher() {
         return redisMessagePublisher;
     }
@@ -117,11 +142,45 @@ public class NodeManager extends InstantActivitySupport {
     }
 
     /**
-     * Sets the node reporter.
-     * @param nodeReporter the node reporter
+     * Creates a time-limited authentication token for this node.
+     * @return an encrypted token string
      */
-    public void setNodeReporter(NodeReporter nodeReporter) {
-        this.nodeReporter = nodeReporter;
+    public String generateToken() {
+        SecretConfig secretConfig = clusterConfig.getSecretConfig();
+        String password = (secretConfig != null ? secretConfig.getPassword() : null);
+        if (password == null) {
+            password = PBEncryptionUtils.getPassword();
+        }
+        if (password == null) {
+            throw new IllegalStateException("Encryption password not found for token generation");
+        }
+        String salt = (secretConfig != null ? secretConfig.getSalt() : PBEncryptionUtils.getSalt());
+
+        VariableParameters payload = new VariableParameters();
+        payload.putValue("nodeId", nodeId);
+        payload.putValue("clusterId", clusterConfig.getId());
+
+        // Default 30 seconds expiration
+        return TimeLimitedPBTokenIssuer.createToken(payload, 30000L, password, salt);
+    }
+
+    /**
+     * Validates the given authentication token.
+     * @param token the token string to validate
+     * @throws InvalidPBTokenException if the token is invalid or expired
+     */
+    public void validateToken(String token) throws InvalidPBTokenException {
+        SecretConfig secretConfig = clusterConfig.getSecretConfig();
+        String password = (secretConfig != null ? secretConfig.getPassword() : null);
+        if (password == null) {
+            password = PBEncryptionUtils.getPassword();
+        }
+        if (password == null) {
+            throw new InvalidPBTokenException(token, "Encryption password not found for token validation");
+        }
+        String salt = (secretConfig != null ? secretConfig.getSalt() : PBEncryptionUtils.getSalt());
+
+        TimeLimitedPBTokenIssuer.validate(token, password, salt);
     }
 
     @Override

@@ -1,20 +1,20 @@
 # Cluster-wide settings
 cluster: {
-    name: cluster
+    id: cluster
     mode: gateway  # direct or gateway or autoscaling
-    pbe: {
+    secret: {
         password: "your-node-management-password"
         # salt: "optional-salt"
     }
     heartbeatInterval: 5000
-    endpoint: {  # for direct mode
+    endpoint: {  # for gateway and autoscaling
         mode: auto  # or websocket or polling
         url: /node
     }
 }
 # No node declaration is necessary in autoscaling mode
 node: {
-    name: node01
+    id: node01
     group: backend-api
     title: Backend API Server 01
     endpoint: {  # for direct mode
@@ -23,7 +23,7 @@ node: {
     }
 }
 node: {
-    name: node02
+    id: node02
     group: backend-api
     title: Backend API Server 02
     endpoint: {  # for direct mode

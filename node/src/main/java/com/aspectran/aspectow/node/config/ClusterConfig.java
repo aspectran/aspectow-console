@@ -27,21 +27,27 @@ import com.aspectran.utils.apon.ValueType;
  */
 public class ClusterConfig extends DefaultParameters {
 
-    private static final ParameterKey name;
+    private static final ParameterKey id;
     private static final ParameterKey mode;
-    private static final ParameterKey pbe;
+    private static final ParameterKey secret;
+    private static final ParameterKey heartbeatInterval;
+    private static final ParameterKey endpoint;
 
     private static final ParameterKey[] parameterKeys;
 
     static {
-        name = new ParameterKey("name", ValueType.STRING);
+        id = new ParameterKey("id", ValueType.STRING);
         mode = new ParameterKey("mode", ValueType.STRING);
-        pbe = new ParameterKey("pbe", PbeConfig.class);
+        secret = new ParameterKey("secret", SecretConfig.class);
+        heartbeatInterval = new ParameterKey("heartbeatInterval", ValueType.LONG);
+        endpoint = new ParameterKey("endpoint", EndpointConfig.class);
 
         parameterKeys = new ParameterKey[] {
-                name,
+                id,
                 mode,
-                pbe
+                secret,
+                heartbeatInterval,
+                endpoint
         };
     }
 
@@ -49,12 +55,12 @@ public class ClusterConfig extends DefaultParameters {
         super(parameterKeys);
     }
 
-    public String getName() {
-        return getString(name);
+    public String getId() {
+        return getString(id);
     }
 
-    public void setName(String name) {
-        putValue(ClusterConfig.name, name);
+    public void setId(String id) {
+        putValue(ClusterConfig.id, id);
     }
 
     public String getMode() {
@@ -77,8 +83,28 @@ public class ClusterConfig extends DefaultParameters {
         return "autoscaling".equals(getString(mode));
     }
 
-    public PbeConfig getPbeConfig() {
-        return getParameters(pbe);
+    public SecretConfig getSecretConfig() {
+        return getParameters(secret);
+    }
+
+    public long getHeartbeatInterval() {
+        return getLong(heartbeatInterval);
+    }
+
+    public long getHeartbeatInterval(long defaultValue) {
+        return getLong(heartbeatInterval, defaultValue);
+    }
+
+    public void setHeartbeatInterval(long heartbeatInterval) {
+        putValue(ClusterConfig.heartbeatInterval, heartbeatInterval);
+    }
+
+    public EndpointConfig getEndpointConfig() {
+        return getParameters(endpoint);
+    }
+
+    public void setEndpointConfig(EndpointConfig endpointConfig) {
+        putValue(endpoint, endpointConfig);
     }
 
 }

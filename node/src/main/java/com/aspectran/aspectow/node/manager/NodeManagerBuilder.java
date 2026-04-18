@@ -19,11 +19,13 @@ import com.aspectran.aspectow.node.config.ClusterConfig;
 import com.aspectran.aspectow.node.config.NodeConfig;
 import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.config.NodeInfoHolder;
+import com.aspectran.aspectow.node.config.SecretConfig;
 import com.aspectran.aspectow.node.redis.RedisConnectionPool;
 import com.aspectran.aspectow.node.redis.RedisMessagePublisher;
 import com.aspectran.aspectow.node.redis.RedisMessageSubscriber;
 import com.aspectran.core.context.ActivityContext;
 import com.aspectran.utils.Assert;
+import com.aspectran.utils.PBEncryptionUtils;
 import com.aspectran.utils.StringUtils;
 import com.aspectran.utils.SystemUtils;
 import org.jspecify.annotations.NonNull;
@@ -53,9 +55,14 @@ public abstract class NodeManagerBuilder {
             nodeConfig.setClusterConfig(clusterConfig);
         }
 
-        String clusterName = clusterConfig.getName();
-        if (!StringUtils.hasText(clusterName)) {
-            clusterConfig.setName(DEFAULT_CLUSTER_ID);
+        String clusterId = clusterConfig.getId();
+        if (!StringUtils.hasText(clusterId)) {
+            clusterConfig.setId(DEFAULT_CLUSTER_ID);
+            clusterId = DEFAULT_CLUSTER_ID;
+        }
+
+        if (!clusterConfig.isDirectMode()) {
+            validateSecretConfig(clusterConfig.getSecretConfig());
         }
 
         String nodeId;
@@ -63,39 +70,57 @@ public abstract class NodeManagerBuilder {
         NodeInfoHolder nodeInfoHolder;
         if (clusterConfig.isAutoscalingMode()) {
             nodeId = UUID.randomUUID().toString();
-            nodeInfoHolder = new NodeInfoHolder();
             nodeInfo = new NodeInfo();
-            nodeInfo.setName(nodeId);
+            nodeInfo.setNodeId(nodeId);
+            nodeInfoHolder = new NodeInfoHolder();
             nodeInfoHolder.putNodeInfo(nodeInfo);
         } else {
             nodeId = resolveMyNodeId();
             nodeInfoHolder = new NodeInfoHolder(nodeConfig.getNodeInfoList());
             nodeInfo = nodeInfoHolder.getNodeInfo(nodeId);
             if (nodeInfo == null) {
+                if (clusterConfig.isGatewayMode()) {
+                    throw new IllegalStateException("Node information for '" + nodeId + "' is not defined in " +
+                            "the configuration file, which is required in gateway mode.");
+                }
                 nodeInfo = new NodeInfo();
-                nodeInfo.setName(nodeId);
+                nodeInfo.setNodeId(nodeId);
                 nodeInfoHolder.putNodeInfo(nodeInfo);
             }
         }
 
-        logger.info("Current Node: {}", nodeId);
+        // Auto-detect host if not specified
+        if (!StringUtils.hasText(nodeInfo.getHost())) {
+            String host = SystemUtils.getHostName();
+            if ("localhost".equals(host)) {
+                host = SystemUtils.getLocalIP();
+            }
+            nodeInfo.setHost(host);
+        }
+
+        logger.info("Current Node: {} (Host: {})", nodeId, nodeInfo.getHost());
 
         if (!context.getBeanRegistry().containsBean(RedisConnectionPool.class)) {
-            throw new Exception("RedisConnectionPool bean not found in the context");
+            throw new IllegalStateException("RedisConnectionPool bean not found in the context");
         }
         RedisConnectionPool connectionPool = context.getBeanRegistry().getBean(RedisConnectionPool.class);
 
-        NodeRegistry nodeRegistry = new NodeRegistry(clusterName, connectionPool);
-        NodeReporter nodeReporter = new NodeReporter(clusterName, nodeInfo, connectionPool);
+        NodeRegistry nodeRegistry = null;
+        NodeReporter nodeReporter = null;
         RedisMessagePublisher redisMessagePublisher = null;
         RedisMessageSubscriber redisMessageSubscriber = null;
 
-        if (clusterConfig.isGatewayMode() || clusterConfig.isAutoscalingMode()) {
-            redisMessagePublisher = new RedisMessagePublisher(clusterName, nodeId, connectionPool);
-            redisMessageSubscriber = new RedisMessageSubscriber(clusterName, nodeId, connectionPool);
+        if (!clusterConfig.isDirectMode()) {
+            nodeRegistry = new NodeRegistry(clusterId, connectionPool);
+            nodeReporter = new NodeReporter(clusterConfig, nodeInfo, connectionPool);
         }
 
-        NodeManager nodeManager = new NodeManager(nodeId, nodeInfoHolder);
+        if (clusterConfig.isGatewayMode() || clusterConfig.isAutoscalingMode()) {
+            redisMessagePublisher = new RedisMessagePublisher(clusterId, nodeId, connectionPool);
+            redisMessageSubscriber = new RedisMessageSubscriber(clusterId, nodeId, connectionPool);
+        }
+
+        NodeManager nodeManager = new NodeManager(nodeId, clusterConfig, nodeInfoHolder);
         nodeManager.setActivityContext(context);
         nodeManager.setNodeRegistry(nodeRegistry);
         nodeManager.setNodeReporter(nodeReporter);
@@ -106,6 +131,27 @@ public abstract class NodeManagerBuilder {
 
     private static String resolveMyNodeId() {
         return SystemUtils.getProperty(MY_NODE_ID_PROPERTY_NAME, DEFAULT_NODE_ID);
+    }
+
+    private static void validateSecretConfig(SecretConfig secretConfig) {
+        String password = (secretConfig != null ? secretConfig.getPassword() : null);
+        if (password == null) {
+            password = PBEncryptionUtils.getPassword();
+        }
+        if (password == null) {
+            throw new IllegalStateException("Encryption password is required for gateway or autoscaling mode; " +
+                    "Please set it in node-config.apon or via the 'aspectran.encryption.password' system property");
+        }
+
+        String algorithm = (secretConfig != null ? secretConfig.getAlgorithm() : null);
+        String salt = (secretConfig != null ? secretConfig.getSalt() : null);
+        if (algorithm == null) {
+            algorithm = PBEncryptionUtils.getAlgorithm();
+        }
+        if (salt == null) {
+            salt = PBEncryptionUtils.getSalt();
+        }
+        PBEncryptionUtils.validate(algorithm, password, salt);
     }
 
 }

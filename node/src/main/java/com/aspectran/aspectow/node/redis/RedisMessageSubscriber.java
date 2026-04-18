@@ -15,10 +15,6 @@
  */
 package com.aspectran.aspectow.node.redis;
 
-import com.aspectran.core.component.bean.annotation.Autowired;
-import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.core.component.bean.annotation.Destroy;
-import com.aspectran.core.component.bean.annotation.Initialize;
 import io.lettuce.core.pubsub.RedisPubSubAdapter;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import org.slf4j.Logger;
