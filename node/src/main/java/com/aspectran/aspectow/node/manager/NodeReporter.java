@@ -20,8 +20,6 @@ import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.config.SecretConfig;
 import com.aspectran.aspectow.node.redis.RedisConnectionPool;
 import com.aspectran.utils.PBEncryptionUtils;
-import com.aspectran.utils.StringUtils;
-import com.aspectran.utils.SystemUtils;
 import com.aspectran.utils.apon.AponWriter;
 import com.aspectran.utils.apon.VariableParameters;
 import com.aspectran.utils.security.TimeLimitedPBTokenIssuer;
@@ -44,8 +42,6 @@ import java.util.concurrent.TimeUnit;
 public class NodeReporter {
 
     private static final Logger logger = LoggerFactory.getLogger(NodeReporter.class);
-
-    private static final String NODES_HASH_KEY_PREFIX = "aspectow:cluster:nodes:";
 
     private static final long DEFAULT_HEARTBEAT_INTERVAL = 5000L;
 
@@ -82,8 +78,8 @@ public class NodeReporter {
     }
 
     private void registerNode() throws IOException {
-        String key = NODES_HASH_KEY_PREFIX + clusterConfig.getId();
-
+        String key = NodeRegistryProtocol.getNodesHashKey(clusterConfig.getId());
+        
         // Generate and set authentication token
         nodeInfo.setToken(generateToken());
 
@@ -118,7 +114,7 @@ public class NodeReporter {
     }
 
     private void sendPulse() {
-        String key = NODES_HASH_KEY_PREFIX + clusterConfig.getId() + ":pulse";
+        String key = NodeRegistryProtocol.getPulsesHashKey(clusterConfig.getId());
         long timestamp = System.currentTimeMillis();
         
         logger.trace("Sending pulse for node {} to {}: {}", nodeInfo.getNodeId(), key, timestamp);
@@ -131,7 +127,7 @@ public class NodeReporter {
     }
 
     private void unregisterNode() {
-        String key = NODES_HASH_KEY_PREFIX + clusterConfig.getId();
+        String key = NodeRegistryProtocol.getNodesHashKey(clusterConfig.getId());
         logger.debug("Unregistering node {} from Redis hash {}", nodeInfo.getNodeId(), key);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             RedisCommands<String, String> sync = connection.sync();

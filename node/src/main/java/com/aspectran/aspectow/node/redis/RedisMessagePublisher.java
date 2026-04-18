@@ -15,49 +15,66 @@
  */
 package com.aspectran.aspectow.node.redis;
 
+import com.aspectran.aspectow.node.manager.NodeRegistryProtocol;
 import io.lettuce.core.api.StatefulRedisConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * RedisMessagePublisher sends messages to a Redis Pub/Sub channel 
- * for remote monitoring or command delivery.
+ * RedisMessagePublisher provides methods to publish management control messages
+ * and transparent application data to Redis Pub/Sub channels.
  */
 public class RedisMessagePublisher {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisMessagePublisher.class);
 
-    private static final String CHANNEL_PREFIX = "aspectow:cluster:";
-
-    private final String clusterName;
+    private final String clusterId;
 
     private final String nodeId;
 
     private final RedisConnectionPool connectionPool;
 
-    public RedisMessagePublisher(String clusterName, String nodeId, RedisConnectionPool connectionPool) {
-        this.clusterName = clusterName;
+    public RedisMessagePublisher(String clusterId, String nodeId, RedisConnectionPool connectionPool) {
+        this.clusterId = clusterId;
         this.nodeId = nodeId;
         this.connectionPool = connectionPool;
     }
 
     /**
-     * Publishes a message to the cluster log channel.
+     * Publishes a management control message for this node.
+     * This method waits for the publication to complete.
      * @param message the message to publish
+     * @throws Exception if an error occurs during publication
      */
-    public void publish(String message) throws Exception {
-        String channel = CHANNEL_PREFIX + clusterName + ":" + nodeId;
-        publish(channel, message);
+    public void publishControl(String message) throws Exception {
+        String channel = NodeRegistryProtocol.getControlChannel(clusterId, nodeId);
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
+            connection.sync().publish(channel, message);
+        }
     }
 
     /**
-     * Publishes a message to a specific channel.
+     * Publishes a transparent application message to be relayed from this node.
+     * This method sends the message asynchronously and does not wait for completion.
+     * @param message the message to publish
+     * @throws Exception if an error occurs while obtaining a connection
+     */
+    public void publishRelay(String message) throws Exception {
+        String channel = NodeRegistryProtocol.getRelayChannel(clusterId, nodeId);
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
+            connection.async().publish(channel, message);
+        }
+    }
+
+    /**
+     * Publishes a message to a specific channel synchronously.
      * @param channel the channel to publish to
      * @param message the message to publish
+     * @throws Exception if an error occurs during publication
      */
     public void publish(String channel, String message) throws Exception {
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
-            connection.async().publish(channel, message);
+            connection.sync().publish(channel, message);
         }
     }
 
