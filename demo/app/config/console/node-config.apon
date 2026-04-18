@@ -7,9 +7,8 @@ cluster: {
         # salt: "optional-salt"
     }
     heartbeatInterval: 5000
-    endpoint: {  # for gateway and autoscaling
+    endpoint: {
         mode: auto  # or websocket or polling
-        url: /node
     }
 }
 # No node declaration is necessary in autoscaling mode
@@ -17,17 +16,15 @@ node: {
     id: node01
     group: backend-api
     title: Backend API Server 01
-    endpoint: {  # for direct mode
-        mode: auto  # or websocket or polling
-        url: /node01
+    endpoint: {
+        mode: auto
     }
 }
 node: {
     id: node02
     group: backend-api
     title: Backend API Server 02
-    endpoint: {  # for direct mode
-        mode: auto  # or websocket or polling
-        url: /node02
+    endpoint: {
+        mode: auto
     }
 }

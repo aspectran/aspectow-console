@@ -28,17 +28,17 @@ import com.aspectran.utils.apon.ValueType;
 public class EndpointConfig extends DefaultParameters {
 
     private static final ParameterKey mode;
-    private static final ParameterKey url;
+    private static final ParameterKey path;
 
     private static final ParameterKey[] parameterKeys;
 
     static {
         mode = new ParameterKey("mode", ValueType.STRING);
-        url = new ParameterKey("url", ValueType.STRING);
+        path = new ParameterKey("path", ValueType.STRING);
 
         parameterKeys = new ParameterKey[] {
                 mode,
-                url
+                path
         };
     }
 
@@ -54,12 +54,12 @@ public class EndpointConfig extends DefaultParameters {
         putValue(EndpointConfig.mode, mode);
     }
 
-    public String getUrl() {
-        return getString(url);
+    public String getPath() {
+        return getString(path);
     }
 
-    public void setUrl(String url) {
-        putValue(EndpointConfig.url, url);
+    public void setPath(String path) {
+        putValue(EndpointConfig.path, path);
     }
 
 }

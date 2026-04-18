@@ -103,6 +103,10 @@ public class ClusterConfig extends DefaultParameters {
         return getParameters(endpoint);
     }
 
+    public EndpointConfig touchEndpointConfig() {
+        return touchParameters(endpoint);
+    }
+
     public void setEndpointConfig(EndpointConfig endpointConfig) {
         putValue(endpoint, endpointConfig);
     }

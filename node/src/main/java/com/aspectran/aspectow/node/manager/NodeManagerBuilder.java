@@ -1,14 +1,14 @@
 /*
  * Copyright (c) 2020-present The Aspectran Project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the \"License\");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the License is distributed on an \"AS IS\" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -34,15 +34,18 @@ import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
+/**
+ * A builder for creating and configuring the main {@link NodeManager} instance.
+ */
 public abstract class NodeManagerBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(NodeManagerBuilder.class);
 
-    public static final String MY_NODE_ID_PROPERTY_NAME = "aspectow.cluster.node.id";
+    private static final String MY_NODE_ID_PROPERTY_NAME = "aspectow.node.id";
 
-    public static final String DEFAULT_CLUSTER_ID = "cluster";
+    private static final String DEFAULT_CLUSTER_ID = "cluster";
 
-    public static final String DEFAULT_NODE_ID = "node1";
+    private static final String DEFAULT_NODE_ID = "node";
 
     @NonNull
     public static NodeManager build(ActivityContext context, NodeConfig nodeConfig) throws Exception {
@@ -64,6 +67,9 @@ public abstract class NodeManagerBuilder {
         if (!clusterConfig.isDirectMode()) {
             validateSecretConfig(clusterConfig.getSecretConfig());
         }
+
+        // Forcefully set the base path for cluster endpoint
+        clusterConfig.touchEndpointConfig().setPath(NodeRegistryProtocol.NODES_BASE_PATH);
 
         String nodeId;
         NodeInfo nodeInfo;
@@ -88,6 +94,9 @@ public abstract class NodeManagerBuilder {
                 nodeInfoHolder.putNodeInfo(nodeInfo);
             }
         }
+
+        // Forcefully set the base path for node endpoint
+        nodeInfo.touchEndpointConfig().setPath(NodeRegistryProtocol.NODES_BASE_PATH);
 
         // Auto-detect host if not specified
         if (!StringUtils.hasText(nodeInfo.getHost())) {

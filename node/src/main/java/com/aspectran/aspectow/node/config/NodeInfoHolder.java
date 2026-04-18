@@ -41,7 +41,7 @@ public class NodeInfoHolder {
      */
     public NodeInfoHolder(@NonNull List<NodeInfo> nodeInfoList) {
         for (NodeInfo info : nodeInfoList) {
-            nodeInfoMap.put(info.getName(), info);
+            nodeInfoMap.put(info.getNodeId(), info);
         }
     }
 
@@ -67,7 +67,7 @@ public class NodeInfoHolder {
     }
 
     public void putNodeInfo(NodeInfo nodeInfo) {
-        nodeInfoMap.put(nodeInfo.getName(), nodeInfo);
+        nodeInfoMap.put(nodeInfo.getNodeId(), nodeInfo);
     }
 
 }

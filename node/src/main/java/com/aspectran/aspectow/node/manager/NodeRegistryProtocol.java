@@ -23,6 +23,8 @@ package com.aspectran.aspectow.node.manager;
  */
 public abstract class NodeRegistryProtocol {
 
+    public static final String NODES_BASE_PATH = "/nodes";
+
     private static final String KEY_PREFIX = "aspectow:cluster:";
 
     private static final String NODES_HASH_KEY_PREFIX = KEY_PREFIX + "nodes:";
