@@ -15,35 +15,31 @@
  */
 package com.aspectran.aspectow.console.home;
 
-import com.aspectran.aspectow.node.config.NodeInfo;
-import com.aspectran.aspectow.node.manager.NodeManager;
-import com.aspectran.aspectow.node.manager.NodeRegistry;
+import com.aspectran.aspectow.console.cluster.NodeConsoleHelper;
 import com.aspectran.core.component.bean.annotation.Action;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Dispatch;
 import com.aspectran.core.component.bean.annotation.Request;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Component("/")
 public class HomeActivity {
 
-    private final NodeManager nodeManager;
+    private final NodeConsoleHelper nodeConsoleHelper;
 
     @Autowired
-    public HomeActivity(NodeManager nodeManager) {
-        this.nodeManager = nodeManager;
+    public HomeActivity(NodeConsoleHelper nodeConsoleHelper) {
+        this.nodeConsoleHelper = nodeConsoleHelper;
     }
 
     @Request("/")
     @Dispatch("home/home")
     @Action("page")
     public Map<String, Object> home() {
-        List<Map<String, Object>> nodes = getNodes();
+        List<Map<String, Object>> nodes = nodeConsoleHelper.getNodes(false);
         return Map.of(
                 "title", "Aspectow Console",
                 "headline", "Aspectow Management Console",
@@ -51,58 +47,6 @@ public class HomeActivity {
                 "style", "dashboard-page",
                 "nodes", nodes
                 );
-    }
-
-    private List<Map<String, Object>> getNodes() {
-        NodeRegistry nodeRegistry = nodeManager.getNodeRegistry();
-        if (nodeManager.getClusterConfig().isDirectMode() || nodeRegistry == null) {
-            List<NodeInfo> nodeInfoList = nodeManager.getNodeInfoHolder().getNodeInfoList();
-            List<Map<String, Object>> result = new ArrayList<>(nodeInfoList.size());
-            for (NodeInfo info : nodeInfoList) {
-                boolean alive = info.getNodeId().equals(nodeManager.getNodeId());
-                result.add(createNodeMap(info, alive));
-            }
-            return result;
-        }
-
-        List<NodeInfo> nodeInfoList = nodeRegistry.getNodes();
-        Map<String, String> pulses = nodeRegistry.getAllPulses();
-        List<Map<String, Object>> result = new ArrayList<>(nodeInfoList.size());
-        long now = System.currentTimeMillis();
-        long timeout = 15000; // 15 seconds timeout
-
-        for (NodeInfo info : nodeInfoList) {
-            String nodeId = info.getNodeId();
-            boolean alive = false;
-            String pulseStr = (pulses != null ? pulses.get(nodeId) : null);
-            if (pulseStr != null) {
-                try {
-                    long lastPulse = Long.parseLong(pulseStr);
-                    alive = (now - lastPulse <= timeout);
-                } catch (NumberFormatException ignored) {
-                }
-            }
-            result.add(createNodeMap(info, alive));
-        }
-        return result;
-    }
-
-    private Map<String, Object> createNodeMap(NodeInfo info, boolean alive) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("id", info.getNodeId());
-        map.put("group", info.getGroup());
-        map.put("title", info.getTitle());
-        map.put("host", info.getHost());
-        map.put("port", info.getPort());
-
-        String status = info.getStatus();
-        if (!alive) {
-            status = "dead";
-        } else if (status == null) {
-            status = "live";
-        }
-        map.put("status", status);
-        return map;
     }
 
 }

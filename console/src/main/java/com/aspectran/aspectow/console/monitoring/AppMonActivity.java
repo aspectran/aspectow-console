@@ -41,7 +41,7 @@ import java.util.Map;
  * <p>Created: 2020/02/23</p>
  */
 @Component("/appmon")
-public class DashboardActivity {
+public class AppMonActivity {
 
     private final AppMonManager appMonManager;
 
@@ -50,7 +50,7 @@ public class DashboardActivity {
      * @param appMonManager the application monitor manager
      */
     @Autowired
-    public DashboardActivity(AppMonManager appMonManager) {
+    public AppMonActivity(AppMonManager appMonManager) {
         this.appMonManager = appMonManager;
     }
 

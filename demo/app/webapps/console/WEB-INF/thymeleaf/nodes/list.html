@@ -80,5 +80,78 @@
             </div>
         </div>
     </div>
+
+    <th:block layout:fragment="script">
+        <script th:src="@{/assets/js/console-client.js}"></script>
+        <script th:inline="javascript">
+            $(function() {
+                /*<![CDATA[*/
+                const BASE_PATH = [[@{/}]].replace(/\/$/, '');
+                const clusterMode = [[${page.clusterMode}]];
+                const token = [[${page.token}]];
+
+                function updateNodeStatus(nodeId, data) {
+                    const $card = $(`.node-id-badge:contains("${nodeId}")`).closest('.node-card');
+                    if ($card.length) {
+                        const $dot = $card.find('.status-dot');
+                        const $statusText = $card.find('.small.fw-bold');
+                        const status = data.status || (data.type === 'control' ? JSON.parse(data.message).status : null);
+                        
+                        if (status) {
+                            $dot.removeClass('bg-success bg-warning bg-danger')
+                                .addClass(status === 'live' ? 'bg-success' : (status === 'stopping' ? 'bg-warning' : 'bg-danger'));
+                            $statusText.removeClass('text-success text-warning text-danger')
+                                .addClass(status === 'live' ? 'text-success' : (status === 'stopping' ? 'text-warning' : 'text-danger'))
+                                .text(status.toUpperCase());
+                        }
+                    }
+                }
+
+                if (clusterMode === 'direct') {
+                    const nodes = [[${page.nodes}]];
+                    nodes.forEach(n => {
+                        const node = {
+                            id: n.id,
+                            endpoint: {
+                                path: BASE_PATH + "/nodes/" + n.id,
+                                token: token
+                            }
+                        };
+                        const client = new ConsoleClient(node, {
+                            onMessage: (msg) => {
+                                try {
+                                    const event = JSON.parse(msg);
+                                    updateNodeStatus(n.id, event);
+                                } catch (e) {
+                                    console.warn("Invalid message from node " + n.id, msg);
+                                }
+                            },
+                            onOpen: () => updateNodeStatus(n.id, { status: 'live' }),
+                            onClose: () => updateNodeStatus(n.id, { status: 'dead' })
+                        });
+                        client.start('');
+                    });
+                } else {
+                    const node = [[${page.node}]];
+                    node.endpoint.path = BASE_PATH + node.endpoint.path;
+                    const client = new ConsoleClient(node, {
+                        token: token,
+                        onMessage: (msg) => {
+                            try {
+                                const event = JSON.parse(msg);
+                                if (event.nodeId) {
+                                    updateNodeStatus(event.nodeId, event);
+                                }
+                            } catch (e) {
+                                console.warn("Invalid message from gateway", msg);
+                            }
+                        }
+                    });
+                    client.start('');
+                }
+                /*]]>*/
+            });
+        </script>
+    </th:block>
 </body>
 </html>

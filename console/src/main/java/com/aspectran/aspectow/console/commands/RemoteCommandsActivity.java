@@ -15,10 +15,9 @@
  */
 package com.aspectran.aspectow.console.commands;
 
+import com.aspectran.aspectow.console.cluster.NodeConsoleHelper;
 import com.aspectran.aspectow.console.commands.manager.FileCommanderManager;
-import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.manager.NodeManager;
-import com.aspectran.aspectow.node.manager.NodeRegistry;
 import com.aspectran.core.activity.Translet;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
@@ -27,7 +26,6 @@ import com.aspectran.core.component.bean.annotation.RequestToPost;
 import com.aspectran.utils.StringUtils;
 import org.jspecify.annotations.NonNull;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,10 +45,15 @@ public class RemoteCommandsActivity {
 
     private final FileCommanderManager fileCommanderManager;
 
+    private final NodeConsoleHelper nodeConsoleHelper;
+
     @Autowired
-    public RemoteCommandsActivity(NodeManager nodeManager, FileCommanderManager fileCommanderManager) {
+    public RemoteCommandsActivity(NodeManager nodeManager,
+                                  FileCommanderManager fileCommanderManager,
+                                  NodeConsoleHelper nodeConsoleHelper) {
         this.nodeManager = nodeManager;
         this.fileCommanderManager = fileCommanderManager;
+        this.nodeConsoleHelper = nodeConsoleHelper;
     }
 
     /**
@@ -59,47 +62,7 @@ public class RemoteCommandsActivity {
      */
     @Request("/list")
     public List<Map<String, Object>> listCommands() {
-        NodeRegistry nodeRegistry = nodeManager.getNodeRegistry();
-        if (nodeRegistry == null) {
-            // Direct mode might not have a registry, return self info
-            List<Map<String, Object>> result = new ArrayList<>();
-            result.add(createNodeMap(nodeManager.getNodeInfoHolder().getNodeInfo(nodeManager.getNodeId()), true));
-            return result;
-        }
-
-        List<NodeInfo> nodeInfoList = nodeRegistry.getNodes();
-        Map<String, String> pulses = nodeRegistry.getAllPulses();
-
-        List<Map<String, Object>> result = new ArrayList<>(nodeInfoList.size());
-        long now = System.currentTimeMillis();
-        long timeout = 15000; // 15 seconds timeout
-
-        for (NodeInfo info : nodeInfoList) {
-            String nodeId = info.getNodeId();
-            String pulseStr = pulses.get(nodeId);
-            boolean live = false;
-            if (pulseStr != null) {
-                try {
-                    long lastPulse = Long.parseLong(pulseStr);
-                    live = (now - lastPulse <= timeout);
-                } catch (NumberFormatException ignored) {
-                }
-            }
-            result.add(createNodeMap(info, live));
-        }
-        return result;
-    }
-
-    private Map<String, Object> createNodeMap(NodeInfo info, boolean live) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("id", info.getNodeId());
-        map.put("group", info.getGroup());
-        map.put("title", info.getTitle());
-        map.put("host", info.getHost());
-        map.put("port", info.getPort());
-        map.put("endpoint", info.getEndpointConfig());
-        map.put("status", live ? "live" : "dead");
-        return map;
+        return nodeConsoleHelper.getNodes(true);
     }
 
     /**

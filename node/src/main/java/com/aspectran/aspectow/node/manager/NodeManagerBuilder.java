@@ -134,6 +134,9 @@ public abstract class NodeManagerBuilder {
             NodeReporter nodeReporter = new NodeReporter(clusterConfig, nodeInfo, connectionPool, portProvider);
             RedisMessagePublisher redisMessagePublisher = new RedisMessagePublisher(clusterId, nodeId, connectionPool);
             RedisMessageSubscriber redisMessageSubscriber = new RedisMessageSubscriber(clusterId, nodeId, connectionPool);
+            if (clusterConfig.isGatewayMode()) {
+                redisMessageSubscriber.setSubscribePattern(NodeRegistryProtocol.getClusterSubscriptionPattern(clusterId));
+            }
 
             nodeManager.setNodeRegistry(nodeRegistry);
             nodeManager.setNodeReporter(nodeReporter);

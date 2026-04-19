@@ -42,6 +42,8 @@ public class RedisMessageSubscriber extends RedisPubSubAdapter<String, String> {
 
     private StatefulRedisPubSubConnection<String, String> pubSubConnection;
 
+    private String subscribePattern;
+
     public RedisMessageSubscriber(String clusterId, String nodeId, RedisConnectionPool connectionPool) {
         this.clusterId = clusterId;
         this.nodeId = nodeId;
@@ -60,24 +62,34 @@ public class RedisMessageSubscriber extends RedisPubSubAdapter<String, String> {
         listeners.remove(listener);
     }
 
+    /**
+     * Sets the Redis Pub/Sub pattern to subscribe to.
+     * If not set, the default node-specific pattern will be used.
+     * @param subscribePattern the subscription pattern
+     */
+    public void setSubscribePattern(String subscribePattern) {
+        this.subscribePattern = subscribePattern;
+    }
+
     @Override
     public void message(String pattern, String channel, String message) {
         // Expected patterns:
         // aspectow:cluster:control:<clusterId>:<nodeId>
         // aspectow:cluster:relay:<clusterId>:<nodeId>
-        
+
         String[] parts = channel.split(":");
         if (parts.length < 5) {
             return;
         }
 
         String category = parts[2]; // control or relay
+        String nodeId = parts[4];   // node ID
 
         for (RedisMessageListener listener : listeners) {
             if ("control".equals(category)) {
-                listener.onControlMessage(message);
+                listener.onControlMessage(nodeId, message);
             } else if ("relay".equals(category)) {
-                listener.onRelayMessage(message);
+                listener.onRelayMessage(nodeId, message);
             }
         }
     }
@@ -86,10 +98,10 @@ public class RedisMessageSubscriber extends RedisPubSubAdapter<String, String> {
         this.pubSubConnection = connectionPool.getPubSubConnection();
         this.pubSubConnection.addListener(this);
 
-        // Subscribe only to channels belonging to this specific node
-        String pattern = NodeRegistryProtocol.getClusterSubscriptionPattern(clusterId, nodeId);
+        String pattern = (subscribePattern != null ? subscribePattern :
+                NodeRegistryProtocol.getClusterSubscriptionPattern(clusterId, nodeId));
         this.pubSubConnection.sync().psubscribe(pattern);
-        logger.info("RedisMessageSubscriber initialized and subscribed to node-specific pattern: {}", pattern);
+        logger.info("RedisMessageSubscriber initialized and subscribed to pattern: {}", pattern);
     }
 
     public void stop() {

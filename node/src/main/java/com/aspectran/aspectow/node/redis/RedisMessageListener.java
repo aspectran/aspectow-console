@@ -16,11 +16,10 @@
 package com.aspectran.aspectow.node.redis;
 
 /**
- * Listener interface for receiving and processing Redis messages 
+ * Listener interface for receiving and processing Redis messages
  * within the Aspectow cluster.
- * <p>Since communication is established in a node-specific context 
- * (e.g., dedicated WebSockets), the node information is not required 
- * for individual messages.</p>
+ *
+ * <p>Created: 2026-04-18</p>
  */
 public interface RedisMessageListener {
 
@@ -32,10 +31,28 @@ public interface RedisMessageListener {
     }
 
     /**
+     * Called when a management control message is received for a specific node.
+     * @param nodeId the node ID
+     * @param message the control message content
+     */
+    default void onControlMessage(String nodeId, String message) {
+        onControlMessage(message);
+    }
+
+    /**
      * Called when an application-specific relay message is received.
      * @param message the relay message content
      */
     default void onRelayMessage(String message) {
+    }
+
+    /**
+     * Called when an application-specific relay message is received for a specific node.
+     * @param nodeId the node ID
+     * @param message the relay message content
+     */
+    default void onRelayMessage(String nodeId, String message) {
+        onRelayMessage(message);
     }
 
 }
