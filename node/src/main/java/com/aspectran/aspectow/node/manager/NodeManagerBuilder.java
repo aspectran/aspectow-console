@@ -32,6 +32,7 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -78,17 +79,26 @@ public abstract class NodeManagerBuilder {
             nodeInfoHolder = new NodeInfoHolder();
             nodeInfoHolder.putNodeInfo(nodeInfo);
         } else {
-            nodeId = resolveMyNodeId();
+            String myNodeId = resolveMyNodeId();
             nodeInfoHolder = new NodeInfoHolder(nodeConfig.getNodeInfoList());
-            nodeInfo = nodeInfoHolder.getNodeInfo(nodeId);
+            nodeInfo = nodeInfoHolder.getNodeInfo(myNodeId);
             if (nodeInfo == null) {
-                if (clusterConfig.isGatewayMode()) {
-                    throw new IllegalStateException("Node information for '" + nodeId + "' is not defined in " +
-                            "the configuration file, which is required in gateway mode.");
+                List<NodeInfo> nodeInfoList = nodeConfig.getNodeInfoList();
+                if (DEFAULT_NODE_ID.equals(myNodeId) && nodeInfoList != null && nodeInfoList.size() == 1) {
+                    nodeInfo = nodeInfoList.get(0);
+                    nodeId = nodeInfo.getNodeId();
+                } else {
+                    if (clusterConfig.isGatewayMode()) {
+                        throw new IllegalStateException("Node information for '" + myNodeId + "' is not defined in " +
+                                "the configuration file, which is required in gateway mode.");
+                    }
+                    nodeId = myNodeId;
+                    nodeInfo = new NodeInfo();
+                    nodeInfo.setNodeId(nodeId);
+                    nodeInfoHolder.putNodeInfo(nodeInfo);
                 }
-                nodeInfo = new NodeInfo();
-                nodeInfo.setNodeId(nodeId);
-                nodeInfoHolder.putNodeInfo(nodeInfo);
+            } else {
+                nodeId = myNodeId;
             }
         }
 
@@ -115,8 +125,13 @@ public abstract class NodeManagerBuilder {
             }
             RedisConnectionPool connectionPool = context.getBeanRegistry().getBean(RedisConnectionPool.class);
 
+            NodePortProvider portProvider = null;
+            if (context.getBeanRegistry().containsBean(NodePortProvider.class)) {
+                portProvider = context.getBeanRegistry().getBean(NodePortProvider.class);
+            }
+
             NodeRegistry nodeRegistry = new NodeRegistry(clusterId, connectionPool);
-            NodeReporter nodeReporter = new NodeReporter(clusterConfig, nodeInfo, connectionPool);
+            NodeReporter nodeReporter = new NodeReporter(clusterConfig, nodeInfo, connectionPool, portProvider);
             RedisMessagePublisher redisMessagePublisher = new RedisMessagePublisher(clusterId, nodeId, connectionPool);
             RedisMessageSubscriber redisMessageSubscriber = new RedisMessageSubscriber(clusterId, nodeId, connectionPool);
 

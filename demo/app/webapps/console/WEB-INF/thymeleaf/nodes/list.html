@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{templates/default}">
+<head>
+    <style>
+        .node-card {
+            border: 1px solid var(--bs-border-color);
+            border-radius: 12px;
+            background: var(--bs-body-bg);
+            transition: all 0.2s ease;
+        }
+        .node-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--accent-color);
+        }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .node-id-badge {
+            font-family: var(--bs-font-monospace);
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Cluster Nodes</h2>
+                <p class="text-muted mb-0">Monitor and manage all active instances in the cluster.</p>
+            </div>
+            <button class="btn btn-outline-primary btn-sm" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4" th:each="node : ${page.nodes}">
+                <div class="node-card p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-0" th:text="${node.title}">Node Title</h5>
+                            <span class="badge bg-secondary node-id-badge mt-1" th:text="${node.id}">node-id</span>
+                        </div>
+                        <div class="d-flex flex-column align-items-end">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="status-dot" th:classappend="${node.status == 'live' ? 'bg-success' : (node.status == 'stopping' ? 'bg-warning' : 'bg-danger')}"></span>
+                                <span class="small fw-bold text-uppercase" th:classappend="${node.status == 'live' ? 'text-success' : (node.status == 'stopping' ? 'text-warning' : 'text-danger')}" th:text="${node.status}">LIVE</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-top pt-3">
+                        <div class="row g-2 small">
+                            <div class="col-5 text-muted">Host Address</div>
+                            <div class="col-7 text-end fw-medium" th:text="${node.host}">127.0.0.1</div>
+                            
+                            <div class="col-5 text-muted">Service Port</div>
+                            <div class="col-7 text-end fw-medium" th:text="${node.port}">8080</div>
+                            
+                            <div class="col-5 text-muted">Node Group</div>
+                            <div class="col-7 text-end fw-medium" th:text="${node.group ?: 'N/A'}">Group</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <a th:href="@{'/nodes/' + ${node.id} + '/commands'}" class="btn btn-sm btn-light flex-grow-1">
+                            <i class="bi bi-terminal"></i> Commands
+                        </a>
+                        <a th:href="@{'/appmon/dashboard/' + ${node.id}}" class="btn btn-sm btn-light flex-grow-1">
+                            <i class="bi bi-activity"></i> Metrics
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

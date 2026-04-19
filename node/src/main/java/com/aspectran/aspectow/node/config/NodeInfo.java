@@ -31,6 +31,8 @@ public class NodeInfo extends DefaultParameters {
     private static final ParameterKey title;
     private static final ParameterKey host;
     private static final ParameterKey port;
+    private static final ParameterKey startTime;
+    private static final ParameterKey status;
     private static final ParameterKey heartbeatInterval;
     private static final ParameterKey endpoint;
     private static final ParameterKey token;
@@ -43,6 +45,8 @@ public class NodeInfo extends DefaultParameters {
         title = new ParameterKey("title", ValueType.STRING);
         host = new ParameterKey("host", ValueType.STRING);
         port = new ParameterKey("port", ValueType.INT);
+        startTime = new ParameterKey("startTime", ValueType.STRING);
+        status = new ParameterKey("status", ValueType.STRING);
         heartbeatInterval = new ParameterKey("heartbeatInterval", ValueType.LONG);
         endpoint = new ParameterKey("endpoint", EndpointConfig.class);
         token = new ParameterKey("token", ValueType.STRING);
@@ -53,6 +57,8 @@ public class NodeInfo extends DefaultParameters {
                 title,
                 host,
                 port,
+                startTime,
+                status,
                 heartbeatInterval,
                 endpoint,
                 token
@@ -101,6 +107,22 @@ public class NodeInfo extends DefaultParameters {
 
     public void setPort(Integer port) {
         putValue(NodeInfo.port, port);
+    }
+
+    public String getStartTime() {
+        return getString(startTime);
+    }
+
+    public void setStartTime(String startTime) {
+        putValue(NodeInfo.startTime, startTime);
+    }
+
+    public String getStatus() {
+        return getString(status);
+    }
+
+    public void setStatus(String status) {
+        putValue(NodeInfo.status, status);
     }
 
     public Long getHeartbeatInterval() {

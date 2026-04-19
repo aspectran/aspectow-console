@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.home;
+package com.aspectran.aspectow.console.cluster;
 
 import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.manager.NodeManager;
@@ -29,28 +29,38 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Component("/")
-public class HomeActivity {
+import static com.aspectran.aspectow.node.manager.NodeRegistryProtocol.NODES_BASE_PATH;
+
+/**
+ * ClusterActivity provides views and data for monitoring and managing cluster nodes.
+ *
+ * <p>Created: 2026-04-19</p>
+ */
+@Component(NODES_BASE_PATH)
+public class ClusterActivity {
 
     private final NodeManager nodeManager;
 
     @Autowired
-    public HomeActivity(NodeManager nodeManager) {
+    public ClusterActivity(NodeManager nodeManager) {
         this.nodeManager = nodeManager;
     }
 
-    @Request("/")
-    @Dispatch("home/home")
+    /**
+     * Displays the cluster nodes list page.
+     * @return a map of attributes for rendering the view
+     */
+    @Request("/list")
+    @Dispatch("nodes/list")
     @Action("page")
-    public Map<String, Object> home() {
+    public Map<String, Object> listNodes() {
         List<Map<String, Object>> nodes = getNodes();
         return Map.of(
-                "title", "Aspectow Console",
-                "headline", "Aspectow Management Console",
-                "include", "home",
-                "style", "dashboard-page",
+                "title", "Cluster Nodes",
+                "include", "nodes/list",
+                "style", "cluster-page",
                 "nodes", nodes
-                );
+        );
     }
 
     private List<Map<String, Object>> getNodes() {

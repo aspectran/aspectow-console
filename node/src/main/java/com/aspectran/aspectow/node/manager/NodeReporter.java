@@ -51,17 +51,23 @@ public class NodeReporter {
 
     private final RedisConnectionPool connectionPool;
 
+    private final NodePortProvider portProvider;
+
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    public NodeReporter(ClusterConfig clusterConfig, NodeInfo nodeInfo, RedisConnectionPool connectionPool) {
+    public NodeReporter(ClusterConfig clusterConfig, NodeInfo nodeInfo,
+                        RedisConnectionPool connectionPool, NodePortProvider portProvider) {
         this.clusterConfig = clusterConfig;
         this.nodeInfo = nodeInfo;
         this.connectionPool = connectionPool;
+        this.portProvider = portProvider;
     }
 
     public void start() throws Exception {
         logger.info("Initializing NodeReporter for cluster: {}, node: {}", 
                 clusterConfig.getId(), nodeInfo.getNodeId());
+
+        nodeInfo.setStatus("live");
         
         // 1. Register the node in Redis Hash
         registerNode();
@@ -73,12 +79,28 @@ public class NodeReporter {
 
     public void stop() {
         logger.info("Stopping NodeReporter for node: {}", nodeInfo.getNodeId());
+
+        nodeInfo.setStatus("stopping");
+        try {
+            registerNode();
+        } catch (IOException e) {
+            // ignore
+        }
+
         scheduler.shutdown();
         unregisterNode();
     }
 
     private void registerNode() throws IOException {
         String key = NodeRegistryProtocol.getNodesHashKey(clusterConfig.getId());
+
+        // Extract and set active service port from NodePortProvider
+        if (portProvider != null) {
+            Integer port = portProvider.getActivePort();
+            if (port != null) {
+                nodeInfo.setPort(port);
+            }
+        }
         
         // Generate and set authentication token
         nodeInfo.setToken(generateToken());
