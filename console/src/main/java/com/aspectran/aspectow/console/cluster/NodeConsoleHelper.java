@@ -24,6 +24,7 @@ import com.aspectran.core.component.bean.annotation.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,24 +45,37 @@ public class NodeConsoleHelper {
     }
 
     public List<Map<String, Object>> getNodes(boolean includeEndpoint) {
+        List<NodeInfo> configuredNodes = nodeManager.getNodeInfoHolder().getNodeInfoList();
         NodeRegistry nodeRegistry = nodeManager.getNodeRegistry();
+
         if (nodeManager.getClusterConfig().isDirectMode() || nodeRegistry == null) {
-            List<NodeInfo> nodeInfoList = nodeManager.getNodeInfoHolder().getNodeInfoList();
-            List<Map<String, Object>> result = new ArrayList<>(nodeInfoList.size());
-            for (NodeInfo info : nodeInfoList) {
+            List<Map<String, Object>> result = new ArrayList<>(configuredNodes.size());
+            for (NodeInfo info : configuredNodes) {
                 boolean alive = info.getNodeId().equals(nodeManager.getNodeId());
                 result.add(createNodeMap(info, alive, includeEndpoint));
             }
             return result;
         }
 
-        List<NodeInfo> nodeInfoList = nodeRegistry.getNodes();
+        // Use a map to merge configured nodes and registered nodes
+        Map<String, NodeInfo> mergedNodes = new LinkedHashMap<>();
+        for (NodeInfo info : configuredNodes) {
+            mergedNodes.put(info.getNodeId(), info);
+        }
+
+        List<NodeInfo> registeredNodes = nodeRegistry.getNodes();
+        if (registeredNodes != null) {
+            for (NodeInfo info : registeredNodes) {
+                mergedNodes.put(info.getNodeId(), info);
+            }
+        }
+
         Map<String, String> pulses = nodeRegistry.getAllPulses();
-        List<Map<String, Object>> result = new ArrayList<>(nodeInfoList.size());
+        List<Map<String, Object>> result = new ArrayList<>(mergedNodes.size());
         long now = System.currentTimeMillis();
         long timeout = 15000; // 15 seconds timeout
 
-        for (NodeInfo info : nodeInfoList) {
+        for (NodeInfo info : mergedNodes.values()) {
             String nodeId = info.getNodeId();
             boolean alive = false;
             String pulseStr = (pulses != null ? pulses.get(nodeId) : null);

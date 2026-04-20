@@ -15,6 +15,7 @@
  */
 package com.aspectran.aspectow.console.commands.relay.redis;
 
+import com.aspectran.aspectow.console.commands.manager.FileCommandRelayManager;
 import com.aspectran.aspectow.console.commands.manager.FileCommanderManager;
 import com.aspectran.aspectow.node.redis.RedisMessageListener;
 import org.slf4j.Logger;
@@ -35,8 +36,15 @@ public class FileCommandMessageRelayHandler implements RedisMessageListener {
     }
 
     @Override
+    public String getCategory() {
+        return FileCommandRelayManager.CATEGORY_COMMANDS;
+    }
+
+    @Override
     public void onRelayMessage(String message) {
-        logger.debug("Forwarding relay message to FileCommanderManager: {}", message);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Forwarding relay message to FileCommanderManager: {}", message);
+        }
         fileCommanderManager.handleCommandResult(message);
     }
 

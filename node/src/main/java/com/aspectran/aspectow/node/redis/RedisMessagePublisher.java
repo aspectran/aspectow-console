@@ -56,11 +56,12 @@ public class RedisMessagePublisher {
     /**
      * Publishes a transparent application message to be relayed from this node.
      * This method sends the message asynchronously and does not wait for completion.
+     * @param category the category of the relay message
      * @param message the message to publish
      * @throws Exception if an error occurs while obtaining a connection
      */
-    public void publishRelay(String message) throws Exception {
-        String channel = NodeRegistryProtocol.getRelayChannel(clusterId, nodeId);
+    public void publishRelay(String category, String message) throws Exception {
+        String channel = NodeRegistryProtocol.getRelayChannel(clusterId, nodeId, category);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             connection.async().publish(channel, message);
         }

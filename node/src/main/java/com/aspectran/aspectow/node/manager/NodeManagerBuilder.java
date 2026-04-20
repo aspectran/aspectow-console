@@ -85,7 +85,7 @@ public abstract class NodeManagerBuilder {
             if (nodeInfo == null) {
                 List<NodeInfo> nodeInfoList = nodeConfig.getNodeInfoList();
                 if (DEFAULT_NODE_ID.equals(myNodeId) && nodeInfoList != null && nodeInfoList.size() == 1) {
-                    nodeInfo = nodeInfoList.get(0);
+                    nodeInfo = nodeInfoList.getFirst();
                     nodeId = nodeInfo.getNodeId();
                 } else {
                     if (clusterConfig.isGatewayMode()) {

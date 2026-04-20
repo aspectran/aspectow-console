@@ -31,6 +31,8 @@ public class FileCommandRelayManager {
 
     private static final Logger logger = LoggerFactory.getLogger(FileCommandRelayManager.class);
 
+    public static final String CATEGORY_COMMANDS = "commands";
+
     private final String nodeId;
 
     private final RedisMessagePublisher messagePublisher;

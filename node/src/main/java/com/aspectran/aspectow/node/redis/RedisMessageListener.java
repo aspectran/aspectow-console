@@ -24,6 +24,14 @@ package com.aspectran.aspectow.node.redis;
 public interface RedisMessageListener {
 
     /**
+     * Returns the category of the relay messages this listener is interested in.
+     * @return the category string, or null to receive all messages
+     */
+    default String getCategory() {
+        return null;
+    }
+
+    /**
      * Called when a management control message is received.
      * @param message the control message content
      */

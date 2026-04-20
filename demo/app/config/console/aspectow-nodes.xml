@@ -8,11 +8,11 @@
             <item name="configLocation">/config/console/node-config-prod.apon</item>
         </properties>
         <properties profile="!prod">
-            <item name="configLocation">/config/console/node-config.apon</item>
+            <item name="configLocation">/config/console/node-config-test-gateway.apon</item>
         </properties>
     </bean>
 
-    <bean class="com.aspectran.aspectow.node.redis.RedisConnectionPool" lazyDestroy="true">
+    <bean class="com.aspectran.aspectow.node.redis.RedisConnectionPool" lazyInit="true" lazyDestroy="true">
         <argument>
             <bean class="com.aspectran.aspectow.node.redis.RedisConnectionPoolConfig">
                 <argument>
@@ -36,6 +36,6 @@
         </argument>
     </bean>
 
-    <bean id="nodeManager" class="com.aspectran.aspectow.node.manager.NodeManagerFactoryBean" lazyDestroy="true"/>
+    <bean id="nodeManager" class="com.aspectran.aspectow.node.manager.NodeManagerFactoryBean" lazyInit="true" lazyDestroy="true"/>
 
 </aspectran>

@@ -72,7 +72,7 @@ public class FileCommanderManager implements InitializableBean {
             // Relay via Redis
             if (nodeManager.getRedisMessagePublisher() != null) {
                 logger.debug("Relaying command to node {}: {}", targetNodeId, commandData);
-                nodeManager.getRedisMessagePublisher().publishRelay(commandData);
+                nodeManager.getRedisMessagePublisher().publishRelay(FileCommandRelayManager.CATEGORY_COMMANDS, commandData);
             } else {
                 throw new IllegalStateException("Redis publisher is not available for relaying commands");
             }
@@ -92,7 +92,9 @@ public class FileCommanderManager implements InitializableBean {
      * @param resultData the result payload
      */
     public void handleCommandResult(String resultData) {
-        logger.debug("Received command result, relaying to clients: {}", resultData);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Received command result, relaying to clients: {}", resultData);
+        }
         if (relayManager != null) {
             relayManager.relay(resultData);
         }

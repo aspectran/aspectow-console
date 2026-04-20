@@ -75,21 +75,27 @@ public class RedisMessageSubscriber extends RedisPubSubAdapter<String, String> {
     public void message(String pattern, String channel, String message) {
         // Expected patterns:
         // aspectow:cluster:control:<clusterId>:<nodeId>
-        // aspectow:cluster:relay:<clusterId>:<nodeId>
+        // aspectow:cluster:relay:<category>:<clusterId>:<nodeId>
 
         String[] parts = channel.split(":");
         if (parts.length < 5) {
             return;
         }
 
-        String category = parts[2]; // control or relay
-        String nodeId = parts[4];   // node ID
-
-        for (RedisMessageListener listener : listeners) {
-            if ("control".equals(category)) {
+        String type = parts[2]; // control or relay
+        if ("control".equals(type)) {
+            String nodeId = parts[4];
+            for (RedisMessageListener listener : listeners) {
                 listener.onControlMessage(nodeId, message);
-            } else if ("relay".equals(category)) {
-                listener.onRelayMessage(nodeId, message);
+            }
+        } else if ("relay".equals(type) && parts.length >= 6) {
+            String category = parts[3]; // appmon, file-commander, etc.
+            String nodeId = parts[5];   // node ID
+            for (RedisMessageListener listener : listeners) {
+                String listenerCategory = listener.getCategory();
+                if (listenerCategory == null || listenerCategory.equals(category)) {
+                    listener.onRelayMessage(nodeId, message);
+                }
             }
         }
     }

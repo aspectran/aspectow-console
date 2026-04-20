@@ -25,6 +25,8 @@ public abstract class NodeRegistryProtocol {
 
     public static final String NODES_BASE_PATH = "/nodes";
 
+    public static final String CATEGORY_CLUSTER = "cluster";
+
     private static final String KEY_PREFIX = "aspectow:cluster:";
 
     private static final String NODES_HASH_KEY_PREFIX = KEY_PREFIX + "nodes:";
@@ -63,10 +65,11 @@ public abstract class NodeRegistryProtocol {
      * messages (e.g., AppMon logs, File Commander data).
      * @param clusterId the cluster ID
      * @param nodeId the node ID
+     * @param category the category of the relay message
      * @return the channel name
      */
-    public static String getRelayChannel(String clusterId, String nodeId) {
-        return KEY_PREFIX + "relay:" + clusterId + ":" + nodeId;
+    public static String getRelayChannel(String clusterId, String nodeId, String category) {
+        return KEY_PREFIX + "relay:" + category + ":" + clusterId + ":" + nodeId;
     }
 
     /**
@@ -88,6 +91,18 @@ public abstract class NodeRegistryProtocol {
      */
     public static String getClusterSubscriptionPattern(String clusterId, String nodeId) {
         return KEY_PREFIX + "*:" + clusterId + ":" + nodeId;
+    }
+
+    /**
+     * Returns the Redis Pub/Sub pattern for subscribing to relay channels
+     * of a specific category for a node within a cluster.
+     * @param clusterId the cluster ID
+     * @param nodeId the node ID
+     * @param category the category of the relay message
+     * @return the subscription pattern
+     */
+    public static String getRelaySubscriptionPattern(String clusterId, String nodeId, String category) {
+        return KEY_PREFIX + "relay:" + category + ":" + clusterId + ":" + nodeId;
     }
 
 }

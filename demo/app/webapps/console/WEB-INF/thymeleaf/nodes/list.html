@@ -89,6 +89,11 @@
                 const clusterMode = [[${page.clusterMode}]];
                 const token = [[${page.token}]];
 
+                let isUnloading = false;
+                $(window).on('beforeunload', function() {
+                    isUnloading = true;
+                });
+
                 function updateNodeStatus(nodeId, data) {
                     const $card = $(`.node-id-badge:contains("${nodeId}")`).closest('.node-card');
                     if ($card.length) {
@@ -126,16 +131,21 @@
                                 }
                             },
                             onOpen: () => updateNodeStatus(n.id, { status: 'live' }),
-                            onClose: () => updateNodeStatus(n.id, { status: 'dead' })
+                            onClose: () => {
+                                if (!isUnloading) {
+                                    updateNodeStatus(n.id, { status: 'dead' });
+                                }
+                            }
                         });
                         client.start('');
                     });
                 } else {
                     const node = [[${page.node}]];
-                    node.endpoint.path = BASE_PATH + node.endpoint.path;
+                    node.endpoint.path = BASE_PATH + "/nodes/" + node.id;
                     const client = new ConsoleClient(node, {
                         token: token,
                         onMessage: (msg) => {
+                            if (isUnloading) return;
                             try {
                                 const event = JSON.parse(msg);
                                 if (event.nodeId) {

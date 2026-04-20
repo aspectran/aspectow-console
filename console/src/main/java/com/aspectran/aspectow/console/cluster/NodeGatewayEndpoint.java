@@ -17,6 +17,7 @@ package com.aspectran.aspectow.console.cluster;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.node.manager.NodeManager;
+import com.aspectran.aspectow.node.manager.NodeRegistryProtocol;
 import com.aspectran.aspectow.node.redis.RedisMessageListener;
 import com.aspectran.aspectow.node.redis.RedisMessageSubscriber;
 import com.aspectran.core.component.bean.annotation.Autowired;
@@ -35,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * NodesMessageRelayer provides real-time, bidirectional communication for cluster node management.
+ * NodeGatewayEndpoint provides real-time, bidirectional communication for cluster node management.
  *
  * <p>Created: 2026-04-19</p>
  */
@@ -44,9 +45,9 @@ import org.slf4j.LoggerFactory;
         value = "/nodes/{nodeId}/websocket/{token}",
         configurator = AspectranConfigurator.class
 )
-public class NodesMessageRelayer extends SimplifiedEndpoint implements RedisMessageListener {
+public class NodeGatewayEndpoint extends SimplifiedEndpoint implements RedisMessageListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(NodesMessageRelayer.class);
+    private static final Logger logger = LoggerFactory.getLogger(NodeGatewayEndpoint.class);
 
     private static final String COMMAND_PING = "ping";
     private static final String COMMAND_JOIN = "join";
@@ -58,7 +59,7 @@ public class NodesMessageRelayer extends SimplifiedEndpoint implements RedisMess
     private final NodeManager nodeManager;
 
     @Autowired
-    public NodesMessageRelayer(NodeManager nodeManager) {
+    public NodeGatewayEndpoint(NodeManager nodeManager) {
         this.nodeManager = nodeManager;
     }
 
@@ -67,7 +68,7 @@ public class NodesMessageRelayer extends SimplifiedEndpoint implements RedisMess
         RedisMessageSubscriber subscriber = nodeManager.getRedisMessageSubscriber();
         if (subscriber != null) {
             subscriber.addListener(this);
-            logger.info("NodesMessageRelayer registered as RedisMessageListener");
+            logger.info("NodeGatewayEndpoint registered as RedisMessageListener");
         }
     }
 
@@ -99,9 +100,14 @@ public class NodesMessageRelayer extends SimplifiedEndpoint implements RedisMess
     }
 
     @Override
-    protected void onSessionRemoved(Session session) {
+    protected void onSessionRemoved(@NonNull Session session) {
         String nodeId = session.getPathParameters().get("nodeId");
         logger.info("Node management session removed: {} (nodeId: {})", session.getId(), nodeId);
+    }
+
+    @Override
+    public String getCategory() {
+        return NodeRegistryProtocol.CATEGORY_CLUSTER;
     }
 
     @Override
@@ -164,7 +170,7 @@ public class NodesMessageRelayer extends SimplifiedEndpoint implements RedisMess
         }
     }
 
-    private void joinComplete(Session session) {
+    private void joinComplete(@NonNull Session session) {
         String nodeId = session.getPathParameters().get("nodeId");
         logger.info("Node management session established: {} (nodeId: {})", session.getId(), nodeId);
     }
