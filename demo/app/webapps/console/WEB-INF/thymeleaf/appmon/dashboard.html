@@ -31,7 +31,7 @@
     </th:block>
 </head>
 <body>
-    <div layout:fragment="content">
+    <th:block layout:fragment="content">
         <div class="row">
             <div class="container node-bar mb-2 mb-md-0">
                 <ul class="node tabs nav nav-tabs">
@@ -189,16 +189,16 @@
                 <i class="bi bi-play-fill"></i> Resume monitoring here
             </button>
         </div>
-    </div>
+    </th:block>
     <script layout:fragment="script" th:inline="javascript">
-    $(function () {
-        const BASE_PATH = [[@{/}]].replace(/\/$/, '');
-        const INSTANCES = [[${page.instances}]];
-        const options = {
-            // flagsUrl: "https://cdn.jsdelivr.net/gh/aspectran/aspectran-assets@main/assets/countries/flags/"
-        };
-        new DashboardBuilder(options).build(BASE_PATH, INSTANCES);
-    });
+        $(function () {
+            const BASE_PATH = [[@{/}]].replace(/\/$/, '');
+            const INSTANCES = [[${page.instances}]];
+            const options = {
+                // flagsUrl: "https://cdn.jsdelivr.net/gh/aspectran/aspectran-assets@main/assets/countries/flags/"
+            };
+            new DashboardBuilder(options).build(BASE_PATH, INSTANCES);
+        });
     </script>
 </body>
 </html>

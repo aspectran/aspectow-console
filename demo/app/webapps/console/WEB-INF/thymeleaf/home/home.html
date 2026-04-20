@@ -44,7 +44,7 @@
     </style>
 </head>
 <body>
-    <div layout:fragment="content">
+    <th:block layout:fragment="content">
         <div class="dashboard-header text-center text-md-start">
             <h1 class="fw-bold mb-1" th:text="${page.headline}">Aspectow Management Console</h1>
             <p class="text-muted">Welcome to the central control system for your Aspectran application.</p>
@@ -143,6 +143,6 @@
                 </a>
             </div>
         </div>
-    </div>
+    </th:block>
 </body>
 </html>

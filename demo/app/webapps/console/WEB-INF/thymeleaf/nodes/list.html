@@ -28,7 +28,7 @@
     </style>
 </head>
 <body>
-    <div layout:fragment="content">
+    <th:block layout:fragment="content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="fw-bold mb-1">Cluster Nodes</h2>
@@ -79,13 +79,12 @@
                 </div>
             </div>
         </div>
-    </div>
+    </th:block>
 
     <th:block layout:fragment="script">
         <script th:src="@{/assets/js/console-client.js}"></script>
         <script th:inline="javascript">
             $(function() {
-                /*<![CDATA[*/
                 const BASE_PATH = [[@{/}]].replace(/\/$/, '');
                 const clusterMode = [[${page.clusterMode}]];
                 const token = [[${page.token}]];
@@ -149,7 +148,6 @@
                     });
                     client.start('');
                 }
-                /*]]>*/
             });
         </script>
     </th:block>

@@ -128,7 +128,7 @@
 
     <div id="sidebar-overlay"></div>
     <div id="main-container">
-        <header id="header-bar">
+        <header id="header-bar" class="px-lg-4">
             <div class="d-flex align-items-center gap-3">
                 <button class="btn d-lg-none p-0" id="sidebar-toggle">
                     <i class="bi bi-list fs-3"></i>
@@ -159,7 +159,7 @@
             <th:block th:if="${page.headinclude != null}">
                 <div th:insert="~{${page.headinclude}}"></div>
             </th:block>
-            <div class="container-fluid my-3">
+            <div class="container-fluid g-lg-5 my-3">
                 <th:block layout:fragment="content"/>
             </div>
         </main>
