@@ -21,6 +21,7 @@ import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.aspectow.node.manager.NodeRegistry;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -91,7 +92,7 @@ public class NodeConsoleHelper {
         return result;
     }
 
-    public Map<String, Object> createNodeMap(NodeInfo info, boolean alive, boolean includeEndpoint) {
+    public Map<String, Object> createNodeMap(@NonNull NodeInfo info, boolean alive, boolean includeEndpoint) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", info.getNodeId());
         map.put("group", info.getGroup());

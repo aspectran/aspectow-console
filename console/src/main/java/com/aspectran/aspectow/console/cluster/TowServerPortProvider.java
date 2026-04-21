@@ -48,7 +48,7 @@ public class TowServerPortProvider implements NodePortProvider, ActivityContextA
     @Override
     public Integer getActivePort() {
         try {
-            TowServer towServer = context.getBeanRegistry().getBean(serverBeanId);
+            TowServer towServer = context.getBeanRegistry().getBean(TowServer.class, serverBeanId);
             if (towServer != null) {
                 Undertow undertow = towServer.getUndertow();
                 if (undertow != null) {

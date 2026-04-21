@@ -70,7 +70,7 @@ public class NodeRegistry {
      * @return a map of node IDs to their metadata (APON strings)
      */
     public Map<String, String> getAllNodes() {
-        String key = NodeRegistryProtocol.getNodesHashKey(clusterId);
+        String key = NodeMessageProtocol.getNodesHashKey(clusterId);
         logger.debug("Retrieving all nodes from Redis hash: {}", key);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             return connection.sync().hgetall(key);
@@ -85,7 +85,7 @@ public class NodeRegistry {
      * @return a map of node IDs to their last pulse timestamps
      */
     public Map<String, String> getAllPulses() {
-        String key = NodeRegistryProtocol.getPulsesHashKey(clusterId);
+        String key = NodeMessageProtocol.getPulsesHashKey(clusterId);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             return connection.sync().hgetall(key);
         } catch (Exception e) {
@@ -100,7 +100,7 @@ public class NodeRegistry {
      * @return the node metadata string, or null if not found
      */
     public String getNode(String nodeId) {
-        String key = NodeRegistryProtocol.getNodesHashKey(clusterId);
+        String key = NodeMessageProtocol.getNodesHashKey(clusterId);
         logger.debug("Retrieving node info for: {} from {}", nodeId, key);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             return connection.sync().hget(key, nodeId);
@@ -117,7 +117,7 @@ public class NodeRegistry {
      * @return true if the node is live, false otherwise
      */
     public boolean isLive(String nodeId, long timeoutMillis) {
-        String key = NodeRegistryProtocol.getPulsesHashKey(clusterId);
+        String key = NodeMessageProtocol.getPulsesHashKey(clusterId);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             String pulse = connection.sync().hget(key, nodeId);
             if (pulse != null) {

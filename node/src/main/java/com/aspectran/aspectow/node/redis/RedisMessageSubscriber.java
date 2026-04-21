@@ -15,9 +15,10 @@
  */
 package com.aspectran.aspectow.node.redis;
 
-import com.aspectran.aspectow.node.manager.NodeRegistryProtocol;
+import com.aspectran.aspectow.node.manager.NodeMessageProtocol;
 import io.lettuce.core.pubsub.RedisPubSubAdapter;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +73,7 @@ public class RedisMessageSubscriber extends RedisPubSubAdapter<String, String> {
     }
 
     @Override
-    public void message(String pattern, String channel, String message) {
+    public void message(@NonNull String channel, String message) {
         // Expected patterns:
         // aspectow:cluster:control:<clusterId>:<nodeId>
         // aspectow:cluster:relay:<category>:<clusterId>:<nodeId>
@@ -89,7 +90,7 @@ public class RedisMessageSubscriber extends RedisPubSubAdapter<String, String> {
                 listener.onControlMessage(nodeId, message);
             }
         } else if ("relay".equals(type) && parts.length >= 6) {
-            String category = parts[3]; // appmon, file-commander, etc.
+            String category = parts[3]; // appmon, commands, etc.
             String nodeId = parts[5];   // node ID
             for (RedisMessageListener listener : listeners) {
                 String listenerCategory = listener.getCategory();
@@ -105,7 +106,7 @@ public class RedisMessageSubscriber extends RedisPubSubAdapter<String, String> {
         this.pubSubConnection.addListener(this);
 
         String pattern = (subscribePattern != null ? subscribePattern :
-                NodeRegistryProtocol.getClusterSubscriptionPattern(clusterId, nodeId));
+                NodeMessageProtocol.getClusterSubscriptionPattern(clusterId, nodeId));
         this.pubSubConnection.sync().psubscribe(pattern);
         logger.info("RedisMessageSubscriber initialized and subscribed to pattern: {}", pattern);
     }

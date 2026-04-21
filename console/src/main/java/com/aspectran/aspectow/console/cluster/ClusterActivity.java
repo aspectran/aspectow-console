@@ -27,7 +27,7 @@ import com.aspectran.core.component.bean.annotation.Request;
 import java.util.List;
 import java.util.Map;
 
-import static com.aspectran.aspectow.node.manager.NodeRegistryProtocol.NODES_BASE_PATH;
+import static com.aspectran.aspectow.node.manager.NodeMessageProtocol.NODES_BASE_PATH;
 
 /**
  * ClusterActivity provides views and data for monitoring and managing cluster nodes.

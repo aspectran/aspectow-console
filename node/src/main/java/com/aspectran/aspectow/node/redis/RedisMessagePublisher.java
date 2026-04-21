@@ -15,18 +15,14 @@
  */
 package com.aspectran.aspectow.node.redis;
 
-import com.aspectran.aspectow.node.manager.NodeRegistryProtocol;
+import com.aspectran.aspectow.node.manager.NodeMessageProtocol;
 import io.lettuce.core.api.StatefulRedisConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * RedisMessagePublisher provides methods to publish management control messages
  * and transparent application data to Redis Pub/Sub channels.
  */
 public class RedisMessagePublisher {
-
-    private static final Logger logger = LoggerFactory.getLogger(RedisMessagePublisher.class);
 
     private final String clusterId;
 
@@ -47,10 +43,8 @@ public class RedisMessagePublisher {
      * @throws Exception if an error occurs during publication
      */
     public void publishControl(String message) throws Exception {
-        String channel = NodeRegistryProtocol.getControlChannel(clusterId, nodeId);
-        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
-            connection.sync().publish(channel, message);
-        }
+        String channel = NodeMessageProtocol.getControlChannel(clusterId, nodeId);
+        syncPublish(channel, message);
     }
 
     /**
@@ -61,10 +55,8 @@ public class RedisMessagePublisher {
      * @throws Exception if an error occurs while obtaining a connection
      */
     public void publishRelay(String category, String message) throws Exception {
-        String channel = NodeRegistryProtocol.getRelayChannel(clusterId, nodeId, category);
-        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
-            connection.async().publish(channel, message);
-        }
+        String channel = NodeMessageProtocol.getRelayChannel(clusterId, nodeId, category);
+        asyncPublish(channel, message);
     }
 
     /**
@@ -73,9 +65,21 @@ public class RedisMessagePublisher {
      * @param message the message to publish
      * @throws Exception if an error occurs during publication
      */
-    public void publish(String channel, String message) throws Exception {
+    public void syncPublish(String channel, String message) throws Exception {
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             connection.sync().publish(channel, message);
+        }
+    }
+
+    /**
+     * Publishes a message to a specific channel asynchronously.
+     * @param channel the channel to publish to
+     * @param message the message to publish
+     * @throws Exception if an error occurs during publication
+     */
+    public void asyncPublish(String channel, String message) throws Exception {
+        try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
+            connection.async().publish(channel, message);
         }
     }
 

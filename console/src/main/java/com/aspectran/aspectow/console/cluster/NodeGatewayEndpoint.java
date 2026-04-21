@@ -17,7 +17,7 @@ package com.aspectran.aspectow.console.cluster;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.node.manager.NodeManager;
-import com.aspectran.aspectow.node.manager.NodeRegistryProtocol;
+import com.aspectran.aspectow.node.manager.NodeMessageProtocol;
 import com.aspectran.aspectow.node.redis.RedisMessageListener;
 import com.aspectran.aspectow.node.redis.RedisMessageSubscriber;
 import com.aspectran.core.component.bean.annotation.Autowired;
@@ -107,7 +107,7 @@ public class NodeGatewayEndpoint extends SimplifiedEndpoint implements RedisMess
 
     @Override
     public String getCategory() {
-        return NodeRegistryProtocol.CATEGORY_CLUSTER;
+        return NodeMessageProtocol.CATEGORY_CLUSTER;
     }
 
     @Override

@@ -15,13 +15,15 @@
  */
 package com.aspectran.aspectow.node.manager;
 
+import org.jspecify.annotations.NonNull;
+
 /**
- * NodeRegistryProtocol defines the Redis key structures and communication
+ * NodeMessageProtocol defines the Redis key structures and communication
  * patterns used for node management and transparent message relaying.
  *
  * <p>Created: 2026-04-18</p>
  */
-public abstract class NodeRegistryProtocol {
+public abstract class NodeMessageProtocol {
 
     public static final String NODES_BASE_PATH = "/nodes";
 
@@ -36,6 +38,7 @@ public abstract class NodeRegistryProtocol {
      * @param clusterId the cluster ID
      * @return the Redis key
      */
+    @NonNull
     public static String getNodesHashKey(String clusterId) {
         return NODES_HASH_KEY_PREFIX + clusterId;
     }
@@ -45,6 +48,7 @@ public abstract class NodeRegistryProtocol {
      * @param clusterId the cluster ID
      * @return the Redis key
      */
+    @NonNull
     public static String getPulsesHashKey(String clusterId) {
         return NODES_HASH_KEY_PREFIX + clusterId + ":pulse";
     }
@@ -56,6 +60,7 @@ public abstract class NodeRegistryProtocol {
      * @param nodeId the node ID
      * @return the channel name
      */
+    @NonNull
     public static String getControlChannel(String clusterId, String nodeId) {
         return KEY_PREFIX + "control:" + clusterId + ":" + nodeId;
     }
@@ -68,6 +73,7 @@ public abstract class NodeRegistryProtocol {
      * @param category the category of the relay message
      * @return the channel name
      */
+    @NonNull
     public static String getRelayChannel(String clusterId, String nodeId, String category) {
         return KEY_PREFIX + "relay:" + category + ":" + clusterId + ":" + nodeId;
     }
@@ -78,6 +84,7 @@ public abstract class NodeRegistryProtocol {
      * @param clusterId the cluster ID
      * @return the subscription pattern
      */
+    @NonNull
     public static String getClusterSubscriptionPattern(String clusterId) {
         return KEY_PREFIX + "*:" + clusterId + ":*";
     }
@@ -89,6 +96,7 @@ public abstract class NodeRegistryProtocol {
      * @param nodeId the node ID
      * @return the subscription pattern
      */
+    @NonNull
     public static String getClusterSubscriptionPattern(String clusterId, String nodeId) {
         return KEY_PREFIX + "*:" + clusterId + ":" + nodeId;
     }
@@ -101,6 +109,7 @@ public abstract class NodeRegistryProtocol {
      * @param category the category of the relay message
      * @return the subscription pattern
      */
+    @NonNull
     public static String getRelaySubscriptionPattern(String clusterId, String nodeId, String category) {
         return KEY_PREFIX + "relay:" + category + ":" + clusterId + ":" + nodeId;
     }

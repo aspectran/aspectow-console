@@ -21,15 +21,10 @@ import com.aspectran.aspectow.node.config.NodeInfoHolder;
 import com.aspectran.aspectow.node.config.SecretConfig;
 import com.aspectran.aspectow.node.redis.RedisMessagePublisher;
 import com.aspectran.aspectow.node.redis.RedisMessageSubscriber;
-import com.aspectran.core.activity.InstantAction;
-import com.aspectran.core.activity.InstantActivitySupport;
-import com.aspectran.core.adapter.ApplicationAdapter;
-import com.aspectran.core.context.ActivityContext;
 import com.aspectran.utils.PBEncryptionUtils;
 import com.aspectran.utils.apon.VariableParameters;
 import com.aspectran.utils.security.InvalidPBTokenException;
 import com.aspectran.utils.security.TimeLimitedPBTokenIssuer;
-import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
@@ -39,7 +34,7 @@ import java.util.List;
  * exporters, persistence, and lifecycle management.
  * It also provides access to the core components of Aspectran's ActivityContext.
  */
-public class NodeManager extends InstantActivitySupport {
+public class NodeManager {
 
     private final String nodeId;
 
@@ -59,18 +54,6 @@ public class NodeManager extends InstantActivitySupport {
         this.nodeId = nodeId;
         this.clusterConfig = clusterConfig;
         this.nodeInfoHolder = nodeInfoHolder;
-    }
-
-    @Override
-    @NonNull
-    public ActivityContext getActivityContext() {
-        return super.getActivityContext();
-    }
-
-    @Override
-    @NonNull
-    public ApplicationAdapter getApplicationAdapter() {
-        return super.getApplicationAdapter();
     }
 
     /**
@@ -181,40 +164,6 @@ public class NodeManager extends InstantActivitySupport {
         String salt = (secretConfig != null ? secretConfig.getSalt() : PBEncryptionUtils.getSalt());
 
         TimeLimitedPBTokenIssuer.validate(token, password, salt);
-    }
-
-    @Override
-    public <V> V instantActivity(InstantAction<V> instantAction) {
-        return super.instantActivity(instantAction);
-    }
-
-    /**
-     * Gets a bean from the ActivityContext's bean registry by its ID.
-     * @param id the ID of the bean
-     * @param <V> the type of the bean
-     * @return the bean instance
-     */
-    public <V> V getBean(@NonNull String id) {
-        return getActivityContext().getBeanRegistry().getBean(id);
-    }
-
-    /**
-     * Gets a bean from the ActivityContext's bean registry by its type.
-     * @param type the type of the bean
-     * @param <V> the type of the bean
-     * @return the bean instance
-     */
-    public <V> V getBean(Class<V> type) {
-        return getActivityContext().getBeanRegistry().getBean(type);
-    }
-
-    /**
-     * Checks if a bean of the given type exists in the ActivityContext's bean registry.
-     * @param type the type of the bean
-     * @return {@code true} if the bean exists, {@code false} otherwise
-     */
-    public boolean containsBean(Class<?> type) {
-        return getActivityContext().getBeanRegistry().containsBean(type);
     }
 
 }

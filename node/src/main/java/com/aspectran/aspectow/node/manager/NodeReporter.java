@@ -92,7 +92,7 @@ public class NodeReporter {
     }
 
     private void registerNode() throws IOException {
-        String key = NodeRegistryProtocol.getNodesHashKey(clusterConfig.getId());
+        String key = NodeMessageProtocol.getNodesHashKey(clusterConfig.getId());
 
         // Extract and set active service port from NodePortProvider
         if (portProvider != null) {
@@ -136,7 +136,7 @@ public class NodeReporter {
     }
 
     private void sendPulse() {
-        String key = NodeRegistryProtocol.getPulsesHashKey(clusterConfig.getId());
+        String key = NodeMessageProtocol.getPulsesHashKey(clusterConfig.getId());
         long timestamp = System.currentTimeMillis();
         
         logger.trace("Sending pulse for node {} to {}: {}", nodeInfo.getNodeId(), key, timestamp);
@@ -149,7 +149,7 @@ public class NodeReporter {
     }
 
     private void unregisterNode() {
-        String key = NodeRegistryProtocol.getNodesHashKey(clusterConfig.getId());
+        String key = NodeMessageProtocol.getNodesHashKey(clusterConfig.getId());
         logger.debug("Unregistering node {} from Redis hash {}", nodeInfo.getNodeId(), key);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             RedisCommands<String, String> sync = connection.sync();

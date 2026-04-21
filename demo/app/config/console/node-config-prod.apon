@@ -1,6 +1,6 @@
 # Cluster-wide settings
 cluster: {
-    id: cluster
+    id: cluster1
     mode: direct  # direct or gateway or autoscaling
 }
 node: {

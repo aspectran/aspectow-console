@@ -67,7 +67,7 @@ public abstract class NodeManagerBuilder {
         }
 
         // Forcefully set the base path for cluster endpoint
-        clusterConfig.touchEndpointConfig().setPath(NodeRegistryProtocol.NODES_BASE_PATH);
+        clusterConfig.touchEndpointConfig().setPath(NodeMessageProtocol.NODES_BASE_PATH);
 
         String nodeId;
         NodeInfo nodeInfo;
@@ -103,7 +103,9 @@ public abstract class NodeManagerBuilder {
         }
 
         // Forcefully set the base path for node endpoint
-        nodeInfo.touchEndpointConfig().setPath(NodeRegistryProtocol.NODES_BASE_PATH);
+        for (NodeInfo info : nodeInfoHolder.getNodeInfoList()) {
+            info.touchEndpointConfig().setPath(NodeMessageProtocol.NODES_BASE_PATH);
+        }
 
         // Auto-detect host if not specified
         if (!StringUtils.hasText(nodeInfo.getHost())) {
@@ -117,7 +119,6 @@ public abstract class NodeManagerBuilder {
         logger.info("Current Node: {} (Host: {})", nodeId, nodeInfo.getHost());
 
         NodeManager nodeManager = new NodeManager(nodeId, clusterConfig, nodeInfoHolder);
-        nodeManager.setActivityContext(context);
 
         if (!clusterConfig.isDirectMode()) {
             if (!context.getBeanRegistry().containsBean(RedisConnectionPool.class)) {
@@ -135,7 +136,7 @@ public abstract class NodeManagerBuilder {
             RedisMessagePublisher redisMessagePublisher = new RedisMessagePublisher(clusterId, nodeId, connectionPool);
             RedisMessageSubscriber redisMessageSubscriber = new RedisMessageSubscriber(clusterId, nodeId, connectionPool);
             if (clusterConfig.isGatewayMode()) {
-                redisMessageSubscriber.setSubscribePattern(NodeRegistryProtocol.getClusterSubscriptionPattern(clusterId));
+                redisMessageSubscriber.setSubscribePattern(NodeMessageProtocol.getClusterSubscriptionPattern(clusterId));
             }
 
             nodeManager.setNodeRegistry(nodeRegistry);
