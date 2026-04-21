@@ -85,12 +85,6 @@
     <th:block layout:fragment="content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-1">
-                        <li class="breadcrumb-item"><a th:href="@{/nodes/list}">Nodes</a></li>
-                        <li class="breadcrumb-item active">File Commander</li>
-                    </ol>
-                </nav>
                 <h2 class="fw-bold mb-0">File Commander</h2>
             </div>
             <div class="text-end">
@@ -106,9 +100,9 @@
                 </div>
                 <div class="col-md-4">
                     <select id="target-type" class="form-select form-select-sm" onchange="onTargetTypeChange()">
-                        <option value="all">All Nodes in Cluster</option>
+                        <option value="all" th:selected="${page.node == null}">All Nodes in Cluster</option>
                         <option value="group">Specific Group</option>
-                        <option value="node" selected>Individual Node</option>
+                        <option value="node" th:selected="${page.node != null}">Individual Node</option>
                     </select>
                 </div>
                 <div class="col-md-4" id="target-value-container">
@@ -179,7 +173,7 @@ arguments: {
         <script th:src="@{/assets/js/console-client.js}"></script>
         <script th:inline="javascript">
             const nodes = [[${page.nodes}]];
-            const currentNodeId = [[${page.node.id}]];
+            const currentNodeId = [[${page.node?.id}]];
             const token = [[${page.token}]];
             const BASE_PATH = [[@{/}]].replace(/\/$/, '');
 

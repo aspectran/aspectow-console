@@ -15,12 +15,16 @@
  */
 package com.aspectran.aspectow.console.commands;
 
+import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.console.cluster.NodeConsoleHelper;
 import com.aspectran.aspectow.console.commands.manager.FileCommanderManager;
+import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.activity.Translet;
+import com.aspectran.core.component.bean.annotation.Action;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
+import com.aspectran.core.component.bean.annotation.Dispatch;
 import com.aspectran.core.component.bean.annotation.Request;
 import com.aspectran.core.component.bean.annotation.RequestToPost;
 import com.aspectran.utils.StringUtils;
@@ -33,12 +37,12 @@ import java.util.Map;
 import static com.aspectran.aspectow.node.manager.NodeMessageProtocol.NODES_BASE_PATH;
 
 /**
- * RemoteCommandsActivity provides REST API endpoints for managing cluster nodes
- * and executing remote file commands.
+ * RemoteCommandsActivity provides views and REST API endpoints for managing
+ * cluster nodes and executing remote file commands.
  *
  * <p>Created: 2026-04-16</p>
  */
-@Component(NODES_BASE_PATH + "/${nodeId}/commands")
+@Component(NODES_BASE_PATH + "/commands")
 public class RemoteCommandsActivity {
 
     private final NodeManager nodeManager;
@@ -54,6 +58,34 @@ public class RemoteCommandsActivity {
         this.nodeManager = nodeManager;
         this.fileCommanderManager = fileCommanderManager;
         this.nodeConsoleHelper = nodeConsoleHelper;
+    }
+
+    /**
+     * Displays the node commands page.
+     * @param nodeId the node ID
+     * @return a map of attributes for rendering the view
+     */
+    @Request("")
+    @Dispatch("nodes/commands")
+    @Action("page")
+    public Map<String, Object> nodeCommands(String nodeId) {
+        String clusterMode = nodeManager.getClusterConfig().getMode();
+        List<Map<String, Object>> nodes = nodeConsoleHelper.getNodes(true);
+        NodeInfo nodeInfo = (nodeId != null ? nodeManager.getNodeInfoHolder().getNodeInfo(nodeId) : null);
+        if (nodeId != null && nodeInfo == null) {
+            throw new IllegalArgumentException("No node found with ID: " + nodeId);
+        }
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("title", "Remote Commands");
+        model.put("style", "commands-page");
+        model.put("nodes", nodes);
+        if (nodeInfo != null) {
+            model.put("node", nodeConsoleHelper.createNodeMap(nodeInfo, true, true));
+        }
+        model.put("token", AppMonTokenIssuer.issueToken(30));
+        model.put("clusterMode", clusterMode);
+        return model;
     }
 
     /**

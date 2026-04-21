@@ -68,33 +68,4 @@ public class ClusterActivity {
         );
     }
 
-    /**
-     * Displays the node commands page.
-     * @param nodeId the node ID
-     * @return a map of attributes for rendering the view
-     */
-    @Request("/${nodeId}/commands")
-    @Dispatch("nodes/commands")
-    @Action("page")
-    public Map<String, Object> nodeCommands(String nodeId) {
-        String clusterMode = nodeManager.getClusterConfig().getMode();
-        List<Map<String, Object>> nodes = nodeConsoleHelper.getNodes(true);
-        NodeInfo nodeInfo = nodeManager.getNodeInfoHolder().getNodeInfo(nodeId);
-        if (nodeInfo == null && nodeManager.getNodeRegistry() != null) {
-            nodeInfo = nodeManager.getNodeInfoHolder().getNodeInfo(nodeManager.getNodeId());
-        }
-        if (nodeInfo == null) {
-            throw new IllegalArgumentException("No node found with ID: " + nodeId);
-        }
-
-        return Map.of(
-                "title", "Remote Commands",
-                "style", "commands-page",
-                "nodes", nodes,
-                "node", nodeConsoleHelper.createNodeMap(nodeInfo, true, true),
-                "token", AppMonTokenIssuer.issueToken(30),
-                "clusterMode", clusterMode
-        );
-    }
-
 }
