@@ -22,7 +22,6 @@ import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.aware.ActivityContextAware;
 import com.aspectran.core.context.ActivityContext;
-import com.aspectran.core.context.config.AspectranConfig;
 import com.aspectran.core.service.CoreService;
 import com.aspectran.core.service.CoreServiceHolder;
 import com.aspectran.daemon.command.polling.DefaultFileCommander;
@@ -68,7 +67,7 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
     public void initialize() throws Exception {
         logger.info("Initializing FileCommanderManager for node: {}", nodeManager.getNodeId());
 
-        this.relayManager = new FileCommandRelayManager(nodeManager.getNodeId(), nodeManager.getRedisMessagePublisher());
+        relayManager = new FileCommandRelayManager(nodeManager.getNodeId(), nodeManager.getRedisMessagePublisher());
 
         // Register a listener for command results from Redis
         if (nodeManager.getRedisMessageSubscriber() != null) {
@@ -78,18 +77,18 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
     }
 
     private synchronized void setupDaemonService() throws Exception {
-        if (this.daemonService != null) {
+        if (daemonService != null) {
             return;
         }
 
         for (CoreService service : CoreServiceHolder.getAllServices()) {
             if (service instanceof DefaultDaemonService ds) {
-                this.daemonService = ds;
+                daemonService = ds;
                 break;
             }
         }
 
-        if (this.daemonService == null) {
+        if (daemonService == null) {
             CoreService baseService = null;
             if (activityContext != null) {
                 baseService = activityContext.getMasterService().getRootService();
@@ -101,20 +100,14 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
             }
 
             if (baseService != null) {
-                AspectranConfig aspectranConfig = baseService.getAspectranConfig();
-                if (aspectranConfig != null) {
-                    logger.info("No active DaemonService found; starting a new one based on root service [{}] configuration",
-                            baseService.getServiceName());
-                    this.daemonService = DefaultDaemonServiceBuilder.build(aspectranConfig, baseService);
-                    // The daemonService is added to baseService's sub-services during construction.
-                    // If the baseService is already active, the new daemonService is considered an
-                    // orphan and must be started manually.
-                    if (this.daemonService.getServiceLifeCycle().isOrphan()) {
-                        this.daemonService.start();
-                    }
-                } else {
-                    logger.warn("No Aspectran configuration found in root service [{}]; cannot start DaemonService",
-                            baseService.getServiceName());
+                logger.info("No active DaemonService found; starting a new one based on root service [{}]",
+                        baseService.getServiceName());
+                daemonService = DefaultDaemonServiceBuilder.build(baseService);
+                // The daemonService is added to baseService's sub-services during construction.
+                // If the baseService is already active, the new daemonService is considered an
+                // orphan and must be started manually.
+                if (daemonService.getServiceLifeCycle().isOrphan()) {
+                    daemonService.start();
                 }
             } else {
                 logger.warn("No Core Service found in CoreServiceHolder; cannot start DaemonService. " +
