@@ -21,24 +21,28 @@ import jakarta.websocket.Session;
 
 /**
  * A {@link RelaySession} implementation that wraps a JSR-356 {@link Session}.
+ * It stores session-specific data in the WebSocket session's user properties.
  */
 public class WebsocketRelaySession extends WrappedSession implements RelaySession {
 
-    private final String nodeId;
+    private static final String NODE_ID_PROPERTY = "console:nodeId";
 
     /**
      * Instantiates a new WebsocketRelaySession.
-     * @param nodeId the node ID
      * @param session the underlying WebSocket session
      */
-    public WebsocketRelaySession(String nodeId, Session session) {
+    public WebsocketRelaySession(Session session) {
         super(session);
-        this.nodeId = nodeId;
     }
 
     @Override
     public String getNodeId() {
-        return nodeId;
+        return (String)getSession().getUserProperties().get(NODE_ID_PROPERTY);
+    }
+
+    @Override
+    public void setNodeId(String nodeId) {
+        getSession().getUserProperties().put(NODE_ID_PROPERTY, nodeId);
     }
 
     @Override

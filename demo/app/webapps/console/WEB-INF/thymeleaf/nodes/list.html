@@ -72,7 +72,7 @@
                         <a th:href="@{/nodes/commands(nodeId=${node.id})}" class="btn btn-sm btn-light flex-grow-1">
                             <i class="bi bi-terminal"></i> Commands
                         </a>
-                        <a th:href="@{/appmon/dashboard/(nodeId=${node.id})}" class="btn btn-sm btn-light flex-grow-1">
+                        <a href="javascript:void(0)" th:onclick="openAppMon([[${node.id}]])" class="btn btn-sm btn-light flex-grow-1">
                             <i class="bi bi-activity"></i> Metrics
                         </a>
                     </div>
@@ -84,8 +84,21 @@
     <th:block layout:fragment="script">
         <script th:src="@{/assets/js/console-client.js}"></script>
         <script th:inline="javascript">
+            const BASE_PATH = [[@{/}]].replace(/\/$/, '');
+
+            function openAppMon(nodeId) {
+                const url = BASE_PATH + "/appmon/dashboard/popup/?nodeId=" + nodeId;
+                const name = "appmon_dashboard_popup_" + nodeId.replace(/[^a-zA-Z0-9]/g, '_');
+                const features = "width=1500,height=1045,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes";
+                const popup = window.open(url, name, features);
+                if (popup) {
+                    popup.focus();
+                } else {
+                    alert("Please allow popups for this site.");
+                }
+            }
+
             $(function() {
-                const BASE_PATH = [[@{/}]].replace(/\/$/, '');
                 const clusterMode = [[${page.clusterMode}]];
                 const token = [[${page.token}]];
 

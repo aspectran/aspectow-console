@@ -15,6 +15,7 @@
  */
 package com.aspectran.aspectow.console.commands.relay.websocket;
 
+import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.console.commands.manager.FileCommandRelayer;
 import com.aspectran.aspectow.console.commands.manager.FileCommanderManager;
 import com.aspectran.aspectow.console.commands.relay.RelaySession;
@@ -38,7 +39,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component
 @ServerEndpoint(
-        value = "/console/file-commander/websocket/{token}",
+        value = "/file-commander/websocket/{token}",
         configurator = AspectranConfigurator.class
 )
 public class WebsocketFileCommandRelayer extends SimplifiedEndpoint implements FileCommandRelayer {
@@ -67,7 +68,7 @@ public class WebsocketFileCommandRelayer extends SimplifiedEndpoint implements F
     protected boolean checkAuthorized(@NonNull Session session) {
         String token = session.getPathParameters().get("token");
         try {
-            nodeManager.validateToken(token);
+            AppMonTokenIssuer.validateToken(token);
             return true;
         } catch (InvalidPBTokenException e) {
             logger.warn("WebSocket connection rejected: invalid or expired token");
@@ -79,10 +80,61 @@ public class WebsocketFileCommandRelayer extends SimplifiedEndpoint implements F
     protected void registerMessageHandlers(@NonNull Session session) {
         if (session.getMessageHandlers().isEmpty()) {
             session.addMessageHandler(String.class, message -> {
-                if ("ping".equalsIgnoreCase(message)) {
-                    sendText(session, "pong");
-                }
+                setLoggingGroup();
+                handleMessage(session, message);
             });
+        }
+    }
+
+    private void handleMessage(Session session, String message) {
+        if (StringUtils.isEmpty(message)) {
+            return;
+        }
+        if (message.startsWith("command:execute")) {
+            execute(session, message);
+        } else if ("command:join".equals(message)) {
+            join(session);
+        } else if ("command:ping".equals(message)) {
+            pong(session);
+        }
+    }
+
+    private void join(Session session) {
+        WebsocketRelaySession relaySession = new WebsocketRelaySession(session);
+        relaySession.setNodeId(nodeManager.getNodeId());
+        if (addSession(session)) {
+            sendText(session, "joined:" + nodeManager.getNodeId());
+            logger.debug("ConsoleClient joined: session {}", session.getId());
+        }
+    }
+
+    private void pong(Session session) {
+        sendText(session, "pong");
+    }
+
+    private void execute(Session session, String message) {
+        String[] parts = message.split("\n");
+        String targetNodeId = null;
+        String commandData = null;
+        for (String part : parts) {
+            if (part.startsWith("targetNodeId:")) {
+                targetNodeId = part.substring(13).trim();
+            } else if (part.startsWith("data:")) {
+                commandData = part.substring(5).trim();
+            }
+        }
+        if (commandData != null) {
+            if (targetNodeId == null || targetNodeId.isEmpty()) {
+                targetNodeId = nodeManager.getNodeId();
+            }
+            try {
+                fileCommanderManager.executeCommand(targetNodeId, commandData);
+                logger.debug("Command execution initiated from session {}: target={}, data={}",
+                        session.getId(), targetNodeId, commandData);
+            } catch (Exception e) {
+                logger.error("Failed to execute command from session {}", session.getId(), e);
+                sendText(session, "[ERROR] " + e.getMessage());
+            }
         }
     }
 

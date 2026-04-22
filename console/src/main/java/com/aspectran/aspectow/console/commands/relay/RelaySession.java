@@ -28,6 +28,12 @@ public interface RelaySession {
     String getNodeId();
 
     /**
+     * Sets the ID of the node that this session is interacting with.
+     * @param nodeId the node ID
+     */
+    void setNodeId(String nodeId);
+
+    /**
      * Checks if the session is still valid.
      * @return {@code true} if the session is valid, {@code false} otherwise
      */

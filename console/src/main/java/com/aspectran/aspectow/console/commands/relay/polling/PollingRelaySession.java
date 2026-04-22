@@ -16,30 +16,29 @@
 package com.aspectran.aspectow.console.commands.relay.polling;
 
 import com.aspectran.aspectow.console.commands.relay.RelaySession;
-import com.aspectran.utils.concurrent.AutoLock;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A {@link RelaySession} implementation for HTTP polling.
- * It manages a message queue for a specific client session.
+ * It tracks the last message index retrieved by the client.
  */
 public class PollingRelaySession implements RelaySession {
 
-    private final String nodeId;
+    private final PollingFileCommandRelayer relayer;
 
-    private final AutoLock autoLock = new AutoLock();
+    private String nodeId;
 
-    private final List<String> messageQueue = new ArrayList<>();
+    private volatile int sessionTimeout;
 
     private volatile long lastAccessTime;
 
-    private boolean expired;
+    private final AtomicInteger lastLineIndex = new AtomicInteger(-1);
 
-    public PollingRelaySession(String nodeId) {
-        this.nodeId = nodeId;
-        this.lastAccessTime = System.currentTimeMillis();
+    private volatile boolean expired;
+
+    public PollingRelaySession(PollingFileCommandRelayer relayer) {
+        this.relayer = relayer;
     }
 
     @Override
@@ -48,50 +47,61 @@ public class PollingRelaySession implements RelaySession {
     }
 
     @Override
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    @Override
     public boolean isValid() {
         return !expired;
     }
 
-    /**
-     * Pushes a message to the session's individual queue.
-     * @param message the message to push
-     */
-    public void push(String message) {
-        try (AutoLock ignored = autoLock.lock()) {
-            if (isValid()) {
-                messageQueue.add(message);
-            }
-        }
+    public int getSessionTimeout() {
+        return sessionTimeout;
     }
 
-    /**
-     * Pops all messages from the session's individual queue.
-     * @return a list of messages, or {@code null} if the queue is empty
-     */
-    public List<String> popMessages() {
-        try (AutoLock ignored = autoLock.lock()) {
-            if (messageQueue.isEmpty()) {
-                return null;
-            }
-            List<String> messages = new ArrayList<>(messageQueue);
-            messageQueue.clear();
-            return messages;
-        }
+    public void setSessionTimeout(int sessionTimeout) {
+        this.sessionTimeout = sessionTimeout;
     }
 
-    public void access() {
+    public void access(boolean first) {
         this.lastAccessTime = System.currentTimeMillis();
+        if (first && relayer != null) {
+            this.lastLineIndex.set(relayer.getBufferedMessages().getCurrentLineIndex());
+        }
     }
 
     public long getLastAccessTime() {
         return lastAccessTime;
     }
 
-    public void expire() {
-        try (AutoLock ignored = autoLock.lock()) {
-            this.expired = true;
-            this.messageQueue.clear();
+    public boolean isExpired() {
+        if (expired) {
+            return true;
         }
+        if (sessionTimeout > 0 && lastAccessTime > 0) {
+            if (System.currentTimeMillis() - lastAccessTime > (long)sessionTimeout * 1000L) {
+                expired = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int getLastLineIndex() {
+        return lastLineIndex.get();
+    }
+
+    public void setLastLineIndex(int lastLineIndex) {
+        this.lastLineIndex.set(lastLineIndex);
+    }
+
+    public void expire() {
+        this.expired = true;
+    }
+
+    public void destroy() {
+        expire();
     }
 
 }

@@ -18,96 +18,144 @@ package com.aspectran.aspectow.console.commands.relay.polling;
 import com.aspectran.aspectow.console.commands.manager.FileCommandRelayer;
 import com.aspectran.aspectow.console.commands.manager.FileCommanderManager;
 import com.aspectran.aspectow.console.commands.relay.RelaySession;
+import com.aspectran.core.activity.Translet;
+import com.aspectran.core.component.AbstractComponent;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.core.component.bean.annotation.Initialize;
+import com.aspectran.core.component.session.SessionIdGenerator;
+import com.aspectran.utils.CopyOnWriteMap;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * PollingFileCommandRelayer manages client sessions for HTTP long-polling
- * and queues command results until they are requested.
+ * and uses a central message buffer to distribute command results.
  */
 @Component
-public class PollingFileCommandRelayer implements FileCommandRelayer {
+public class PollingFileCommandRelayer extends AbstractComponent implements FileCommandRelayer {
 
     private static final Logger logger = LoggerFactory.getLogger(PollingFileCommandRelayer.class);
 
+    private final SessionIdGenerator sessionIdGenerator = new SessionIdGenerator();
+
+    private final Map<String, PollingRelaySession> sessions = new CopyOnWriteMap<>();
+
     private final FileCommanderManager fileCommanderManager;
 
-    private final Map<String, PollingRelaySession> sessions = new ConcurrentHashMap<>();
+    private final BufferedMessages bufferedMessages;
 
     @Autowired
     public PollingFileCommandRelayer(FileCommanderManager fileCommanderManager) {
         this.fileCommanderManager = fileCommanderManager;
+        this.bufferedMessages = new BufferedMessages(100);
     }
 
-    @Initialize
-    public void register() {
+    @Override
+    protected void doInitialize() throws Exception {
         if (fileCommanderManager.getRelayManager() != null) {
             fileCommanderManager.getRelayManager().addRelayer(this);
             logger.info("PollingFileCommandRelayer registered with FileCommanderManager");
         }
     }
 
+    @Override
+    protected void doDestroy() throws Exception {
+        if (fileCommanderManager.getRelayManager() != null) {
+            fileCommanderManager.getRelayManager().removeRelayer(this);
+        }
+        bufferedMessages.clear();
+        sessions.clear();
+    }
+
     public PollingRelaySession createSession(String nodeId) {
-        // Use a unique session ID for the client
-        String sessionId = java.util.UUID.randomUUID().toString();
-        PollingRelaySession session = new PollingRelaySession(nodeId);
-        sessions.put(sessionId, session);
-        return session;
+        String sessionId = sessionIdGenerator.createSessionId();
+        PollingRelaySession newSession = new PollingRelaySession(this);
+        newSession.setNodeId(nodeId);
+        newSession.setSessionTimeout(60); // 1 minute default
+        newSession.access(true);
+        sessions.put(sessionId, newSession);
+        return newSession;
     }
 
     public PollingRelaySession getSession(String sessionId) {
         PollingRelaySession session = sessions.get(sessionId);
         if (session != null) {
-            session.access();
+            session.access(false);
         }
         return session;
     }
 
-    public void removeSession(String sessionId) {
-        PollingRelaySession session = sessions.remove(sessionId);
-        if (session != null) {
-            session.expire();
-        }
-    }
-
     @Override
     public void relay(String data) {
-        for (PollingRelaySession session : sessions.values()) {
-            if (session.isValid()) {
-                session.push(data);
-            }
+        if (!sessions.isEmpty()) {
+            bufferedMessages.push(data);
         }
     }
 
     @Override
     public void relay(@NonNull RelaySession relaySession, String data) {
-        if (relaySession instanceof PollingRelaySession pollingRelaySession) {
-            if (pollingRelaySession.isValid()) {
-                pollingRelaySession.push(data);
-            }
+        // For individual relaying, we might need a separate mechanism
+        // but typically file commands are broadcasted or targeted via NodeId
+        relay(data);
+    }
+
+    public String[] pull(PollingRelaySession session) {
+        String[] messages = bufferedMessages.pop(session);
+        if (messages != null && messages.length > 0) {
+            shrinkBuffer();
+        }
+        return messages;
+    }
+
+    private void shrinkBuffer() {
+        int minLineIndex = getMinLineIndex();
+        if (minLineIndex > -1) {
+            bufferedMessages.shrink(minLineIndex);
         }
     }
 
-    /**
-     * Scavenges expired sessions.
-     * @param timeoutMillis the timeout in milliseconds
-     */
-    public void scavenge(long timeoutMillis) {
-        long now = System.currentTimeMillis();
-        sessions.entrySet().removeIf(entry -> {
-            boolean expired = (now - entry.getValue().getLastAccessTime() > timeoutMillis);
-            if (expired) {
-                entry.getValue().expire();
+    private int getMinLineIndex() {
+        int minLineIndex = -1;
+        for (PollingRelaySession session : sessions.values()) {
+            if (minLineIndex == -1) {
+                minLineIndex = session.getLastLineIndex();
+            } else if (session.getLastLineIndex() < minLineIndex) {
+                minLineIndex = session.getLastLineIndex();
             }
-            return expired;
-        });
+        }
+        return minLineIndex;
+    }
+
+    /**
+     * Scavenges for and removes expired sessions.
+     */
+    public void scavenge() {
+        List<String> expiredSessions = new ArrayList<>();
+        for (Map.Entry<String, PollingRelaySession> entry : sessions.entrySet()) {
+            if (entry.getValue().isExpired()) {
+                expiredSessions.add(entry.getKey());
+            }
+        }
+        for (String id : expiredSessions) {
+            PollingRelaySession session = sessions.remove(id);
+            if (session != null) {
+                session.destroy();
+            }
+        }
+        if (sessions.isEmpty()) {
+            bufferedMessages.clear();
+        } else {
+            shrinkBuffer();
+        }
+    }
+
+    public BufferedMessages getBufferedMessages() {
+        return bufferedMessages;
     }
 
 }

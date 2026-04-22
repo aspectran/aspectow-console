@@ -20,8 +20,21 @@ import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.component.bean.ablility.InitializableBean;
 import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Component;
+import com.aspectran.core.component.bean.aware.ActivityContextAware;
+import com.aspectran.core.context.ActivityContext;
+import com.aspectran.core.context.config.AspectranConfig;
+import com.aspectran.core.service.CoreService;
+import com.aspectran.core.service.CoreServiceHolder;
+import com.aspectran.daemon.command.polling.DefaultFileCommander;
+import com.aspectran.daemon.command.polling.FileCommander;
+import com.aspectran.daemon.service.DefaultDaemonService;
+import com.aspectran.daemon.service.DefaultDaemonServiceBuilder;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * FileCommanderManager manages file-related commands across the cluster.
@@ -30,16 +43,25 @@ import org.slf4j.LoggerFactory;
  */
 @Component
 @Bean(id = "fileCommanderManager")
-public class FileCommanderManager implements InitializableBean {
+public class FileCommanderManager implements ActivityContextAware, InitializableBean {
 
     private static final Logger logger = LoggerFactory.getLogger(FileCommanderManager.class);
 
     private final NodeManager nodeManager;
 
+    private ActivityContext activityContext;
+
     private FileCommandRelayManager relayManager;
+
+    private DefaultDaemonService daemonService;
 
     public FileCommanderManager(NodeManager nodeManager) {
         this.nodeManager = nodeManager;
+    }
+
+    @Override
+    public void setActivityContext(@NonNull ActivityContext activityContext) {
+        this.activityContext = activityContext;
     }
 
     @Override
@@ -52,6 +74,54 @@ public class FileCommanderManager implements InitializableBean {
         if (nodeManager.getRedisMessageSubscriber() != null) {
             FileCommandMessageRelayHandler relayHandler = new FileCommandMessageRelayHandler(this);
             nodeManager.getRedisMessageSubscriber().addListener(relayHandler);
+        }
+    }
+
+    private synchronized void setupDaemonService() throws Exception {
+        if (this.daemonService != null) {
+            return;
+        }
+
+        for (CoreService service : CoreServiceHolder.getAllServices()) {
+            if (service instanceof DefaultDaemonService ds) {
+                this.daemonService = ds;
+                break;
+            }
+        }
+
+        if (this.daemonService == null) {
+            CoreService baseService = null;
+            if (activityContext != null) {
+                baseService = activityContext.getMasterService().getRootService();
+            } else {
+                for (CoreService service : CoreServiceHolder.getAllServices()) {
+                    baseService = service.getRootService();
+                    break;
+                }
+            }
+
+            if (baseService != null) {
+                AspectranConfig aspectranConfig = baseService.getAspectranConfig();
+                if (aspectranConfig != null) {
+                    logger.info("No active DaemonService found; starting a new one based on root service [{}] configuration",
+                            baseService.getServiceName());
+                    this.daemonService = DefaultDaemonServiceBuilder.build(aspectranConfig, baseService);
+                    // The daemonService is added to baseService's sub-services during construction.
+                    // If the baseService is already active, the new daemonService is considered an
+                    // orphan and must be started manually.
+                    if (this.daemonService.getServiceLifeCycle().isOrphan()) {
+                        this.daemonService.start();
+                    }
+                } else {
+                    logger.warn("No Aspectran configuration found in root service [{}]; cannot start DaemonService",
+                            baseService.getServiceName());
+                }
+            } else {
+                logger.warn("No Core Service found in CoreServiceHolder; cannot start DaemonService. " +
+                        "This might be because FileCommanderManager is initialized too early.");
+            }
+        } else {
+            logger.info("Active DaemonService found: {}", daemonService.getServiceName());
         }
     }
 
@@ -79,11 +149,33 @@ public class FileCommanderManager implements InitializableBean {
         }
     }
 
-    private void processLocalCommand(String commandData) {
+    private void processLocalCommand(String commandData) throws Exception {
         logger.info("Processing local file command: {}", commandData);
-        // Implementation for local command handling
-        // For testing, just simulate a result back
-        handleCommandResult(commandData + " (processed locally)");
+        if (daemonService == null) {
+            setupDaemonService();
+        }
+        if (daemonService != null) {
+            FileCommander fileCommander = daemonService.getFileCommander();
+            if (fileCommander instanceof DefaultFileCommander defaultFileCommander) {
+                try {
+                    Path incomingDir = defaultFileCommander.getIncomingDir();
+                    String fileName = "cmd_" + System.currentTimeMillis() + ".apon";
+                    Files.writeString(incomingDir.resolve(fileName), commandData);
+                    logger.debug("Command file created in incoming directory: {}", fileName);
+                    // Explicitly trigger polling to process the command immediately
+                    fileCommander.polling();
+                } catch (Exception e) {
+                    logger.error("Failed to write local command file", e);
+                    handleCommandResult("[FAILED] Error writing command file: " + e.getMessage());
+                }
+            } else {
+                logger.warn("FileCommander is not available or not an instance of DefaultFileCommander");
+                handleCommandResult("[FAILED] Local FileCommander is not available");
+            }
+        } else {
+            logger.warn("DaemonService is not available for local command processing");
+            handleCommandResult("[FAILED] Local DaemonService is not available");
+        }
     }
 
     /**
