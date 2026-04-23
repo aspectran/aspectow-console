@@ -64,7 +64,7 @@ public class WebsocketRemoteCommandRelayer extends SimplifiedEndpoint implements
     public void register() {
         if (remoteCommandManager.getRelayManager() != null) {
             remoteCommandManager.getRelayManager().addRelayer(this);
-            logger.info("WebsocketFileCommandRelayer registered with FileCommanderManager");
+            logger.info("WebsocketRemoteCommandRelayer registered with RemoteCommandManager");
         }
     }
 

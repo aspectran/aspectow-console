@@ -318,11 +318,18 @@ arguments: {
                 };
 
                 client = new ConsoleClient(commandsNode, {
-                    onOpen: () => {
-                        $('#connection-indicator').text("CONNECTED").removeClass("bg-secondary").addClass("bg-success");
+                    onEstablished: () => {
+                        $('#connection-indicator').text("CONNECTED").removeClass("bg-secondary bg-danger bg-warning").addClass("bg-success");
                     },
-                    onClose: () => {
-                        $('#connection-indicator').text("DISCONNECTED").removeClass("bg-success").addClass("bg-danger");
+                    onRetry: (count, max) => {
+                        $('#connection-indicator').text(`RECONNECTING (${count}/${max})...`).removeClass("bg-success bg-danger").addClass("bg-warning");
+                    },
+                    onClose: (event) => {
+                        if (event.code === 1003) {
+                            $('#connection-indicator').text("SESSION EXPIRED").removeClass("bg-success bg-warning").addClass("bg-danger");
+                        } else {
+                            $('#connection-indicator').text("DISCONNECTED").removeClass("bg-success bg-warning").addClass("bg-danger");
+                        }
                     },
                     onMessage: (message) => {
                         const result = message.result;

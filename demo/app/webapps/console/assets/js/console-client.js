@@ -32,6 +32,7 @@ class ConsoleClient {
             onOpen: null,
             onMessage: null,
             onClose: null,
+            onRetry: null,
             onError: null,
             onEstablished: null,
             onJoined: null,
@@ -139,8 +140,15 @@ class ConsoleClient {
             if (this.options.onClose) {
                 this.options.onClose(event);
             }
-            if (!this.manualClose && event.code !== 1000) {
-                this.rejoin();
+            if (!this.manualClose) {
+                if (event.code === 1003) {
+                    this.options.viewer.printErrorMessage("Connection rejected: " + (event.reason || "Unauthorized"));
+                    if (this.options.onFailed) {
+                        this.options.onFailed(this.node);
+                    }
+                } else {
+                    this.rejoin();
+                }
             }
         };
 
@@ -206,6 +214,9 @@ class ConsoleClient {
             const status = "(" + this.retryCount + "/" + this.options.maxRetries + ", interval=" + interval + "ms)";
 
             this.options.viewer.printMessage("Trying to reconnect... " + status);
+            if (this.options.onRetry) {
+                this.options.onRetry(this.retryCount, this.options.maxRetries, interval);
+            }
             setTimeout(() => {
                 this.openSocket();
             }, interval);
