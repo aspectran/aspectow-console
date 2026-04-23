@@ -27,6 +27,7 @@ import com.aspectran.core.service.CoreServiceHolder;
 import com.aspectran.daemon.command.CommandResult;
 import com.aspectran.daemon.service.DefaultDaemonService;
 import com.aspectran.daemon.service.DefaultDaemonServiceBuilder;
+import com.aspectran.utils.ToStringBuilder;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,14 +45,15 @@ public class RemoteCommandManager implements ActivityContextAware, Initializable
 
     private final NodeManager nodeManager;
 
-    private ActivityContext activityContext;
+    private final RemoteCommandRelayManager relayManager;
 
-    private RemoteCommandRelayManager relayManager;
+    private ActivityContext activityContext;
 
     private DefaultDaemonService daemonService;
 
-    public RemoteCommandManager(NodeManager nodeManager) {
+    public RemoteCommandManager(@NonNull NodeManager nodeManager) {
         this.nodeManager = nodeManager;
+        this.relayManager = new RemoteCommandRelayManager(nodeManager.getNodeId(), nodeManager.getRedisMessagePublisher());
     }
 
     @Override
@@ -62,8 +64,6 @@ public class RemoteCommandManager implements ActivityContextAware, Initializable
     @Override
     public void initialize() throws Exception {
         logger.info("Initializing RemoteCommandManager for node: {}", nodeManager.getNodeId());
-
-        relayManager = new RemoteCommandRelayManager(nodeManager.getNodeId(), nodeManager.getRedisMessagePublisher());
 
         // Register a listener for command results from Redis
         if (nodeManager.getRedisMessageSubscriber() != null) {
@@ -139,7 +139,7 @@ public class RemoteCommandManager implements ActivityContextAware, Initializable
     }
 
     private void processLocalCommand(String commandData) throws Exception {
-        logger.info("Processing local command: {}", commandData);
+        logger.info(ToStringBuilder.toString("Processing local command:", commandData));
         if (daemonService == null) {
             setupDaemonService();
         }

@@ -98,11 +98,11 @@ class ConsoleClient {
             this.retryCount = 0;
             this.pendingMessages.push("Socket connection successful");
 
-            const joinOptions = [
-                "command:join",
-                "timeZone:" + Intl.DateTimeFormat().resolvedOptions().timeZone
-            ];
-            this.socket.send(joinOptions.join(";"));
+            const joinMessage = {
+                header: "join",
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+            this.socket.send(JSON.stringify(joinMessage));
             this.heartbeatPing();
 
             if (this.options.onOpen) {
@@ -112,22 +112,24 @@ class ConsoleClient {
 
         this.socket.onmessage = (event) => {
             if (typeof event.data === "string") {
-                const msg = event.data;
-                if (this.established) {
-                    if (msg.startsWith("pong:")) {
-                        this.node.endpoint.token = msg.substring(5);
+                try {
+                    const message = JSON.parse(event.data);
+                    const header = message.header;
+
+                    if (header === 'joined') {
+                        console.log(this.node.id, "joined", this.activityPath);
+                        this.establish(message);
+                    } else if (header === 'pong') {
                         this.heartbeatPing();
-                    } else {
+                    } else if (header === 'result' || header === 'error') {
                         if (this.options.onMessage) {
-                            this.options.onMessage(msg);
+                            this.options.onMessage(message);
                         } else {
-                            this.options.viewer.processMessage(msg);
+                            this.options.viewer.processMessage(message);
                         }
                     }
-                } else if (msg.startsWith("joined:")) {
-                    console.log(this.node.id, "joined", this.activityPath);
-                    const payload = (msg.length > 7 ? JSON.parse(msg.substring(7)) : null);
-                    this.establish(payload);
+                } catch (e) {
+                    console.error("Failed to parse incoming WebSocket message:", event.data, e);
                 }
             }
         };
@@ -189,7 +191,7 @@ class ConsoleClient {
             this.options.onEstablished(this.node);
         }
         this.established = true;
-        this.socket.send("command:established");
+        this.socket.send(JSON.stringify({ header: "established" }));
     }
 
     /**
@@ -217,6 +219,16 @@ class ConsoleClient {
     }
 
     /**
+     * Sends a raw message to the server.
+     * @param {string} data - the message data to send
+     */
+    sendMessage(data) {
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(data);
+        }
+    }
+
+    /**
      * Sends a command to the server.
      * @param {string} command - the command name
      * @param {string[]} [args] - optional arguments
@@ -238,7 +250,7 @@ class ConsoleClient {
         }
         this.heartbeatTimer = setTimeout(() => {
             if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-                this.socket.send("command:ping");
+                this.socket.send(JSON.stringify({ header: "ping" }));
             }
         }, this.options.heartbeatInterval);
     }

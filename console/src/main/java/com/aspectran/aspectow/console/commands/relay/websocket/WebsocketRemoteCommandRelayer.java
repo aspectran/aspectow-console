@@ -19,11 +19,15 @@ import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.console.commands.manager.RemoteCommandRelayer;
 import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
 import com.aspectran.aspectow.console.commands.relay.RelaySession;
+import com.aspectran.aspectow.console.commands.relay.RemoteCommandParameters;
+import com.aspectran.aspectow.console.commands.relay.RemoteCommandResultParameters;
 import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Initialize;
+import com.aspectran.daemon.command.CommandParameters;
 import com.aspectran.utils.StringUtils;
+import com.aspectran.utils.apon.JsonToParameters;
 import com.aspectran.utils.security.InvalidPBTokenException;
 import com.aspectran.web.websocket.jsr356.AspectranConfigurator;
 import com.aspectran.web.websocket.jsr356.SimplifiedEndpoint;
@@ -90,12 +94,21 @@ public class WebsocketRemoteCommandRelayer extends SimplifiedEndpoint implements
         if (StringUtils.isEmpty(message)) {
             return;
         }
-        if (message.startsWith("command:execute")) {
-            execute(session, message);
-        } else if ("command:join".equals(message)) {
-            join(session);
-        } else if ("command:ping".equals(message)) {
-            pong(session);
+
+        try {
+            RemoteCommandParameters parameters = JsonToParameters.from(message, RemoteCommandParameters.class);
+
+            String header = parameters.getHeader();
+            if ("execute".equals(header)) {
+                execute(session, parameters);
+            } else if ("join".equals(header)) {
+                join(session);
+            } else if ("ping".equals(header)) {
+                pong(session);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to parse incoming remote command message: {}", message, e);
+            sendText(session, "[ERROR] Invalid message format");
         }
     }
 
@@ -103,57 +116,71 @@ public class WebsocketRemoteCommandRelayer extends SimplifiedEndpoint implements
         WebsocketRelaySession relaySession = new WebsocketRelaySession(session);
         relaySession.setNodeId(nodeManager.getNodeId());
         if (addSession(session)) {
-            sendText(session, "joined:" + nodeManager.getNodeId());
+            RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
+                    .setHeader("joined")
+                    .setNodeId(nodeManager.getNodeId());
+            sendText(session, resultParameters.toString());
             logger.debug("ConsoleClient joined: session {}", session.getId());
         }
     }
 
     private void pong(Session session) {
-        sendText(session, "pong");
+        RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
+                .setHeader("pong");
+        sendText(session, resultParameters.toString());
     }
 
-    private void execute(Session session, String message) {
-        String[] parts = message.split("\n");
-        String targetNodeId = null;
-        String commandData = null;
-        for (String part : parts) {
-            if (part.startsWith("targetNodeId:")) {
-                targetNodeId = part.substring(13).trim();
-            } else if (part.startsWith("data:")) {
-                commandData = part.substring(5).trim();
-            }
-        }
-        if (commandData != null) {
+    private void execute(Session session, RemoteCommandParameters messageParameters) {
+        CommandParameters commandParameters = messageParameters.getCommandParameters();
+        if (commandParameters != null) {
+            String targetNodeId = messageParameters.getTargetNodeId();
             if (targetNodeId == null || targetNodeId.isEmpty()) {
                 targetNodeId = nodeManager.getNodeId();
             }
+
+            final String finalTargetNodeId = targetNodeId;
             try {
-                remoteCommandManager.executeCommand(targetNodeId, commandData);
-                logger.debug("Command execution initiated from session {}: target={}, data={}",
-                        session.getId(), targetNodeId, commandData);
+                Thread.ofVirtual().start(() -> {
+                    try {
+                        remoteCommandManager.executeCommand(finalTargetNodeId, commandParameters.toString());
+                    } catch (Exception e) {
+                        logger.error("Failed to execute command from session {}", session.getId(), e);
+                        sendText(session, "[ERROR] " + e.getMessage());
+                    }
+                });
+                logger.debug("Command execution initiated from session {}: target={}, command={}",
+                        session.getId(), finalTargetNodeId, commandParameters.getCommandName());
             } catch (Exception e) {
-                logger.error("Failed to execute command from session {}", session.getId(), e);
+                logger.error("Failed to initiate command execution from session {}", session.getId(), e);
                 sendText(session, "[ERROR] " + e.getMessage());
             }
         }
     }
 
     @Override
-    protected void onSessionRemoved(Session session) {
+    protected void onSessionRemoved(@NonNull Session session) {
         logger.debug("WebSocket session removed: {} (Total: {})", session.getId(), countSessions());
     }
 
     @Override
     public void relay(String data) {
-        if (StringUtils.hasText(data)) {
-            broadcast(data);
+        if (data != null) {
+            RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
+                    .setHeader("result")
+                    .setNodeId(nodeManager.getNodeId())
+                    .setResult(data);
+            broadcast(resultParameters.toString());
         }
     }
 
     @Override
     public void relay(@NonNull RelaySession relaySession, String data) {
         if (relaySession instanceof WebsocketRelaySession websocketRelaySession) {
-            sendText(websocketRelaySession.getSession(), data);
+            RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
+                    .setHeader("result")
+                    .setNodeId(nodeManager.getNodeId())
+                    .setResult(data);
+            sendText(websocketRelaySession.getSession(), resultParameters.toString());
         }
     }
 

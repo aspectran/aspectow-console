@@ -59,6 +59,8 @@ public class PollingRemoteCommandRelayer extends AbstractComponent implements Re
         if (remoteCommandManager.getRelayManager() != null) {
             remoteCommandManager.getRelayManager().addRelayer(this);
             logger.info("PollingRemoteCommandRelayer registered with RemoteCommandManager");
+        } else {
+            logger.warn("Failed to register PollingRemoteCommandRelayer: RelayManager is null");
         }
     }
 

@@ -85,7 +85,7 @@
     <th:block layout:fragment="content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="fw-bold mb-0">Remote Commander</h2>
+                <h2 class="fw-bold mb-0">Remote Commands</h2>
             </div>
             <div class="text-end">
                 <span class="text-muted small">Target Mode:</span>
@@ -233,12 +233,15 @@ arguments: {
                 updateHistoryUI();
                 
                 if (client) {
-                    const args = ["data:" + apon];
-                    if (targetType === 'node') args.push("targetNodeId:" + targetValue);
-                    if (targetType === 'group') args.push("targetGroup:" + targetValue);
-                    if (targetType === 'all') args.push("targetAll:true");
-                    
-                    client.sendCommand("execute", args);
+                    const message = {
+                        header: "execute",
+                        command: apon
+                    };
+                    if (targetType === 'node') message.targetNodeId = targetValue;
+                    if (targetType === 'group') message.targetGroup = targetValue;
+                    if (targetType === 'all') message.targetAll = true;
+
+                    client.sendMessage(JSON.stringify(message));
                 }
             }
 
@@ -321,13 +324,19 @@ arguments: {
                     onClose: () => {
                         $('#connection-indicator').text("DISCONNECTED").removeClass("bg-success").addClass("bg-danger");
                     },
-                    onMessage: (msg) => {
-                        // In a real multi-node scenario, we would match by correlation ID or similar.
-                        // For now, we update the first queued command.
+                    onMessage: (message) => {
+                        const result = message.result;
+                        const error = message.error;
+
                         const target = commandHistory.find(c => c.status === 'queued');
                         if (target) {
-                            target.status = msg.includes('[FAILED]') ? 'failed' : 'completed';
-                            target.result = msg;
+                            if (error) {
+                                target.status = 'failed';
+                                target.result = error;
+                            } else {
+                                target.status = result.includes('[FAILED]') ? 'failed' : 'completed';
+                                target.result = result;
+                            }
                             updateHistoryUI();
                         }
                     }
