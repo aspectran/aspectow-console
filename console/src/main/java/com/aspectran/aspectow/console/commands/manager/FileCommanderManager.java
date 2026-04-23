@@ -32,9 +32,6 @@ import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 /**
  * FileCommanderManager manages file-related commands across the cluster.
  * It handles local command execution in direct mode and relays commands
@@ -82,7 +79,7 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
         }
 
         for (CoreService service : CoreServiceHolder.getAllServices()) {
-            if (service instanceof DefaultDaemonService ds) {
+            if (service instanceof DaemonService ds) {
                 daemonService = ds;
                 break;
             }
@@ -148,22 +145,19 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
             setupDaemonService();
         }
         if (daemonService != null) {
-            FileCommander fileCommander = daemonService.getFileCommander();
-            if (fileCommander instanceof DefaultFileCommander defaultFileCommander) {
-                try {
-                    Path incomingDir = defaultFileCommander.getIncomingDir();
-                    String fileName = "cmd_" + System.currentTimeMillis() + ".apon";
-                    Files.writeString(incomingDir.resolve(fileName), commandData);
-                    logger.debug("Command file created in incoming directory: {}", fileName);
-                    // Explicitly trigger polling to process the command immediately
-                    fileCommander.polling();
-                } catch (Exception e) {
-                    logger.error("Failed to write local command file", e);
-                    handleCommandResult("[FAILED] Error writing command file: " + e.getMessage());
+            try {
+                CommandResult commandResult = daemonService.execute(commandData);
+                if (commandResult.isSuccess()) {
+                    handleCommandResult(commandResult.getResult());
+                } else {
+                    handleCommandResult(commandResult.getResult());
+                    if (commandResult.getError() != null) {
+                        logger.error("Local command execution failed: {}", commandResult.getError());
+                    }
                 }
-            } else {
-                logger.warn("FileCommander is not available or not an instance of DefaultFileCommander");
-                handleCommandResult("[FAILED] Local FileCommander is not available");
+            } catch (Exception e) {
+                logger.error("Failed to execute local command", e);
+                handleCommandResult("[FAILED] Error executing command: " + e.getMessage());
             }
         } else {
             logger.warn("DaemonService is not available for local command processing");
@@ -182,6 +176,11 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
         }
         if (relayManager != null) {
             relayManager.relay(resultData);
+        }
+    }
+
+}
+(resultData);
         }
     }
 
