@@ -29,7 +29,6 @@ import com.aspectran.core.component.bean.annotation.Redirect;
 import com.aspectran.core.component.bean.annotation.Request;
 import com.aspectran.core.component.bean.annotation.RequestToPost;
 import com.aspectran.utils.StringUtils;
-import com.aspectran.web.activity.response.DefaultRestResponse;
 import com.aspectran.web.activity.response.RestResponse;
 import com.aspectran.web.support.http.HttpHeaders;
 import com.aspectran.web.support.rest.response.FailureResponse;

@@ -79,7 +79,7 @@ public class RemoteCommandResultParameters extends DefaultParameters {
                     .put(this)
                     .toString();
         } catch (Exception e) {
-            throw new RuntimeException("Badly formatted outgoing message", e);
+            throw new RuntimeException(e);
         }
     }
 

@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.manager;
-
-import com.aspectran.aspectow.console.commands.relay.RelaySession;
+package com.aspectran.aspectow.console.commands.relay;
 
 /**
  * Interface for relaying command results to clients.

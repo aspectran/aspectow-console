@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.manager;
+package com.aspectran.aspectow.console.commands.relay;
 
-import com.aspectran.aspectow.console.commands.relay.RelaySession;
 import com.aspectran.aspectow.node.redis.RedisMessagePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +43,14 @@ public class RemoteCommandRelayManager {
         this.messagePublisher = messagePublisher;
     }
 
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    public RedisMessagePublisher getMessagePublisher() {
+        return messagePublisher;
+    }
+
     public void addRelayer(RemoteCommandRelayer relayer) {
         relayers.add(relayer);
     }
@@ -61,7 +68,8 @@ public class RemoteCommandRelayManager {
             try {
                 relayer.relay(resultData);
             } catch (Exception e) {
-                logger.warn("Failed to relay command result via {}: {}", relayer.getClass().getSimpleName(), e.getMessage());
+                logger.warn("Failed to relay command result via {}: {}",
+                        relayer.getClass().getSimpleName(), e.getMessage());
             }
         }
     }
@@ -76,17 +84,10 @@ public class RemoteCommandRelayManager {
             try {
                 relayer.relay(session, resultData);
             } catch (Exception e) {
-                logger.warn("Failed to relay command result via {}: {}", relayer.getClass().getSimpleName(), e.getMessage());
+                logger.warn("Failed to relay command result via {}: {}",
+                        relayer.getClass().getSimpleName(), e.getMessage());
             }
         }
-    }
-
-    public RedisMessagePublisher getMessagePublisher() {
-        return messagePublisher;
-    }
-
-    public String getNodeId() {
-        return nodeId;
     }
 
 }

@@ -15,8 +15,8 @@
  */
 package com.aspectran.aspectow.console.commands.relay.redis;
 
-import com.aspectran.aspectow.console.commands.manager.RemoteCommandRelayManager;
 import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
+import com.aspectran.aspectow.console.commands.relay.RemoteCommandRelayManager;
 import com.aspectran.aspectow.node.redis.RedisMessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

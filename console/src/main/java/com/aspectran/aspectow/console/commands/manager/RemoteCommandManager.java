@@ -15,6 +15,7 @@
  */
 package com.aspectran.aspectow.console.commands.manager;
 
+import com.aspectran.aspectow.console.commands.relay.RemoteCommandRelayManager;
 import com.aspectran.aspectow.console.commands.relay.redis.RemoteCommandMessageRelayHandler;
 import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.component.bean.ablility.InitializableBean;

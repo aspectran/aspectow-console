@@ -294,7 +294,7 @@ arguments: {
                     </div>
                     <div>
                         <div class="text-muted mb-1 small text-uppercase fw-bold">Execution Result:</div>
-                        <pre class="p-0" style="font-size: 0.85rem;">${cmd.result || (cmd.status === 'queued' ? 'Wait for response...' : 'No result.')}</pre>
+                        <pre style="font-size: 0.85rem;">${cmd.result || (cmd.status === 'queued' ? 'Wait for response...' : 'No result.')}</pre>
                     </div>
                 `);
                 $view.append($detail);
