@@ -17,7 +17,7 @@ package com.aspectran.aspectow.console.commands;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.console.cluster.NodeConsoleHelper;
-import com.aspectran.aspectow.console.commands.manager.FileCommanderManager;
+import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
 import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.activity.Translet;
@@ -47,16 +47,16 @@ public class RemoteCommandsActivity {
 
     private final NodeManager nodeManager;
 
-    private final FileCommanderManager fileCommanderManager;
+    private final RemoteCommandManager remoteCommandManager;
 
     private final NodeConsoleHelper nodeConsoleHelper;
 
     @Autowired
     public RemoteCommandsActivity(NodeManager nodeManager,
-                                  FileCommanderManager fileCommanderManager,
+                                  RemoteCommandManager remoteCommandManager,
                                   NodeConsoleHelper nodeConsoleHelper) {
         this.nodeManager = nodeManager;
-        this.fileCommanderManager = fileCommanderManager;
+        this.remoteCommandManager = remoteCommandManager;
         this.nodeConsoleHelper = nodeConsoleHelper;
     }
 
@@ -113,7 +113,7 @@ public class RemoteCommandsActivity {
             targetNodeId = nodeManager.getNodeId();
         }
 
-        fileCommanderManager.executeCommand(targetNodeId, command);
+        remoteCommandManager.executeCommand(targetNodeId, command);
 
         Map<String, String> result = new HashMap<>();
         result.put("message", "Command initiated successfully for node: " + targetNodeId);

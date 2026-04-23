@@ -16,8 +16,8 @@
 package com.aspectran.aspectow.console.commands.relay.websocket;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
-import com.aspectran.aspectow.console.commands.manager.FileCommandRelayer;
-import com.aspectran.aspectow.console.commands.manager.FileCommanderManager;
+import com.aspectran.aspectow.console.commands.manager.RemoteCommandRelayer;
+import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
 import com.aspectran.aspectow.console.commands.relay.RelaySession;
 import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.component.bean.annotation.Autowired;
@@ -34,32 +34,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * WebsocketFileCommandRelayer provides a WebSocket endpoint for real-time
- * file command result delivery.
+ * WebsocketRemoteCommandRelayer provides a WebSocket endpoint for real-time
+ * remote command result delivery.
  */
 @Component
 @ServerEndpoint(
-        value = "/file-commander/websocket/{token}",
+        value = "/remote-commands/websocket/{token}",
         configurator = AspectranConfigurator.class
 )
-public class WebsocketFileCommandRelayer extends SimplifiedEndpoint implements FileCommandRelayer {
+public class WebsocketRemoteCommandRelayer extends SimplifiedEndpoint implements RemoteCommandRelayer {
 
-    private static final Logger logger = LoggerFactory.getLogger(WebsocketFileCommandRelayer.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebsocketRemoteCommandRelayer.class);
 
-    private final FileCommanderManager fileCommanderManager;
+    private final RemoteCommandManager remoteCommandManager;
 
     private final NodeManager nodeManager;
 
     @Autowired
-    public WebsocketFileCommandRelayer(FileCommanderManager fileCommanderManager, NodeManager nodeManager) {
-        this.fileCommanderManager = fileCommanderManager;
+    public WebsocketRemoteCommandRelayer(RemoteCommandManager remoteCommandManager, NodeManager nodeManager) {
+        this.remoteCommandManager = remoteCommandManager;
         this.nodeManager = nodeManager;
     }
 
     @Initialize
     public void register() {
-        if (fileCommanderManager.getRelayManager() != null) {
-            fileCommanderManager.getRelayManager().addRelayer(this);
+        if (remoteCommandManager.getRelayManager() != null) {
+            remoteCommandManager.getRelayManager().addRelayer(this);
             logger.info("WebsocketFileCommandRelayer registered with FileCommanderManager");
         }
     }
@@ -128,7 +128,7 @@ public class WebsocketFileCommandRelayer extends SimplifiedEndpoint implements F
                 targetNodeId = nodeManager.getNodeId();
             }
             try {
-                fileCommanderManager.executeCommand(targetNodeId, commandData);
+                remoteCommandManager.executeCommand(targetNodeId, commandData);
                 logger.debug("Command execution initiated from session {}: target={}, data={}",
                         session.getId(), targetNodeId, commandData);
             } catch (Exception e) {
@@ -158,3 +158,4 @@ public class WebsocketFileCommandRelayer extends SimplifiedEndpoint implements F
     }
 
 }
+

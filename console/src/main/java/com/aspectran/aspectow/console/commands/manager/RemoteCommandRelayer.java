@@ -18,10 +18,10 @@ package com.aspectran.aspectow.console.commands.manager;
 import com.aspectran.aspectow.console.commands.relay.RelaySession;
 
 /**
- * Interface for relaying file command results to clients.
+ * Interface for relaying command results to clients.
  * This can be implemented using various communication protocols like WebSocket or polling.
  */
-public interface FileCommandRelayer {
+public interface RemoteCommandRelayer {
 
     /**
      * Relays a message to all connected sessions.

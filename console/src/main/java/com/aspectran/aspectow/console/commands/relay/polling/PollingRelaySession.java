@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PollingRelaySession implements RelaySession {
 
-    private final PollingFileCommandRelayer relayer;
+    private final PollingRemoteCommandRelayer relayer;
 
     private String nodeId;
 
@@ -37,7 +37,7 @@ public class PollingRelaySession implements RelaySession {
 
     private volatile boolean expired;
 
-    public PollingRelaySession(PollingFileCommandRelayer relayer) {
+    public PollingRelaySession(PollingRemoteCommandRelayer relayer) {
         this.relayer = relayer;
     }
 

@@ -16,7 +16,7 @@
 package com.aspectran.aspectow.console.commands.relay;
 
 /**
- * An interface representing a client session for relaying file commands.
+ * An interface representing a client session for relaying commands.
  * It provides a protocol-agnostic way to manage session state.
  */
 public interface RelaySession {

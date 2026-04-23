@@ -15,7 +15,7 @@
  */
 package com.aspectran.aspectow.console.commands.manager;
 
-import com.aspectran.aspectow.console.commands.relay.redis.FileCommandMessageRelayHandler;
+import com.aspectran.aspectow.console.commands.relay.redis.RemoteCommandMessageRelayHandler;
 import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.component.bean.ablility.InitializableBean;
 import com.aspectran.core.component.bean.annotation.Bean;
@@ -24,8 +24,7 @@ import com.aspectran.core.component.bean.aware.ActivityContextAware;
 import com.aspectran.core.context.ActivityContext;
 import com.aspectran.core.service.CoreService;
 import com.aspectran.core.service.CoreServiceHolder;
-import com.aspectran.daemon.command.polling.DefaultFileCommander;
-import com.aspectran.daemon.command.polling.FileCommander;
+import com.aspectran.daemon.command.CommandResult;
 import com.aspectran.daemon.service.DefaultDaemonService;
 import com.aspectran.daemon.service.DefaultDaemonServiceBuilder;
 import org.jspecify.annotations.NonNull;
@@ -33,25 +32,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * FileCommanderManager manages file-related commands across the cluster.
+ * RemoteCommandManager manages commands across the cluster.
  * It handles local command execution in direct mode and relays commands
  * via Redis in gateway/autoscaling modes.
  */
 @Component
-@Bean(id = "fileCommanderManager")
-public class FileCommanderManager implements ActivityContextAware, InitializableBean {
+@Bean(id = "remoteCommandManager")
+public class RemoteCommandManager implements ActivityContextAware, InitializableBean {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileCommanderManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(RemoteCommandManager.class);
 
     private final NodeManager nodeManager;
 
     private ActivityContext activityContext;
 
-    private FileCommandRelayManager relayManager;
+    private RemoteCommandRelayManager relayManager;
 
     private DefaultDaemonService daemonService;
 
-    public FileCommanderManager(NodeManager nodeManager) {
+    public RemoteCommandManager(NodeManager nodeManager) {
         this.nodeManager = nodeManager;
     }
 
@@ -62,13 +61,13 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
 
     @Override
     public void initialize() throws Exception {
-        logger.info("Initializing FileCommanderManager for node: {}", nodeManager.getNodeId());
+        logger.info("Initializing RemoteCommandManager for node: {}", nodeManager.getNodeId());
 
-        relayManager = new FileCommandRelayManager(nodeManager.getNodeId(), nodeManager.getRedisMessagePublisher());
+        relayManager = new RemoteCommandRelayManager(nodeManager.getNodeId(), nodeManager.getRedisMessagePublisher());
 
         // Register a listener for command results from Redis
         if (nodeManager.getRedisMessageSubscriber() != null) {
-            FileCommandMessageRelayHandler relayHandler = new FileCommandMessageRelayHandler(this);
+            RemoteCommandMessageRelayHandler relayHandler = new RemoteCommandMessageRelayHandler(this);
             nodeManager.getRedisMessageSubscriber().addListener(relayHandler);
         }
     }
@@ -79,7 +78,7 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
         }
 
         for (CoreService service : CoreServiceHolder.getAllServices()) {
-            if (service instanceof DaemonService ds) {
+            if (service instanceof DefaultDaemonService ds) {
                 daemonService = ds;
                 break;
             }
@@ -108,19 +107,19 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
                 }
             } else {
                 logger.warn("No Core Service found in CoreServiceHolder; cannot start DaemonService. " +
-                        "This might be because FileCommanderManager is initialized too early.");
+                        "This might be because RemoteCommandManager is initialized too early.");
             }
         } else {
             logger.info("Active DaemonService found: {}", daemonService.getServiceName());
         }
     }
 
-    public FileCommandRelayManager getRelayManager() {
+    public RemoteCommandRelayManager getRelayManager() {
         return relayManager;
     }
 
     /**
-     * Sends a file command to a specific node.
+     * Sends a command to a specific node.
      * @param targetNodeId the ID of the node to execute the command
      * @param commandData the command payload in APON/JSON format
      */
@@ -132,7 +131,7 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
             // Relay via Redis
             if (nodeManager.getRedisMessagePublisher() != null) {
                 logger.debug("Relaying command to node {}: {}", targetNodeId, commandData);
-                nodeManager.getRedisMessagePublisher().publishRelay(FileCommandRelayManager.CATEGORY_COMMANDS, commandData);
+                nodeManager.getRedisMessagePublisher().publishRelay(RemoteCommandRelayManager.CATEGORY_COMMANDS, commandData);
             } else {
                 throw new IllegalStateException("Redis publisher is not available for relaying commands");
             }
@@ -140,7 +139,7 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
     }
 
     private void processLocalCommand(String commandData) throws Exception {
-        logger.info("Processing local file command: {}", commandData);
+        logger.info("Processing local command: {}", commandData);
         if (daemonService == null) {
             setupDaemonService();
         }
@@ -176,11 +175,6 @@ public class FileCommanderManager implements ActivityContextAware, Initializable
         }
         if (relayManager != null) {
             relayManager.relay(resultData);
-        }
-    }
-
-}
-(resultData);
         }
     }
 

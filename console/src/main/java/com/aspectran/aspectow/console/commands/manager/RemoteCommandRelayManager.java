@@ -24,12 +24,12 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * FileCommandRelayManager handles the distribution of command results
+ * RemoteCommandRelayManager handles the distribution of command results
  * to connected clients (via WebSockets or Polling).
  */
-public class FileCommandRelayManager {
+public class RemoteCommandRelayManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileCommandRelayManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(RemoteCommandRelayManager.class);
 
     public static final String CATEGORY_COMMANDS = "commands";
 
@@ -37,18 +37,18 @@ public class FileCommandRelayManager {
 
     private final RedisMessagePublisher messagePublisher;
 
-    private final Set<FileCommandRelayer> relayers = new CopyOnWriteArraySet<>();
+    private final Set<RemoteCommandRelayer> relayers = new CopyOnWriteArraySet<>();
 
-    public FileCommandRelayManager(String nodeId, RedisMessagePublisher messagePublisher) {
+    public RemoteCommandRelayManager(String nodeId, RedisMessagePublisher messagePublisher) {
         this.nodeId = nodeId;
         this.messagePublisher = messagePublisher;
     }
 
-    public void addRelayer(FileCommandRelayer relayer) {
+    public void addRelayer(RemoteCommandRelayer relayer) {
         relayers.add(relayer);
     }
 
-    public void removeRelayer(FileCommandRelayer relayer) {
+    public void removeRelayer(RemoteCommandRelayer relayer) {
         relayers.remove(relayer);
     }
 
@@ -57,7 +57,7 @@ public class FileCommandRelayManager {
      * @param resultData the result payload to send
      */
     public void relay(String resultData) {
-        for (FileCommandRelayer relayer : relayers) {
+        for (RemoteCommandRelayer relayer : relayers) {
             try {
                 relayer.relay(resultData);
             } catch (Exception e) {
@@ -72,7 +72,7 @@ public class FileCommandRelayManager {
      * @param resultData the result payload to send
      */
     public void relay(RelaySession session, String resultData) {
-        for (FileCommandRelayer relayer : relayers) {
+        for (RemoteCommandRelayer relayer : relayers) {
             try {
                 relayer.relay(session, resultData);
             } catch (Exception e) {

@@ -15,37 +15,37 @@
  */
 package com.aspectran.aspectow.console.commands.relay.redis;
 
-import com.aspectran.aspectow.console.commands.manager.FileCommandRelayManager;
-import com.aspectran.aspectow.console.commands.manager.FileCommanderManager;
+import com.aspectran.aspectow.console.commands.manager.RemoteCommandRelayManager;
+import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
 import com.aspectran.aspectow.node.redis.RedisMessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * FileCommandRelayHandler listens to Redis relay messages and forwards
- * them to the FileCommanderManager.
+ * RemoteCommandMessageRelayHandler listens to Redis relay messages and forwards
+ * them to the RemoteCommandManager.
  */
-public class FileCommandMessageRelayHandler implements RedisMessageListener {
+public class RemoteCommandMessageRelayHandler implements RedisMessageListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileCommandMessageRelayHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(RemoteCommandMessageRelayHandler.class);
 
-    private final FileCommanderManager fileCommanderManager;
+    private final RemoteCommandManager remoteCommandManager;
 
-    public FileCommandMessageRelayHandler(FileCommanderManager fileCommanderManager) {
-        this.fileCommanderManager = fileCommanderManager;
+    public RemoteCommandMessageRelayHandler(RemoteCommandManager remoteCommandManager) {
+        this.remoteCommandManager = remoteCommandManager;
     }
 
     @Override
     public String getCategory() {
-        return FileCommandRelayManager.CATEGORY_COMMANDS;
+        return RemoteCommandRelayManager.CATEGORY_COMMANDS;
     }
 
     @Override
     public void onRelayMessage(String message) {
         if (logger.isTraceEnabled()) {
-            logger.trace("Forwarding relay message to FileCommanderManager: {}", message);
+            logger.trace("Forwarding relay message to RemoteCommandManager: {}", message);
         }
-        fileCommanderManager.handleCommandResult(message);
+        remoteCommandManager.handleCommandResult(message);
     }
 
 }

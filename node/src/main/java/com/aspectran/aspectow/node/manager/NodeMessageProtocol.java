@@ -67,7 +67,7 @@ public abstract class NodeMessageProtocol {
 
     /**
      * Returns the Redis Pub/Sub channel for transparently relaying application-specific
-     * messages (e.g., AppMon logs, File Commander data).
+     * messages (e.g., AppMon logs, Remote Command data).
      * @param clusterId the cluster ID
      * @param nodeId the node ID
      * @param category the category of the relay message

@@ -153,6 +153,7 @@ public class NodeReporter {
         logger.debug("Unregistering node {} from Redis hash {}", nodeInfo.getNodeId(), key);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             RedisCommands<String, String> sync = connection.sync();
+            sync.hset(key, nodeInfo.getNodeId(), "");
             sync.hdel(key, nodeInfo.getNodeId());
         } catch (Exception e) {
             logger.error("Failed to unregister node {} from Redis registry", nodeInfo.getNodeId(), e);

@@ -15,10 +15,9 @@
  */
 package com.aspectran.aspectow.console.commands.relay.polling;
 
-import com.aspectran.aspectow.console.commands.manager.FileCommandRelayer;
-import com.aspectran.aspectow.console.commands.manager.FileCommanderManager;
+import com.aspectran.aspectow.console.commands.manager.RemoteCommandRelayer;
+import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
 import com.aspectran.aspectow.console.commands.relay.RelaySession;
-import com.aspectran.core.activity.Translet;
 import com.aspectran.core.component.AbstractComponent;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
@@ -33,40 +32,40 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * PollingFileCommandRelayer manages client sessions for HTTP long-polling
+ * PollingRemoteCommandRelayer manages client sessions for HTTP long-polling
  * and uses a central message buffer to distribute command results.
  */
 @Component
-public class PollingFileCommandRelayer extends AbstractComponent implements FileCommandRelayer {
+public class PollingRemoteCommandRelayer extends AbstractComponent implements RemoteCommandRelayer {
 
-    private static final Logger logger = LoggerFactory.getLogger(PollingFileCommandRelayer.class);
+    private static final Logger logger = LoggerFactory.getLogger(PollingRemoteCommandRelayer.class);
 
     private final SessionIdGenerator sessionIdGenerator = new SessionIdGenerator();
 
     private final Map<String, PollingRelaySession> sessions = new CopyOnWriteMap<>();
 
-    private final FileCommanderManager fileCommanderManager;
+    private final RemoteCommandManager remoteCommandManager;
 
     private final BufferedMessages bufferedMessages;
 
     @Autowired
-    public PollingFileCommandRelayer(FileCommanderManager fileCommanderManager) {
-        this.fileCommanderManager = fileCommanderManager;
+    public PollingRemoteCommandRelayer(RemoteCommandManager remoteCommandManager) {
+        this.remoteCommandManager = remoteCommandManager;
         this.bufferedMessages = new BufferedMessages(100);
     }
 
     @Override
     protected void doInitialize() throws Exception {
-        if (fileCommanderManager.getRelayManager() != null) {
-            fileCommanderManager.getRelayManager().addRelayer(this);
-            logger.info("PollingFileCommandRelayer registered with FileCommanderManager");
+        if (remoteCommandManager.getRelayManager() != null) {
+            remoteCommandManager.getRelayManager().addRelayer(this);
+            logger.info("PollingRemoteCommandRelayer registered with RemoteCommandManager");
         }
     }
 
     @Override
     protected void doDestroy() throws Exception {
-        if (fileCommanderManager.getRelayManager() != null) {
-            fileCommanderManager.getRelayManager().removeRelayer(this);
+        if (remoteCommandManager.getRelayManager() != null) {
+            remoteCommandManager.getRelayManager().removeRelayer(this);
         }
         bufferedMessages.clear();
         sessions.clear();
@@ -100,7 +99,7 @@ public class PollingFileCommandRelayer extends AbstractComponent implements File
     @Override
     public void relay(@NonNull RelaySession relaySession, String data) {
         // For individual relaying, we might need a separate mechanism
-        // but typically file commands are broadcasted or targeted via NodeId
+        // but typically commands are broadcasted or targeted via NodeId
         relay(data);
     }
 
