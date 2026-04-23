@@ -27,6 +27,8 @@ import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Dispatch;
 import com.aspectran.core.component.bean.annotation.Request;
 import com.aspectran.core.component.bean.annotation.RequestToPost;
+import com.aspectran.core.component.bean.annotation.Transform;
+import com.aspectran.core.context.rule.type.FormatType;
 import com.aspectran.utils.StringUtils;
 import org.jspecify.annotations.NonNull;
 
@@ -65,7 +67,7 @@ public class RemoteCommandsActivity {
      * @param nodeId the node ID
      * @return a map of attributes for rendering the view
      */
-    @Request("")
+    @Request
     @Dispatch("nodes/commands")
     @Action("page")
     public Map<String, Object> nodeCommands(String nodeId) {
@@ -83,9 +85,18 @@ public class RemoteCommandsActivity {
         if (nodeInfo != null) {
             model.put("node", nodeConsoleHelper.createNodeMap(nodeInfo, true, true));
         }
-        model.put("token", AppMonTokenIssuer.issueToken(30));
         model.put("clusterMode", clusterMode);
         return model;
+    }
+
+    /**
+     * Issues a new authentication token for WebSocket connection.
+     * @return the issued token
+     */
+    @Request("/token")
+    @Transform(format = FormatType.TEXT)
+    public String refreshToken() {
+        return AppMonTokenIssuer.issueToken(30);
     }
 
     /**

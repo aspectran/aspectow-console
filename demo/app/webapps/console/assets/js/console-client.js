@@ -33,6 +33,7 @@ class ConsoleClient {
             onMessage: null,
             onClose: null,
             onRetry: null,
+            onBeforeConnect: null,
             onError: null,
             onEstablished: null,
             onJoined: null,
@@ -77,9 +78,30 @@ class ConsoleClient {
 
     /**
      * Opens a new WebSocket connection.
-     * @private
      */
     openSocket() {
+        if (this.options.onBeforeConnect) {
+            Promise.resolve(this.options.onBeforeConnect(this.node)).then((token) => {
+                if (token) {
+                    this.node.endpoint.token = token;
+                }
+                this.doOpenSocket();
+            }).catch((err) => {
+                console.error(this.node.id, "failed to prepare connection:", err);
+                if (this.options.onFailed) {
+                    this.options.onFailed(this.node);
+                }
+            });
+        } else {
+            this.doOpenSocket();
+        }
+    }
+
+    /**
+     * Actually opens a new WebSocket connection.
+     * @private
+     */
+    doOpenSocket() {
         this.closeSocket(false);
 
         let path = this.node.endpoint.path;

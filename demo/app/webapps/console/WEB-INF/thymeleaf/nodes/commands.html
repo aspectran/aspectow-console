@@ -9,7 +9,7 @@
             display: grid;
             grid-template-columns: 350px 1fr;
             gap: 20px;
-            height: calc(100vh - 200px);
+            height: calc(100vh - 250px);
             min-height: 650px;
         }
         .history-panel {
@@ -174,7 +174,6 @@ arguments: {
         <script th:inline="javascript">
             const nodes = [[${page.nodes}]];
             const currentNodeId = [[${page.node?.id}]];
-            const token = [[${page.token}]];
             const BASE_PATH = [[@{/}]].replace(/\/$/, '');
 
             let client = null;
@@ -312,12 +311,19 @@ arguments: {
                 const commandsNode = {
                     id: currentNodeId,
                     endpoint: {
-                        path: BASE_PATH + "/remote-commands",
-                        token: token
+                        path: BASE_PATH + "/remote-commands"
                     }
                 };
 
                 client = new ConsoleClient(commandsNode, {
+                    onBeforeConnect: () => {
+                        return fetch(BASE_PATH + "/nodes/commands/token")
+                            .then(response => response.text())
+                            .catch(err => {
+                                console.error("Failed to fetch new token:", err);
+                                return null;
+                            });
+                    },
                     onEstablished: () => {
                         $('#connection-indicator').text("CONNECTED").removeClass("bg-secondary bg-danger bg-warning").addClass("bg-success");
                     },
@@ -329,6 +335,23 @@ arguments: {
                             $('#connection-indicator').text("SESSION EXPIRED").removeClass("bg-success bg-warning").addClass("bg-danger");
                         } else {
                             $('#connection-indicator').text("DISCONNECTED").removeClass("bg-success bg-warning").addClass("bg-danger");
+                        }
+
+                        let changed = false;
+                        commandHistory.forEach(cmd => {
+                            if (cmd.status === 'queued') {
+                                if (cmd.content.includes('command: restart')) {
+                                    cmd.status = 'completed';
+                                    cmd.result = 'Restart command dispatched. Connection lost as expected.';
+                                } else {
+                                    cmd.status = 'failed';
+                                    cmd.result = 'Connection closed before response was received.';
+                                }
+                                changed = true;
+                            }
+                        });
+                        if (changed) {
+                            updateHistoryUI();
                         }
                     },
                     onMessage: (message) => {
