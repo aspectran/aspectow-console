@@ -19,28 +19,33 @@ import com.aspectran.aspectow.node.config.ClusterConfig;
 import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.config.NodeInfoHolder;
 import com.aspectran.aspectow.node.config.SecretConfig;
+import com.aspectran.aspectow.node.redis.RedisConnectionPool;
 import com.aspectran.aspectow.node.redis.RedisMessagePublisher;
 import com.aspectran.aspectow.node.redis.RedisMessageSubscriber;
 import com.aspectran.utils.PBEncryptionUtils;
 import com.aspectran.utils.apon.VariableParameters;
 import com.aspectran.utils.security.InvalidPBTokenException;
 import com.aspectran.utils.security.TimeLimitedPBTokenIssuer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 /**
- * The main manager for Aspectow AppMon.
- * This class orchestrates the entire monitoring application, including configuration,
- * exporters, persistence, and lifecycle management.
- * It also provides access to the core components of Aspectran's ActivityContext.
+ * The main manager for Aspectow Node Management.
+ * This class orchestrates node status reporting, message relaying, and cluster coordination.
  */
 public class NodeManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(NodeManager.class);
 
     private final String nodeId;
 
     private final ClusterConfig clusterConfig;
 
     private final NodeInfoHolder nodeInfoHolder;
+
+    private RedisConnectionPool redisConnectionPool;
 
     private NodeRegistry nodeRegistry;
 
@@ -84,6 +89,14 @@ public class NodeManager {
         return nodeInfoHolder.getNodeInfoList();
     }
 
+    public RedisConnectionPool getRedisConnectionPool() {
+        return redisConnectionPool;
+    }
+
+    public void setRedisConnectionPool(RedisConnectionPool redisConnectionPool) {
+        this.redisConnectionPool = redisConnectionPool;
+    }
+
     public NodeRegistry getNodeRegistry() {
         return nodeRegistry;
     }
@@ -122,6 +135,22 @@ public class NodeManager {
 
     public void setRedisMessageSubscriber(RedisMessageSubscriber redisMessageSubscriber) {
         this.redisMessageSubscriber = redisMessageSubscriber;
+    }
+
+    /**
+     * Shuts down all managed components and releases resources.
+     */
+    public void destroy() {
+        if (nodeReporter != null) {
+            nodeReporter.stop();
+        }
+        if (redisMessageSubscriber != null) {
+            redisMessageSubscriber.stop();
+        }
+        if (redisConnectionPool != null) {
+            logger.info("Closing Redis connection pool for node: {}", nodeId);
+            redisConnectionPool.destroy();
+        }
     }
 
     /**

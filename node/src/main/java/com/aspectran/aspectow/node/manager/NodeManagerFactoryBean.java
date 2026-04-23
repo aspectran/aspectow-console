@@ -18,6 +18,7 @@ package com.aspectran.aspectow.node.manager;
 import com.aspectran.aspectow.node.config.NodeConfig;
 import com.aspectran.aspectow.node.config.NodeConfigBuilder;
 import com.aspectran.aspectow.node.config.NodeConfigResolver;
+import com.aspectran.aspectow.node.redis.RedisConnectionPoolConfig;
 import com.aspectran.core.component.bean.ablility.DisposableBean;
 import com.aspectran.core.component.bean.ablility.InitializableFactoryBean;
 import com.aspectran.core.component.bean.aware.ActivityContextAware;
@@ -28,11 +29,17 @@ public class NodeManagerFactoryBean implements ActivityContextAware, Initializab
 
     private ActivityContext context;
 
+    private RedisConnectionPoolConfig redisConnectionPoolConfig;
+
     private NodeManager nodeManager;
 
     @Override
     public void setActivityContext(@NonNull ActivityContext context) {
         this.context = context;
+    }
+
+    public void setRedisConnectionPoolConfig(RedisConnectionPoolConfig redisConnectionPoolConfig) {
+        this.redisConnectionPoolConfig = redisConnectionPoolConfig;
     }
 
     @Override
@@ -50,7 +57,7 @@ public class NodeManagerFactoryBean implements ActivityContextAware, Initializab
             nodeConfig = NodeConfigBuilder.build();
         }
 
-        nodeManager = NodeManagerBuilder.build(context, nodeConfig);
+        nodeManager = NodeManagerBuilder.build(context, nodeConfig, redisConnectionPoolConfig);
         if (nodeManager.getNodeReporter() != null) {
             nodeManager.getNodeReporter().start();
         }
@@ -62,12 +69,7 @@ public class NodeManagerFactoryBean implements ActivityContextAware, Initializab
     @Override
     public void destroy() throws Exception {
         if (nodeManager != null) {
-            if (nodeManager.getNodeReporter() != null) {
-                nodeManager.getNodeReporter().stop();
-            }
-            if (nodeManager.getRedisMessageSubscriber() != null) {
-                nodeManager.getRedisMessageSubscriber().stop();
-            }
+            nodeManager.destroy();
         }
     }
 

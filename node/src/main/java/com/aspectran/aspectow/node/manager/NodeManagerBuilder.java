@@ -21,6 +21,7 @@ import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.config.NodeInfoHolder;
 import com.aspectran.aspectow.node.config.SecretConfig;
 import com.aspectran.aspectow.node.redis.RedisConnectionPool;
+import com.aspectran.aspectow.node.redis.RedisConnectionPoolConfig;
 import com.aspectran.aspectow.node.redis.RedisMessagePublisher;
 import com.aspectran.aspectow.node.redis.RedisMessageSubscriber;
 import com.aspectran.core.context.ActivityContext;
@@ -49,7 +50,7 @@ public abstract class NodeManagerBuilder {
     private static final String DEFAULT_NODE_ID = "node";
 
     @NonNull
-    public static NodeManager build(ActivityContext context, NodeConfig nodeConfig) throws Exception {
+    public static NodeManager build(ActivityContext context, NodeConfig nodeConfig, RedisConnectionPoolConfig redisConnectionPoolConfig) throws Exception {
         Assert.notNull(context, "context must not be null");
         Assert.notNull(nodeConfig, "nodeConfig must not be null");
 
@@ -121,10 +122,12 @@ public abstract class NodeManagerBuilder {
         NodeManager nodeManager = new NodeManager(nodeId, clusterConfig, nodeInfoHolder);
 
         if (!clusterConfig.isDirectMode()) {
-            if (!context.getBeanRegistry().containsBean(RedisConnectionPool.class)) {
-                throw new IllegalStateException("RedisConnectionPool bean not found in the context");
+            if (redisConnectionPoolConfig == null) {
+                throw new IllegalStateException("RedisConnectionPoolConfig is required for cluster mode");
             }
-            RedisConnectionPool connectionPool = context.getBeanRegistry().getBean(RedisConnectionPool.class);
+            RedisConnectionPool connectionPool = new RedisConnectionPool(redisConnectionPoolConfig);
+            connectionPool.initialize();
+            nodeManager.setRedisConnectionPool(connectionPool);
 
             NodePortProvider portProvider = null;
             if (context.getBeanRegistry().containsBean(NodePortProvider.class)) {
