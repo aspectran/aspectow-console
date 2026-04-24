@@ -137,14 +137,13 @@
 
     <!-- Verification Result Modal -->
     <div class="modal fade" id="verifyModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-sm">
+        <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header py-2">
                     <h6 class="modal-title">Decryption Result</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <div class="small text-muted mb-2">Plain text:</div>
                     <div id="decryptedValue" class="fw-bold fs-5 font-monospace text-primary" style="white-space: pre-wrap; word-break: break-all;"></div>
                 </div>
             </div>
@@ -256,7 +255,10 @@
             $('#tokenType').prop('disabled', isEdit);
             $('#expirationMinutes').prop('readonly', isEdit);
             $('#plainText').prop('readonly', isEdit);
-            
+            $('#vaultModalLabel').text(isEdit ? 'View/Edit Token Meta' : 'New Token');
+
+            vaultModal.show();
+
             if (isEdit && encryptedValue) {
                 // Fetch current decrypted value for viewing
                 $.ajax({
@@ -265,7 +267,13 @@
                     data: { encryptedValue: encryptedValue, tokenType: type },
                     dataType: 'json',
                     success: function(res) {
-                        $('#plainText').val(res.data);
+                        if (res.success) {
+                            $('#plainText').val(res.data);
+                        } else {
+                            const msg = (res.error && res.error.message) ? res.error.message : 'Decryption failed.';
+                            $('#plainText').val('[' + msg + ']');
+                            $('#plainTextHelp').html('<span class="text-danger fw-bold"><i class="bi bi-exclamation-triangle me-1"></i>' + msg + '</span>');
+                        }
                     }
                 });
                 $('#plainTextHelp').text('Token value and type cannot be modified after issuance.');
@@ -274,9 +282,6 @@
                 $('#plainTextHelp').text('This value will be encrypted and stored.');
                 $('#plainText').prop('required', true);
             }
-            
-            $('#vaultModalLabel').text(isEdit ? 'View/Edit Token Meta' : 'New Token');
-            vaultModal.show();
         }
 
         function deleteVault(id) {
@@ -303,11 +308,19 @@
                 data: { encryptedValue: encryptedValue, tokenType: tokenType },
                 dataType: 'json',
                 success: function(res) {
-                    $('#decryptedValue').text(res.data);
+                    const $val = $('#decryptedValue');
+                    if (res.success) {
+                        $val.text(res.data).removeClass('text-danger').addClass('text-primary');
+                    } else {
+                        const msg = (res.error && res.error.message) ? res.error.message : 'Decryption failed.';
+                        $val.text(msg).removeClass('text-primary').addClass('text-danger');
+                    }
                     verifyModal.show();
                 },
                 error: function(xhr) {
-                    alert('Decryption failed. Check master password or token value.');
+                    const $val = $('#decryptedValue');
+                    $val.text('System error occurred.').removeClass('text-primary').addClass('text-danger');
+                    verifyModal.show();
                 }
             });
         }
