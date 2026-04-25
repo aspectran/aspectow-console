@@ -24,11 +24,11 @@ import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Dispatch;
 import com.aspectran.core.component.bean.annotation.Request;
 import com.aspectran.core.component.bean.annotation.RequestToPost;
-import com.aspectran.core.context.asel.value.ValueExpression;
 import com.aspectran.utils.StringUtils;
 import com.aspectran.web.activity.response.RestResponse;
 import com.aspectran.web.support.rest.response.FailureResponse;
 import com.aspectran.web.support.rest.response.SuccessResponse;
+import org.jspecify.annotations.NonNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,8 +39,6 @@ import java.util.Map;
 @Component("/framework/asel")
 @Bean("aselActivity")
 public class AselActivity extends InstantActivitySupport {
-
-    private static final String TEST_PROPERTIES_PATH = "com/aspectran/aspectow/console/framework/asel-test.properties";
 
     @Request("/")
     @Dispatch("framework/asel/tester")
@@ -85,7 +83,7 @@ public class AselActivity extends InstantActivitySupport {
             activity.setAttributeMap(attributes);
 
             // Evaluate the expression within the perform block of the InstantActivity
-            Object result = activity.perform(() -> ValueExpression.evaluate(expression, activity));
+            Object result = activity.perform(() -> activity.evaluate(expression));
 
             Map<String, Object> data = new HashMap<>();
             data.put("result", result);
@@ -98,7 +96,7 @@ public class AselActivity extends InstantActivitySupport {
         }
     }
 
-    private boolean isUnsafe(String expression) {
+    private boolean isUnsafe(@NonNull String expression) {
         String clean = expression.toLowerCase().replaceAll("\\s", "");
         // Block static class access and sensitive system objects
         if (clean.contains("system") || clean.contains("runtime") ||
