@@ -68,14 +68,17 @@
 
             <!-- Framework Group -->
             <div class="nav-group">
-                <a class="nav-link d-flex justify-content-between align-items-center" th:classappend="${page.style == 'anatomy-page' ? 'active' : 'collapsed'}"
+                <a class="nav-link d-flex justify-content-between align-items-center" th:classappend="${page.style == 'anatomy-page' || page.style == 'wildcard-page' ? 'active' : 'collapsed'}"
                    data-bs-toggle="collapse" href="#framework-menu" role="button" aria-expanded="false">
                     <span><i class="bi bi-diagram-3"></i> Framework</span>
                     <i class="bi bi-chevron-down small"></i>
                 </a>
-                <div class="collapse" th:classappend="${page.style == 'anatomy-page' ? 'show' : ''}" id="framework-menu">
+                <div class="collapse" th:classappend="${page.style == 'anatomy-page' || page.style == 'wildcard-page' ? 'show' : ''}" id="framework-menu">
                     <a th:href="@{/framework/anatomy/}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'anatomy/viewer' ? 'active' : ''}">
                         Anatomy
+                    </a>
+                    <a th:href="@{/framework/wildcard/}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'wildcard/tester' ? 'active' : ''}">
+                        Wildcard Tester
                     </a>
                     <a href="#" class="nav-link ps-5 py-2 small">
                         Configuration

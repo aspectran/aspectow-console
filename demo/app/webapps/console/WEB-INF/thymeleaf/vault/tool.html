@@ -154,7 +154,8 @@
                                 output: res.data
                             });
                         } else {
-                            alert('Error: ' + res.error.message);
+                            const msg = (res.error && res.error.message) ? res.error.message : 'Unknown error';
+                            alert('Error: ' + msg);
                         }
                     },
                     error: function() {
