@@ -91,12 +91,12 @@
             <!-- Developer Tools Group -->
             <div class="nav-group">
                 <a class="nav-link d-flex justify-content-between align-items-center"
-                   th:classappend="${page.style == 'vault-tool-page' || page.style == 'wildcard-page' || page.style == 'asel-page' ? 'active' : 'collapsed'}"
+                   th:classappend="${page.style == 'vault-tool-page' || page.style == 'wildcard-page' || page.style == 'asel-page' || page.style == 'apon-page' ? 'active' : 'collapsed'}"
                    data-bs-toggle="collapse" href="#tools-menu" role="button" aria-expanded="false">
                     <span><i class="bi bi-wrench-adjustable"></i> Developer Tools</span>
                     <i class="bi bi-chevron-down small"></i>
                 </a>
-                <div class="collapse" th:classappend="${page.style == 'vault-tool-page' || page.style == 'wildcard-page' || page.style == 'asel-page' ? 'show' : ''}" id="tools-menu">
+                <div class="collapse" th:classappend="${page.style == 'vault-tool-page' || page.style == 'wildcard-page' || page.style == 'asel-page' || page.style == 'apon-page' ? 'show' : ''}" id="tools-menu">
                     <a th:href="@{/vault/tool}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'vault-tool-page' ? 'active' : ''}">
                         Vault Tool
                     </a>
@@ -105,6 +105,9 @@
                     </a>
                     <a th:href="@{/framework/asel/}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'asel-page' ? 'active' : ''}">
                         AsEL Tester
+                    </a>
+                    <a th:href="@{/framework/apon/}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'apon-page' ? 'active' : ''}">
+                        APON Converter
                     </a>
                 </div>
             </div>
