@@ -22,10 +22,10 @@
                     <form id="aselForm" autocomplete="off">
                         <div class="mb-3">
                             <label for="expression" class="form-label small">Expression</label>
-                            <textarea class="form-control font-monospace" id="expression" name="expression" rows="3" placeholder="e.g. #{aselTestBean^metadata}['environment']" required></textarea>
+                            <textarea class="form-control font-monospace" id="expression" name="expression" rows="3" placeholder="e.g. #{aselTestBean^metadata}['version']" required></textarea>
                             <div class="form-text small">
                                 <i class="bi bi-info-circle me-1"></i>
-                                Tokens (<code>#{}</code>, <code>@{}</code>) find objects; use OGNL (<code>.</code>, <code>[]</code>, <code>?:</code>) <strong>outside</strong> the braces.
+                                Tokens (<code>#{}</code>, <code>@{}</code>) find objects; use OGNL (<code>.</code>, <code>[]</code>, <code>?:</code>, <code>+</code>) <strong>outside</strong> the braces.
                             </div>
                         </div>
                         <div class="d-grid mt-4">
@@ -67,24 +67,34 @@
                             </thead>
                             <tbody>
                             <tr>
-                                <td class="ps-3"><span class="badge bg-primary">Bean</span></td>
-                                <td class="font-monospace">#{aselTestBean^name}</td>
-                                <td class="text-end pe-3"><button class="btn btn-sm btn-link p-0" onclick="applyExample('#{aselTestBean^name}')"><i class="bi bi-arrow-left"></i></button></td>
+                                <td class="ps-3"><span class="badge bg-secondary">String</span></td>
+                                <td class="font-monospace">${id} + '(' + ${status} + ')'</td>
+                                <td class="text-end pe-3"><button class="btn btn-sm btn-link p-0" onclick="applyExample('${id} + \'(\' + ${status} + \')\'')"><i class="bi bi-arrow-left"></i></button></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-3"><span class="badge bg-dark">Prop</span></td>
+                                <td class="font-monospace">%{asel.test.app.name}</td>
+                                <td class="text-end pe-3"><button class="btn btn-sm btn-link p-0" onclick="applyExample('%{asel.test.app.name}')"><i class="bi bi-arrow-left"></i></button></td>
                             </tr>
                             <tr>
                                 <td class="ps-3"><span class="badge bg-info">Attr</span></td>
-                                <td class="font-monospace">@{currentUser^nickname} ?: 'Guest'</td>
-                                <td class="text-end pe-3"><button class="btn btn-sm btn-link p-0" onclick="applyExample('@{currentUser^nickname} ?: \'Guest\'')"><i class="bi bi-arrow-left"></i></button></td>
+                                <td class="font-monospace">@{sampleUser^nickname} ?: 'Guest'</td>
+                                <td class="text-end pe-3"><button class="btn btn-sm btn-link p-0" onclick="applyExample('@{sampleUser^nickname} ?: \'Guest\'')"><i class="bi bi-arrow-left"></i></button></td>
                             </tr>
                             <tr>
                                 <td class="ps-3"><span class="badge bg-success">Map</span></td>
-                                <td class="font-monospace">#{aselTestBean^metadata}['environment']</td>
-                                <td class="text-end pe-3"><button class="btn btn-sm btn-link p-0" onclick="applyExample('#{aselTestBean^metadata}[\'environment\']')"><i class="bi bi-arrow-left"></i></button></td>
+                                <td class="font-monospace">#{aselTestBean^metadata}['version']</td>
+                                <td class="text-end pe-3"><button class="btn btn-sm btn-link p-0" onclick="applyExample('#{aselTestBean^metadata}[\'version\']')"><i class="bi bi-arrow-left"></i></button></td>
                             </tr>
                             <tr>
                                 <td class="ps-3"><span class="badge bg-warning text-dark">Method</span></td>
-                                <td class="font-monospace">#{aselTestBean}.greet('Tester')</td>
-                                <td class="text-end pe-3"><button class="btn btn-sm btn-link p-0" onclick="applyExample('#{aselTestBean}.greet(\'Tester\')')"><i class="bi bi-arrow-left"></i></button></td>
+                                <td class="font-monospace">#{aselTestBean}.isAvailable()</td>
+                                <td class="text-end pe-3"><button class="btn btn-sm btn-link p-0" onclick="applyExample('#{aselTestBean}.isAvailable()')"><i class="bi bi-arrow-left"></i></button></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-3"><span class="badge bg-primary">Bean</span></td>
+                                <td class="font-monospace">#{aselTestBean^name}</td>
+                                <td class="text-end pe-3"><button class="btn btn-sm btn-link p-0" onclick="applyExample('#{aselTestBean^name}')"><i class="bi bi-arrow-left"></i></button></td>
                             </tr>
                             </tbody>
                         </table>
@@ -100,7 +110,7 @@
                     </button>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive" style="max-height: 400px;">
+                    <div class="table-responsive" style="max-height: 250px;">
                         <table class="table table-hover table-sm mb-0 small" id="historyTable">
                             <thead class="table-light sticky-top">
                             <tr>
@@ -115,6 +125,117 @@
                         <div id="noHistory" class="text-center py-4 text-muted">
                             <i class="bi bi-clock-history fs-3 d-block mb-2"></i>
                             No history yet.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white py-2 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 small fw-bold"><i class="bi bi-info-square me-2"></i> Sandbox Context Information</h6>
+                    <span class="badge bg-primary" style="font-size: 0.65rem;">AVAILABLE DATA</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-lg-7">
+                            <label class="small text-muted fw-bold mb-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Bean: <code>#{aselTestBean}</code> (Java Source)</label>
+                            <div class="p-3 bg-light border rounded" style="max-height: 546px; overflow-y: auto;">
+<pre class="mb-0 font-monospace" style="font-size: 0.8rem; color: #24292e; line-height: 1.5;">
+<span style="color: #d73a49;">@Component</span>
+<span style="color: #d73a49;">@Bean</span>(<span style="color: #032f62;">"aselTestBean"</span>)
+<span style="color: #d73a49;">public class</span> <span style="color: #6f42c1;">AselTestBean</span> {
+
+    <span style="color: #d73a49;">public</span> String <span style="color: #6f42c1;">getName</span>() {
+        <span style="color: #d73a49;">return</span> <span style="color: #032f62;">"AsEL Expression Tester"</span>;
+    }
+
+    <span style="color: #d73a49;">public int</span> <span style="color: #6f42c1;">getValue</span>() {
+        <span style="color: #005cc5;">return 12345</span>;
+    }
+
+    <span style="color: #d73a49;">public boolean</span> <span style="color: #6f42c1;">isAvailable</span>() {
+        <span style="color: #d73a49;">return true</span>;
+    }
+
+    <span style="color: #d73a49;">public</span> LocalDateTime <span style="color: #6f42c1;">getServerTime</span>() {
+        <span style="color: #d73a49;">return</span> LocalDateTime.now();
+    }
+
+    <span style="color: #d73a49;">public</span> List&lt;String&gt; <span style="color: #6f42c1;">getTags</span>() {
+        <span style="color: #d73a49;">return</span> List.of(<span style="color: #032f62;">"aspectran"</span>, <span style="color: #032f62;">"asel"</span>, <span style="color: #032f62;">"expression"</span>);
+    }
+
+    <span style="color: #d73a49;">public</span> Map&lt;String, Object&gt; <span style="color: #6f42c1;">getMetadata</span>() {
+        <span style="color: #d73a49;">return</span> Map.of(<span style="color: #032f62;">"version"</span>, <span style="color: #032f62;">"1.0.0"</span>, <span style="color: #032f62;">"environment"</span>, <span style="color: #032f62;">"console"</span>);
+    }
+
+    <span style="color: #d73a49;">public</span> String <span style="color: #6f42c1;">greet</span>(String user) {
+        <span style="color: #d73a49;">return</span> <span style="color: #032f62;">"Hello, "</span> + user + <span style="color: #032f62;">"! Welcome to AsEL."</span>;
+    }
+}
+</pre>
+                            </div>
+                        </div>
+                        <div class="col-lg-5 border-start">
+                            <div class="mb-4">
+                                <label class="small text-muted fw-bold mb-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Attributes: <code>@{}</code></label>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered small mb-0">
+                                        <thead class="table-light">
+                                            <tr><th style="width: 35%;">Token</th><th>Description</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td><code>@{sampleAttr}</code></td><td>Sample string data</td></tr>
+                                            <tr><td><code>@{sampleRole}</code></td><td>Sample role (ADMIN)</td></tr>
+                                            <tr><td><code>@{sampleUser}</code></td><td>Sample user (Map object)</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="small text-muted fw-bold mb-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Parameters: <code>${}</code></label>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered small mb-0">
+                                        <thead class="table-light">
+                                            <tr><th style="width: 35%;">Token</th><th>Description</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td><code>${id}</code></td><td>Sample user ID ("tester")</td></tr>
+                                            <tr><td><code>${status}</code></td><td>Sample status ("active")</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="small text-muted fw-bold mb-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Properties: <code>%{}</code></label>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered small mb-0">
+                                        <thead class="table-light">
+                                            <tr><th style="width: 35%;">Token</th><th>Description</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td><code>%{asel.test.app.name}</code></td><td>Sample application name</td></tr>
+                                            <tr><td><code>%{asel.test.app.version}</code></td><td>Sample version info</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="form-text mt-1 text-danger" style="font-size: 0.7rem;">
+                                    <i class="bi bi-shield-lock-fill me-1"></i>
+                                    System properties (system:, classpath:) are restricted for security.
+                                </div>
+                            </div>
+                            <div class="alert alert-info py-2 mb-0 border-0 shadow-none" style="font-size: 0.75rem;">
+                                <h6 class="alert-heading fw-bold mb-1" style="font-size: 0.8rem;"><i class="bi bi-lightbulb me-1"></i> Sandbox Tips</h6>
+                                <ul class="ps-3 mb-0">
+                                    <li>Try <code>${id} + ' (' + ${status} + ')'</code></li>
+                                    <li>Try <code>@{sampleUser^nickname} ?: 'Guest'</code></li>
+                                    <li>Try <code>#{aselTestBean^metadata}['version']</code></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>

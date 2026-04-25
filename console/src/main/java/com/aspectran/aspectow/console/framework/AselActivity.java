@@ -25,6 +25,7 @@ import com.aspectran.core.component.bean.annotation.Dispatch;
 import com.aspectran.core.component.bean.annotation.Request;
 import com.aspectran.core.component.bean.annotation.RequestToPost;
 import com.aspectran.core.context.asel.value.ValueExpression;
+import com.aspectran.utils.PropertiesLoaderUtils;
 import com.aspectran.utils.StringUtils;
 import com.aspectran.web.activity.response.RestResponse;
 import com.aspectran.web.support.rest.response.FailureResponse;
@@ -32,6 +33,7 @@ import com.aspectran.web.support.rest.response.SuccessResponse;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Handles AsEL expression testing requests using an isolated InstantActivity.
@@ -39,6 +41,8 @@ import java.util.Map;
 @Component("/framework/asel")
 @Bean("aselActivity")
 public class AselActivity extends InstantActivitySupport {
+
+    private static final String TEST_PROPERTIES_PATH = "com/aspectran/aspectow/console/framework/asel-test.properties";
 
     @Request("/")
     @Dispatch("framework/asel/tester")
@@ -57,11 +61,9 @@ public class AselActivity extends InstantActivitySupport {
             return new FailureResponse().setError("required", "Expression is required.");
         }
 
-        // Basic sandbox security check
-        String lowerExpr = expression.toLowerCase();
-        if (lowerExpr.contains("system") || lowerExpr.contains("runtime") || 
-            lowerExpr.contains("classloader") || lowerExpr.contains("activitycontext")) {
-            return new FailureResponse().setError("security", "Access to restricted system classes is not allowed.");
+        // Strict sandbox security check
+        if (isUnsafe(expression)) {
+            return new FailureResponse().setError("security", "Access to restricted system resources or properties is denied for security reasons.");
         }
 
         try {
@@ -76,11 +78,12 @@ public class AselActivity extends InstantActivitySupport {
 
             Map<String, Object> attributes = new HashMap<>();
             attributes.put("sampleAttr", "Sandbox mode enabled");
+            attributes.put("sampleRole", "ADMIN");
             
             Map<String, Object> user = new HashMap<>();
             user.put("nickname", "Aspectow Developer");
             user.put("level", 99);
-            attributes.put("currentUser", user);
+            attributes.put("sampleUser", user);
             activity.setAttributeMap(attributes);
 
             // Evaluate the expression within the perform block of the InstantActivity
@@ -95,6 +98,25 @@ public class AselActivity extends InstantActivitySupport {
             String msg = (e.getCause() != null ? e.getCause().getMessage() : e.getMessage());
             return new FailureResponse().setError("error", msg);
         }
+    }
+
+    private boolean isUnsafe(String expression) {
+        String clean = expression.toLowerCase().replaceAll("\\s", "");
+        // Block static class access and sensitive system objects
+        if (clean.contains("system") || clean.contains("runtime") ||
+                clean.contains("classloader") || clean.contains("activitycontext") ||
+                clean.contains("beanfactory") || clean.contains("shutdown")) {
+            return true;
+        }
+        // Block property tokens that access system/classpath/env or secrets
+        if (clean.contains("%{")) {
+            if (clean.contains("system:") || clean.contains("classpath:") ||
+                    clean.contains("password") || clean.contains("secret") ||
+                    clean.contains("key") || clean.contains("token")) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

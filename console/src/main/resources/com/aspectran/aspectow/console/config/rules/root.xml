@@ -22,5 +22,6 @@
 
     <append resource="com/aspectran/aspectow/console/config/rules/db.xml"/>
     <append resource="com/aspectran/aspectow/console/config/rules/web.xml"/>
+    <append resource="com/aspectran/aspectow/console/framework/asel-test-rules.xml"/>
 
 </aspectran>
