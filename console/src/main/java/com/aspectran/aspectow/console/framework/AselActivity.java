@@ -25,7 +25,6 @@ import com.aspectran.core.component.bean.annotation.Dispatch;
 import com.aspectran.core.component.bean.annotation.Request;
 import com.aspectran.core.component.bean.annotation.RequestToPost;
 import com.aspectran.core.context.asel.value.ValueExpression;
-import com.aspectran.utils.PropertiesLoaderUtils;
 import com.aspectran.utils.StringUtils;
 import com.aspectran.web.activity.response.RestResponse;
 import com.aspectran.web.support.rest.response.FailureResponse;
@@ -33,7 +32,6 @@ import com.aspectran.web.support.rest.response.SuccessResponse;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Handles AsEL expression testing requests using an isolated InstantActivity.
@@ -79,7 +77,7 @@ public class AselActivity extends InstantActivitySupport {
             Map<String, Object> attributes = new HashMap<>();
             attributes.put("sampleAttr", "Sandbox mode enabled");
             attributes.put("sampleRole", "ADMIN");
-            
+
             Map<String, Object> user = new HashMap<>();
             user.put("nickname", "Aspectow Developer");
             user.put("level", 99);

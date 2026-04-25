@@ -15,7 +15,7 @@
     <div class="row">
         <div class="col-lg-6">
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
+                <div class="card-header bg-body-tertiary">
                     <h6 class="mb-0 small fw-bold">Expression Evaluation</h6>
                 </div>
                 <div class="card-body">
@@ -38,12 +38,12 @@
             </div>
 
             <div class="card shadow-sm d-none" id="resultCard">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center py-2">
                     <h6 class="mb-0 small fw-bold">Evaluation Result</h6>
                     <span class="badge bg-secondary font-monospace" id="resultType" style="font-size: 0.7rem;">java.lang.String</span>
                 </div>
                 <div class="card-body">
-                    <div class="p-3 bg-light border rounded">
+                    <div class="p-3 bg-body-tertiary border rounded">
                         <pre id="resultValue" class="mb-0 font-monospace text-primary" style="white-space: pre-wrap; word-break: break-all;"></pre>
                     </div>
                 </div>
@@ -52,13 +52,13 @@
 
         <div class="col-lg-6">
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
+                <div class="card-header bg-body-tertiary">
                     <h6 class="mb-0 small fw-bold">Quick Examples</h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover table-sm mb-0 small">
-                            <thead class="table-light">
+                            <thead>
                             <tr>
                                 <th class="ps-3">Type</th>
                                 <th>Expression</th>
@@ -103,7 +103,7 @@
             </div>
 
             <div class="card shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 small fw-bold">Execution History</h6>
                     <button class="btn btn-link btn-sm text-danger p-0" onclick="clearHistory()">
                         <i class="bi bi-trash me-1"></i> Clear
@@ -112,7 +112,7 @@
                 <div class="card-body p-0">
                     <div class="table-responsive" style="max-height: 250px;">
                         <table class="table table-hover table-sm mb-0 small" id="historyTable">
-                            <thead class="table-light sticky-top">
+                            <thead class="sticky-top">
                             <tr>
                                 <th class="ps-3" style="width: 100px;">Time</th>
                                 <th>Expression</th>
@@ -143,8 +143,8 @@
                     <div class="row g-4">
                         <div class="col-lg-7">
                             <label class="small text-muted fw-bold mb-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Bean: <code>#{aselTestBean}</code> (Java Source)</label>
-                            <div class="p-3 bg-light border rounded" style="max-height: 546px; overflow-y: auto;">
-<pre class="mb-0 font-monospace" style="font-size: 0.8rem; color: #24292e; line-height: 1.5;">
+                            <div class="p-3 bg-body-tertiary border rounded" style="max-height: 546px; overflow-y: auto;">
+<pre class="mb-0 font-monospace" style="font-size: 0.8rem; color: var(--bs-body-color); line-height: 1.5;">
 <span style="color: #d73a49;">@Component</span>
 <span style="color: #d73a49;">@Bean</span>(<span style="color: #032f62;">"aselTestBean"</span>)
 <span style="color: #d73a49;">public class</span> <span style="color: #6f42c1;">AselTestBean</span> {
@@ -185,7 +185,7 @@
                                 <label class="small text-muted fw-bold mb-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Attributes: <code>@{}</code></label>
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered small mb-0">
-                                        <thead class="table-light">
+                                        <thead class="table-group-divider">
                                             <tr><th style="width: 35%;">Token</th><th>Description</th></tr>
                                         </thead>
                                         <tbody>
@@ -200,7 +200,7 @@
                                 <label class="small text-muted fw-bold mb-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Parameters: <code>${}</code></label>
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered small mb-0">
-                                        <thead class="table-light">
+                                        <thead class="table-group-divider">
                                             <tr><th style="width: 35%;">Token</th><th>Description</th></tr>
                                         </thead>
                                         <tbody>
@@ -214,7 +214,7 @@
                                 <label class="small text-muted fw-bold mb-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Properties: <code>%{}</code></label>
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered small mb-0">
-                                        <thead class="table-light">
+                                        <thead class="table-group-divider">
                                             <tr><th style="width: 35%;">Token</th><th>Description</th></tr>
                                         </thead>
                                         <tbody>
@@ -234,6 +234,7 @@
                                     <li>Try <code>${id} + ' (' + ${status} + ')'</code></li>
                                     <li>Try <code>@{sampleUser^nickname} ?: 'Guest'</code></li>
                                     <li>Try <code>#{aselTestBean^metadata}['version']</code></li>
+                                    <li>Try <code>#{aselTestBean}.isAvailable()</code></li>
                                 </ul>
                             </div>
                         </div>

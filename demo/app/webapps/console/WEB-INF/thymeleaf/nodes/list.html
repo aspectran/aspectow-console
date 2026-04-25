@@ -69,10 +69,10 @@
                     </div>
 
                     <div class="mt-4 d-flex gap-2">
-                        <a th:href="@{/nodes/commands(nodeId=${node.id})}" class="btn btn-sm btn-light flex-grow-1">
+                        <a th:href="@{/nodes/commands(nodeId=${node.id})}" class="btn btn-sm btn-outline-secondary flex-grow-1">
                             <i class="bi bi-terminal"></i> Commands
                         </a>
-                        <a href="javascript:void(0)" th:onclick="openAppMon([[${node.id}]])" class="btn btn-sm btn-light flex-grow-1">
+                        <a href="javascript:void(0)" th:onclick="openAppMon([[${node.id}]])" class="btn btn-sm btn-outline-secondary flex-grow-1">
                             <i class="bi bi-activity"></i> Metrics
                         </a>
                     </div>

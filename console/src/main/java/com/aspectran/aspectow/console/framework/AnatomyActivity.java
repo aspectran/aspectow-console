@@ -57,7 +57,7 @@ public class AnatomyActivity {
      * Dispatches to the anatomy viewer page.
      */
     @Request("/${contextName}")
-    @Dispatch("anatomy/viewer")
+    @Dispatch("framework/anatomy/viewer")
     @Action("page")
     public Map<String, Object> viewer(String contextName) {
         Map<String, ActivityContext> contexts = prepareContextMap();
