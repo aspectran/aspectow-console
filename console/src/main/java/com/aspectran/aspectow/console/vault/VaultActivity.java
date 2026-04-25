@@ -23,8 +23,7 @@ import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Dispatch;
 import com.aspectran.core.component.bean.annotation.Request;
 import com.aspectran.core.component.bean.annotation.RequestToPost;
-import com.aspectran.core.component.bean.annotation.Transform;
-import com.aspectran.core.context.rule.type.FormatType;
+import com.aspectran.utils.PBEncryptionUtils;
 import com.aspectran.utils.StringUtils;
 import com.aspectran.web.activity.response.RestResponse;
 import com.aspectran.web.support.rest.response.FailureResponse;
@@ -58,8 +57,59 @@ public class VaultActivity {
             "style", "vault-page",
             "include", "vault",
             "vaultList", vaultList,
+            "encryptionAlgorithm", PBEncryptionUtils.getAlgorithm(),
+            "encryptionSalt", StringUtils.nullToEmpty(PBEncryptionUtils.getSalt()),
             "now", LocalDateTime.now()
         );
+    }
+
+    @RequestToPost("/encryption-password")
+    public RestResponse getEncryptionPassword() {
+        try {
+            String password = PBEncryptionUtils.getPassword();
+            return new SuccessResponse(password).ok();
+        } catch (Exception e) {
+            return new FailureResponse().setError("failed", e.getMessage());
+        }
+    }
+
+    @Request("/tool")
+    @Dispatch("vault/tool")
+    @Action("page")
+    public Map<String, Object> tool() {
+        List<String> algorithms = List.of(
+            "PBEWITHHMACSHA256ANDAES_128",
+            "PBEWITHHMACSHA512ANDAES_256",
+            "PBEWithMD5AndDES",
+            "PBEWithMD5AndTripleDES",
+            "PBEWithSHA1AndDESede",
+            "PBEWithSHA1AndRC2_40"
+        );
+        return Map.of(
+            "title", "Vault Tool",
+            "style", "vault-tool-page",
+            "include", "vault",
+            "algorithms", algorithms,
+            "defaultAlgorithm", PBEncryptionUtils.DEFAULT_ALGORITHM
+        );
+    }
+
+    @RequestToPost("/tool/execute")
+    public RestResponse executeTool(String algorithm, String password, String salt, String mode, String text) {
+        if (StringUtils.isEmpty(algorithm) || StringUtils.isEmpty(password) || StringUtils.isEmpty(text)) {
+            return new FailureResponse().setError("required", "Algorithm, Password, and Text are required.");
+        }
+        try {
+            String result;
+            if ("encrypt".equals(mode)) {
+                result = PBEncryptionUtils.encrypt(text, password, salt);
+            } else {
+                result = PBEncryptionUtils.decrypt(text, password, salt);
+            }
+            return new SuccessResponse(result).ok();
+        } catch (Exception e) {
+            return new FailureResponse().setError("failed", e.getMessage());
+        }
     }
 
     @RequestToPost("/save")

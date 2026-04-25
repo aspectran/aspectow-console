@@ -12,9 +12,40 @@
                 <input class="form-check-input" type="checkbox" id="hideExpired" onchange="filterExpired()">
                 <label class="form-check-label small text-muted" for="hideExpired">Hide Expired</label>
             </div>
+            <a th:href="@{/vault/tool}" class="btn btn-outline-primary">
+                <i class="bi bi-tools"></i> Vault Tool
+            </a>
             <button type="button" class="btn btn-primary" onclick="openVaultModal()">
                 <i class="bi bi-plus-lg"></i> New Token
             </button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light py-2">
+            <h6 class="mb-0 text-secondary small fw-bold"><i class="bi bi-shield-lock-fill me-2"></i> System Encryption Configuration</h6>
+        </div>
+        <div class="card-body py-2">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <label class="small text-muted mb-0">Algorithm</label>
+                    <div class="fw-bold font-monospace text-primary" th:text="${page.encryptionAlgorithm}">PBEWITHHMACSHA256ANDAES_128</div>
+                </div>
+                <div class="col-md-4 border-start">
+                    <label class="small text-muted mb-0">Password</label>
+                    <div class="d-flex align-items-center">
+                        <input type="text" class="form-control form-control-sm font-monospace border-0 bg-transparent p-0 fw-bold text-primary"
+                               value="********" readonly id="sys_pwd" style="-webkit-text-security: disc; width: auto; min-width: 150px;">
+                        <button class="btn btn-link btn-sm text-secondary p-0 ms-2" type="button" onclick="toggleSystemPassword(this)" title="Show/Hide Password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4 border-start">
+                    <label class="small text-muted mb-0">Salt</label>
+                    <div class="fw-bold font-monospace text-primary" th:text="${#strings.isEmpty(page.encryptionSalt) ? '(none)' : page.encryptionSalt}">salt_value</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -227,6 +258,48 @@
                     $(this).show();
                 }
             });
+        }
+
+        function toggleVisibility(id, btn) {
+            const $input = $('#' + id);
+            const $icon = $(btn).find('i');
+            if ($input.css('-webkit-text-security') === 'none') {
+                $input.css('-webkit-text-security', 'disc');
+                $icon.removeClass('bi-eye-slash').addClass('bi-eye');
+            } else {
+                $input.css('-webkit-text-security', 'none');
+                $icon.removeClass('bi-eye').addClass('bi-eye-slash');
+            }
+        }
+
+        function toggleSystemPassword(btn) {
+            const $input = $('#sys_pwd');
+            const $icon = $(btn).find('i');
+            if ($input.css('-webkit-text-security') === 'none') {
+                // Hide and clear
+                $input.val('********');
+                $input.css('-webkit-text-security', 'disc');
+                $icon.removeClass('bi-eye-slash').addClass('bi-eye');
+            } else {
+                // Fetch and Show
+                $.ajax({
+                    url: /*[[@{/vault/encryption-password}]]*/ '/vault/encryption-password',
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.success) {
+                            $input.val(res.data);
+                            $input.css('-webkit-text-security', 'none');
+                            $icon.removeClass('bi-eye').addClass('bi-eye-slash');
+                        } else {
+                            alert('Failed to fetch password');
+                        }
+                    },
+                    error: function() {
+                        alert('System error occurred');
+                    }
+                });
+            }
         }
 
         function openVaultModal(id, label, description, type, encryptedValue, validUntil) {
