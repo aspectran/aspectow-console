@@ -52,6 +52,9 @@
                 <button id="refresh-btn" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-arrow-clockwise"></i> Refresh
                 </button>
+                <div class="ms-2 d-flex align-items-center">
+                    <span id="connection-indicator" class="status-pill bg-secondary text-white">CONNECTING...</span>
+                </div>
             </div>
         </div>
 
@@ -77,7 +80,7 @@
             </div>
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm p-3 text-info">
-                    <div class="small text-uppercase fw-bold">Connected Node</div>
+                    <div class="small text-uppercase fw-bold">Target Node</div>
                     <div class="h3 fw-bold mb-0 text-truncate" id="stat-current-node">-</div>
                 </div>
             </div>
@@ -109,7 +112,7 @@
 
                 currentNodeId = nodeId;
                 $('#stat-current-node').text(nodeId);
-                $('#scheduler-container').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Fetching data from ' + nodeId + '...</p></div>');
+                $('#connection-indicator').text("CONNECTING...").removeClass("bg-success bg-danger bg-warning").addClass("bg-secondary");
 
                 const node = {
                     id: nodeId,
@@ -120,13 +123,39 @@
                 };
 
                 consoleClient = new ConsoleClient(node, {
-                    onMessage: (event) => {
-                        if (event.type === 'list' || event.type === 'result') {
-                            handleRelayMessage(event);
+                    onMessage: (message) => {
+                        const result = message.result;
+                        const error = message.error;
+                        if (error) {
+                            console.error("Received error from scheduler bridge:", error);
+                            return;
+                        }
+                        if (result) {
+                            try {
+                                const event = (typeof result === 'string' ? JSON.parse(result) : result);
+                                if (event && (event.type === 'list' || event.type === 'result')) {
+                                    handleRelayMessage(event);
+                                }
+                            } catch (e) {
+                                console.error("Failed to parse scheduler result:", e, result);
+                            }
                         }
                     },
-                    onOpen: () => {
-                        consoleClient.sendCommand('scheduler:list', [currentNodeId]);
+                    onEstablished: () => {
+                        $('#connection-indicator').text("CONNECTED").removeClass("bg-secondary bg-danger bg-warning").addClass("bg-success");
+                        const message = {
+                            header: "execute",
+                            command: "scheduler:list",
+                            targetNodeId: currentNodeId
+                        };
+                        consoleClient.sendMessage(JSON.stringify(message));
+                    },
+                    onRetry: (count, max) => {
+                        $('#connection-indicator').text(`RECONNECTING (${count}/${max})...`).removeClass("bg-success bg-danger").addClass("bg-warning");
+                    },
+                    onClose: (event) => {
+                        $('#connection-indicator').text(event.code === 1003 ? "SESSION EXPIRED" : "DISCONNECTED")
+                            .removeClass("bg-success bg-warning").addClass("bg-danger");
                     }
                 });
                 consoleClient.start('');
@@ -273,8 +302,13 @@
             }
 
             function toggleState(serviceName, type, id, checked) {
-                const command = checked ? 'scheduler:enable' : 'scheduler:disable';
-                consoleClient.sendCommand(`${command}:${serviceName}:${type}:${id}`, [currentNodeId]);
+                const command = (checked ? 'scheduler:enable' : 'scheduler:disable') + ':' + serviceName + ':' + type + ':' + id;
+                const message = {
+                    header: "execute",
+                    command: command,
+                    targetNodeId: currentNodeId
+                };
+                consoleClient.sendMessage(JSON.stringify(message));
             }
 
             $(function() {
@@ -286,7 +320,12 @@
 
                 $('#refresh-btn').on('click', function() {
                     if (consoleClient) {
-                        consoleClient.sendCommand('scheduler:list', [currentNodeId]);
+                        const message = {
+                            header: "execute",
+                            command: "scheduler:list",
+                            targetNodeId: currentNodeId
+                        };
+                        consoleClient.sendMessage(JSON.stringify(message));
                     } else {
                         connectToNode($('#node-selector').val());
                     }

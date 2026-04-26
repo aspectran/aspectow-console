@@ -17,6 +17,8 @@ package com.aspectran.aspectow.console.scheduler.bridge.websocket;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.console.scheduler.bridge.SchedulerBridge;
+import com.aspectran.aspectow.console.scheduler.bridge.SchedulerParameters;
+import com.aspectran.aspectow.console.scheduler.bridge.SchedulerResultParameters;
 import com.aspectran.aspectow.console.scheduler.bridge.SchedulerSession;
 import com.aspectran.aspectow.console.scheduler.manager.SchedulerManager;
 import com.aspectran.aspectow.node.manager.NodeManager;
@@ -24,6 +26,7 @@ import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Initialize;
 import com.aspectran.utils.StringUtils;
+import com.aspectran.utils.apon.JsonToParameters;
 import com.aspectran.utils.security.InvalidPBTokenException;
 import com.aspectran.web.websocket.jsr356.AspectranConfigurator;
 import com.aspectran.web.websocket.jsr356.SimplifiedEndpoint;
@@ -91,21 +94,19 @@ public class WebsocketSchedulerBridge extends SimplifiedEndpoint implements Sche
             return;
         }
 
-        if (message.startsWith("command:")) {
-            String fullCommand = message.substring(8);
-            String[] parts = fullCommand.split(";");
-            if (parts.length < 1) return;
-
-            String command = parts[0];
-            String targetNodeId = (parts.length > 1 ? parts[1] : null);
-
-            if ("ping".equals(command)) {
-                sendText(session, "pong");
-            } else if ("join".equals(command)) {
+        try {
+            SchedulerParameters parameters = JsonToParameters.from(message, SchedulerParameters.class);
+            String header = parameters.getHeader();
+            if ("execute".equals(header)) {
+                execute(session, parameters);
+            } else if ("join".equals(header)) {
                 join(session);
-            } else if (command.startsWith("scheduler:")) {
-                execute(targetNodeId, command);
+            } else if ("ping".equals(header)) {
+                pong(session);
             }
+        } catch (Exception e) {
+            logger.error("Failed to parse incoming scheduler management message: {}", message, e);
+            sendText(session, "[ERROR] Invalid message format");
         }
     }
 
@@ -113,16 +114,45 @@ public class WebsocketSchedulerBridge extends SimplifiedEndpoint implements Sche
         WebsocketSchedulerSession schedulerSession = new WebsocketSchedulerSession(session);
         schedulerSession.setNodeId(nodeManager.getNodeId());
         if (addSession(session)) {
-            sendText(session, "joined");
+            SchedulerResultParameters resultParameters = new SchedulerResultParameters()
+                    .setHeader("joined")
+                    .setNodeId(nodeManager.getNodeId());
+            sendText(session, resultParameters.toString());
             logger.debug("ConsoleClient joined scheduler management: session {}", session.getId());
         }
     }
 
-    private void execute(String targetNodeId, String command) {
-        if (targetNodeId == null || targetNodeId.isEmpty()) {
-            targetNodeId = nodeManager.getNodeId();
+    private void pong(Session session) {
+        SchedulerResultParameters resultParameters = new SchedulerResultParameters()
+                .setHeader("pong");
+        sendText(session, resultParameters.toString());
+    }
+
+    private void execute(Session session, @NonNull SchedulerParameters messageParameters) {
+        String command = messageParameters.getCommand();
+        if (command != null) {
+            String targetNodeId = messageParameters.getTargetNodeId();
+            if (targetNodeId == null || targetNodeId.isEmpty()) {
+                targetNodeId = nodeManager.getNodeId();
+            }
+
+            final String finalTargetNodeId = targetNodeId;
+            try {
+                Thread.ofVirtual().start(() -> {
+                    try {
+                        schedulerManager.sendCommand(finalTargetNodeId, command);
+                    } catch (Exception e) {
+                        logger.error("Failed to execute scheduler command from session {}", session.getId(), e);
+                        sendText(session, "[ERROR] " + e.getMessage());
+                    }
+                });
+                logger.debug("Scheduler command execution initiated from session {}: target={}, command={}",
+                        session.getId(), finalTargetNodeId, command);
+            } catch (Exception e) {
+                logger.error("Failed to initiate scheduler command execution from session {}", session.getId(), e);
+                sendText(session, "[ERROR] " + e.getMessage());
+            }
         }
-        schedulerManager.sendCommand(targetNodeId, command);
     }
 
     @Override
@@ -132,13 +162,23 @@ public class WebsocketSchedulerBridge extends SimplifiedEndpoint implements Sche
 
     @Override
     public void bridge(String data) {
-        broadcast(data);
+        if (data != null) {
+            SchedulerResultParameters resultParameters = new SchedulerResultParameters()
+                    .setHeader("result")
+                    .setNodeId(nodeManager.getNodeId())
+                    .setResult(data);
+            broadcast(resultParameters.toString());
+        }
     }
 
     @Override
     public void bridge(@NonNull SchedulerSession session, String data) {
         if (session instanceof WebsocketSchedulerSession websocketSchedulerSession) {
-            sendText(websocketSchedulerSession.getSession(), data);
+            SchedulerResultParameters resultParameters = new SchedulerResultParameters()
+                    .setHeader("result")
+                    .setNodeId(nodeManager.getNodeId())
+                    .setResult(data);
+            sendText(websocketSchedulerSession.getSession(), resultParameters.toString());
         }
     }
 

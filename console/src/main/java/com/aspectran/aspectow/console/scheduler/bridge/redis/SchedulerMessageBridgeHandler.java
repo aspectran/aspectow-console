@@ -42,10 +42,14 @@ public class SchedulerMessageBridgeHandler implements RedisMessageListener {
 
     @Override
     public void onRelayMessage(String nodeId, String message) {
-        if (logger.isTraceEnabled()) {
-            logger.trace("Forwarding scheduler bridge message to SchedulerManager: {}", message);
+        if (message.startsWith("command:")) {
+            schedulerManager.processCommand(message);
+        } else {
+            if (logger.isTraceEnabled()) {
+                logger.trace("Forwarding scheduler bridge message to SchedulerManager: {}", message);
+            }
+            schedulerManager.handleSchedulerResult(message);
         }
-        schedulerManager.handleSchedulerResult(message);
     }
 
 }
