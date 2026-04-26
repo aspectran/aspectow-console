@@ -32,6 +32,7 @@ import com.aspectran.core.component.bean.annotation.Request;
 import com.aspectran.core.component.bean.annotation.RequestToPost;
 import com.aspectran.core.component.bean.annotation.Transform;
 import com.aspectran.core.context.rule.type.FormatType;
+import com.aspectran.core.service.CoreServiceHolder;
 import com.aspectran.utils.StringUtils;
 import org.jspecify.annotations.NonNull;
 
@@ -84,12 +85,13 @@ public class SchedulerActivity {
             nodeInfo = nodeManager.getNodeInfoHolder().getNodeInfo(nodeManager.getNodeId());
         }
         return Map.of(
-                "title", "Scheduler Management",
+                "title", "Scheduler Manager",
                 "style", "cluster-page",
                 "nodes", nodes,
                 "node", nodeConsoleHelper.createNodeMap(nodeInfo, true, true),
                 "token", AppMonTokenIssuer.issueToken(30),
-                "clusterMode", clusterMode
+                "clusterMode", clusterMode,
+                "jobLockProvider", (CoreServiceHolder.getJobLockProvider() != null)
         );
     }
 
