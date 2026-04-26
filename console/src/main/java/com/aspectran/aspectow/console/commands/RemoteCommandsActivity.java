@@ -124,7 +124,7 @@ public class RemoteCommandsActivity {
             targetNodeId = nodeManager.getNodeId();
         }
 
-        remoteCommandManager.executeCommand(targetNodeId, command);
+        remoteCommandManager.dispatch(targetNodeId, command);
 
         Map<String, String> result = new HashMap<>();
         result.put("message", "Command initiated successfully for node: " + targetNodeId);

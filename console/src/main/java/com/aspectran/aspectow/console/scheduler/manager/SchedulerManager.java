@@ -28,8 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * SchedulerManager manages schedulers across the cluster.
- * It sends control commands to nodes and handles results via Redis relay.
+ * SchedulerManager orchestrates scheduler management across the cluster.
+ * It manages local execution, remote dispatching via Redis, and broadcasting
+ * results to connected clients.
  */
 @Component
 @Bean(id = "schedulerManager")
@@ -37,9 +38,9 @@ public class SchedulerManager implements InitializableBean {
 
     private static final Logger logger = LoggerFactory.getLogger(SchedulerManager.class);
 
-    private static final String COMMAND_LIST = "scheduler:list";
-    private static final String COMMAND_ENABLE = "scheduler:enable";
-    private static final String COMMAND_DISABLE = "scheduler:disable";
+    private static final String OP_LIST = "scheduler:list";
+    private static final String OP_ENABLE = "scheduler:enable";
+    private static final String OP_DISABLE = "scheduler:disable";
 
     private final NodeManager nodeManager;
 
@@ -57,7 +58,6 @@ public class SchedulerManager implements InitializableBean {
     public void initialize() throws Exception {
         logger.info("Initializing SchedulerManager for node: {}", nodeManager.getNodeId());
 
-        // Register a listener for scheduler relay messages (commands and results) from Redis
         if (nodeManager.getRedisMessageSubscriber() != null) {
             SchedulerMessageBridgeHandler bridgeHandler = new SchedulerMessageBridgeHandler(this);
             nodeManager.getRedisMessageSubscriber().addListener(bridgeHandler);
@@ -69,96 +69,103 @@ public class SchedulerManager implements InitializableBean {
     }
 
     /**
-     * Sends a scheduler management command to the cluster or executes locally.
-     * @param targetNodeId the ID of the node to execute the command
-     * @param command the command string
+     * Dispatches a management request to a specific node or handles it locally.
+     * @param targetNodeId the ID of the node to receive the request
+     * @param request the management request string
      */
-    public void sendCommand(String targetNodeId, String command) {
+    public void dispatch(String targetNodeId, String request) {
         if (nodeManager.getNodeId().equals(targetNodeId)) {
-            // Case 1: Target is local node, execute directly and bridge result to local clients
-            logger.debug("Executing local scheduler command: {}", command);
-            String result = executeLocalCommand(command);
-            if (result != null) {
-                handleSchedulerResult(result);
+            logger.debug("Executing local scheduler request: {}", request);
+            String response = execute(request);
+            if (response != null) {
+                broadcast(response);
             }
         } else {
-            // Case 2: Target is a remote node, relay via Redis
             if (nodeManager.getRedisMessagePublisher() != null) {
                 try {
-                    String message = "command:" + command + ";" + targetNodeId;
+                    String message = "command:" + request + ";" + targetNodeId;
                     nodeManager.getRedisMessagePublisher().publishRelay(NodeMessageProtocol.CATEGORY_SCHEDULER, message);
-                    logger.debug("Scheduler command relayed to node {}: {}", targetNodeId, command);
+                    logger.debug("Scheduler request dispatched to node {}: {}", targetNodeId, request);
                 } catch (Exception e) {
-                    logger.error("Failed to relay scheduler command to Redis", e);
+                    logger.error("Failed to dispatch scheduler request to node {}", targetNodeId, e);
                 }
             } else {
-                logger.warn("Cannot relay command to node {}: Redis publisher not available", targetNodeId);
+                logger.warn("Cannot dispatch request to node {}: Redis publisher not available", targetNodeId);
             }
         }
     }
 
     /**
-     * Processes a scheduler management command received from Redis.
-     * If the command is for this node, executes it and publishes the result back to Redis.
-     * @param message the full command message string
+     * Processes an incoming message received from the cluster relay.
+     * @param message the raw relay message
      */
-    public void processCommand(String message) {
+    public void process(String message) {
         if (StringUtils.isEmpty(message) || !message.startsWith("command:")) {
             return;
         }
 
-        String full = message.substring(8);
-        int idx = full.indexOf(';');
-        String command;
+        String payload = message.substring(8);
+        int idx = payload.indexOf(';');
+        String request;
         String targetNodeId = null;
 
         if (idx != -1) {
-            command = full.substring(0, idx);
-            targetNodeId = full.substring(idx + 1);
+            request = payload.substring(0, idx);
+            targetNodeId = payload.substring(idx + 1);
         } else {
-            command = full;
+            request = payload;
         }
 
         if (targetNodeId == null || targetNodeId.equals(nodeManager.getNodeId())) {
-            // Executing command requested by another node
-            String result = executeLocalCommand(command);
-            if (result != null && nodeManager.getRedisMessagePublisher() != null) {
+            String response = execute(request);
+            if (response != null && nodeManager.getRedisMessagePublisher() != null) {
                 try {
-                    // Publish the result so the requesting node can receive it
-                    nodeManager.getRedisMessagePublisher().publishRelay(NodeMessageProtocol.CATEGORY_SCHEDULER, result);
+                    nodeManager.getRedisMessagePublisher().publishRelay(NodeMessageProtocol.CATEGORY_SCHEDULER, response);
                 } catch (Exception e) {
-                    logger.error("Failed to publish scheduler result to Redis", e);
+                    logger.error("Failed to relay scheduler response to cluster", e);
                 }
             }
         }
     }
 
-    private String executeLocalCommand(String command) {
+    /**
+     * Executes the management logic for a given request on the local node.
+     * @param request the request string
+     * @return the execution result as JSON string, or null if unhandled
+     */
+    private String execute(String request) {
         try {
-            if (command.startsWith(COMMAND_LIST)) {
-                return localSchedulerService.getSchedulerListJson();
-            } else if (command.startsWith(COMMAND_ENABLE)) {
-                return localSchedulerService.changeActiveState(command.substring(COMMAND_ENABLE.length() + 1), false);
-            } else if (command.startsWith(COMMAND_DISABLE)) {
-                return localSchedulerService.changeActiveState(command.substring(COMMAND_DISABLE.length() + 1), true);
+            if (request.startsWith(OP_LIST)) {
+                return localSchedulerService.getSchedulesAsJson();
+            } else if (request.startsWith(OP_ENABLE)) {
+                return performStateChange(request.substring(OP_ENABLE.length() + 1), false);
+            } else if (request.startsWith(OP_DISABLE)) {
+                return performStateChange(request.substring(OP_DISABLE.length() + 1), true);
             }
         } catch (Exception e) {
-            logger.error("Failed to process local scheduler command: {}", command, e);
+            logger.error("Failed to execute local scheduler request: {}", request, e);
         }
         return null;
     }
 
+    private String performStateChange(String target, boolean disabled) {
+        String[] parts = target.split(":");
+        if (parts.length < 3) {
+            return null;
+        }
+        return localSchedulerService.updateState(parts[0], parts[1], parts[2], disabled);
+    }
+
     /**
-     * Handles an incoming scheduler management result (from Redis or local execution).
-     * This will be pushed to connected clients via WebSockets or Polling.
-     * @param resultData the result payload
+     * Broadcasts a management result to all connected clients on this node.
+     * @param response the result payload in JSON format
      */
-    public void handleSchedulerResult(String resultData) {
+    public void broadcast(String response) {
         if (logger.isTraceEnabled()) {
-            logger.trace("Received scheduler result, bridging to clients: {}", resultData);
+            logger.trace("Broadcasting scheduler result to local clients: {}", response);
         }
         if (broker != null) {
-            broker.bridge(resultData);
+            broker.bridge(response);
         }
     }
 

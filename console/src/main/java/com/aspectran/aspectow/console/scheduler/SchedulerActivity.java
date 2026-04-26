@@ -138,7 +138,7 @@ public class SchedulerActivity {
             targetNodeId = nodeManager.getNodeId();
         }
 
-        schedulerManager.sendCommand(targetNodeId, command);
+        schedulerManager.dispatch(targetNodeId, command);
 
         Map<String, String> result = new HashMap<>();
         result.put("message", "Scheduler command initiated successfully");

@@ -21,97 +21,42 @@ import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.component.bean.ablility.InitializableBean;
 import com.aspectran.core.component.bean.annotation.Bean;
 import com.aspectran.core.component.bean.annotation.Component;
-import com.aspectran.core.component.bean.aware.ActivityContextAware;
-import com.aspectran.core.context.ActivityContext;
-import com.aspectran.core.service.CoreService;
-import com.aspectran.core.service.CoreServiceHolder;
-import com.aspectran.daemon.command.CommandResult;
-import com.aspectran.daemon.service.DefaultDaemonService;
-import com.aspectran.daemon.service.DefaultDaemonServiceBuilder;
-import com.aspectran.utils.ToStringBuilder;
+import com.aspectran.utils.StringUtils;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * RemoteCommandManager manages commands across the cluster.
- * It handles local command execution in direct mode and bridges commands
- * via Redis in gateway/autoscaling modes.
+ * RemoteCommandManager orchestrates remote daemon command execution across the cluster.
+ * It manages local execution, remote dispatching via Redis, and broadcasting
+ * results to connected clients.
  */
 @Component
 @Bean(id = "remoteCommandManager")
-public class RemoteCommandManager implements ActivityContextAware, InitializableBean {
+public class RemoteCommandManager implements InitializableBean {
 
     private static final Logger logger = LoggerFactory.getLogger(RemoteCommandManager.class);
 
     private final NodeManager nodeManager;
 
+    private final LocalCommandService localCommandService;
+
     private final CommandBroker broker;
 
-    private ActivityContext activityContext;
-
-    private DefaultDaemonService daemonService;
-
-    public RemoteCommandManager(@NonNull NodeManager nodeManager) {
+    public RemoteCommandManager(@NonNull NodeManager nodeManager, LocalCommandService localCommandService) {
         this.nodeManager = nodeManager;
+        this.localCommandService = localCommandService;
         this.broker = new CommandBroker(nodeManager.getNodeId(), nodeManager.getRedisMessagePublisher());
-    }
-
-    @Override
-    public void setActivityContext(@NonNull ActivityContext activityContext) {
-        this.activityContext = activityContext;
     }
 
     @Override
     public void initialize() throws Exception {
         logger.info("Initializing RemoteCommandManager for node: {}", nodeManager.getNodeId());
 
-        // Register a listener for command results from Redis
+        // Register a listener for command relay messages (commands and results) from Redis
         if (nodeManager.getRedisMessageSubscriber() != null) {
             CommandMessageBridgeHandler bridgeHandler = new CommandMessageBridgeHandler(this);
             nodeManager.getRedisMessageSubscriber().addListener(bridgeHandler);
-        }
-    }
-
-    private synchronized void setupDaemonService() throws Exception {
-        if (daemonService != null) {
-            return;
-        }
-
-        for (CoreService service : CoreServiceHolder.getAllServices()) {
-            if (service instanceof DefaultDaemonService ds) {
-                daemonService = ds;
-                break;
-            }
-        }
-
-        if (daemonService == null) {
-            CoreService baseService = null;
-            if (activityContext != null) {
-                baseService = activityContext.getMasterService().getRootService();
-            } else {
-                for (CoreService service : CoreServiceHolder.getAllServices()) {
-                    baseService = service.getRootService();
-                    break;
-                }
-            }
-
-            if (baseService != null) {
-                logger.info("No active DaemonService found; starting a new one based on root service [{}]",
-                        baseService.getServiceName());
-                daemonService = DefaultDaemonServiceBuilder.build(baseService);
-                // The daemonService is added to baseService's sub-services during construction.
-                // If the baseService is already active, the new daemonService is considered an
-                // orphan and must be started manually.
-                if (daemonService.getServiceLifeCycle().isOrphan()) {
-                    daemonService.start();
-                }
-            } else {
-                logger.warn("No Core Service found in CoreServiceHolder; cannot start DaemonService. " +
-                        "This might be because RemoteCommandManager is initialized too early.");
-            }
-        } else {
-            logger.info("Active DaemonService found: {}", daemonService.getServiceName());
         }
     }
 
@@ -120,62 +65,69 @@ public class RemoteCommandManager implements ActivityContextAware, Initializable
     }
 
     /**
-     * Sends a command to a specific node.
-     * @param targetNodeId the ID of the node to execute the command
+     * Dispatches a command request to a specific node or handles it locally.
+     * @param targetNodeId the ID of the node to receive the request
      * @param commandData the command payload in APON/JSON format
      */
-    public void executeCommand(String targetNodeId, String commandData) throws Exception {
+    public void dispatch(String targetNodeId, String commandData) {
         if (nodeManager.getNodeId().equals(targetNodeId)) {
-            // Process locally
-            processLocalCommand(commandData);
+            // Case 1: Target is local node, execute directly and broadcast result to local clients
+            logger.debug("Executing local daemon command: {}", commandData);
+            String response = localCommandService.execute(commandData);
+            if (response != null) {
+                broadcast(response);
+            }
         } else {
-            // Relay via Redis
+            // Case 2: Target is a remote node, relay via Redis
             if (nodeManager.getRedisMessagePublisher() != null) {
-                logger.debug("Relaying command to node {}: {}", targetNodeId, commandData);
-                nodeManager.getRedisMessagePublisher().publishRelay(CommandBroker.CATEGORY_COMMANDS, commandData);
-            } else {
-                throw new IllegalStateException("Redis publisher is not available for relaying commands");
-            }
-        }
-    }
-
-    private void processLocalCommand(String commandData) throws Exception {
-        logger.info(ToStringBuilder.toString("Processing local command:", commandData));
-        if (daemonService == null) {
-            setupDaemonService();
-        }
-        if (daemonService != null) {
-            try {
-                CommandResult commandResult = daemonService.execute(commandData);
-                if (commandResult.isSuccess()) {
-                    handleCommandResult(commandResult.getResult());
-                } else {
-                    handleCommandResult(commandResult.getResult());
-                    if (commandResult.getError() != null) {
-                        logger.error("Local command execution failed: {}", commandResult.getError());
-                    }
+                try {
+                    // Command target is embedded in the message format if needed,
+                    // but for commands we currently rely on the publishRelay mechanism
+                    nodeManager.getRedisMessagePublisher().publishRelay(CommandBroker.CATEGORY_COMMANDS, commandData);
+                    logger.debug("Daemon command dispatched to cluster (target={}): {}", targetNodeId, commandData);
+                } catch (Exception e) {
+                    logger.error("Failed to dispatch daemon command to cluster", e);
                 }
-            } catch (Exception e) {
-                logger.error("Failed to execute local command", e);
-                handleCommandResult("[FAILED] Error executing command: " + e.getMessage());
+            } else {
+                logger.warn("Cannot dispatch command: Redis publisher not available");
             }
-        } else {
-            logger.warn("DaemonService is not available for local command processing");
-            handleCommandResult("[FAILED] Local DaemonService is not available");
         }
     }
 
     /**
-     * Handles an incoming command result from Redis or local execution.
-     * This will be pushed to connected clients via WebSocket or Polling.
-     * @param resultData the result payload
+     * Processes an incoming message received from the cluster relay.
+     * @param message the raw relay message
      */
-    public void handleCommandResult(String resultData) {
+    public void process(String message) {
+        // Since categorization is handled by the BridgeHandler, 
+        // we just need to distinguish between a command and a result.
+        // For RemoteCommandManager, we assume if it's not a known result format, it's a command.
+        // But for consistency with SchedulerManager, we can use a prefix or check the content.
+        if (message.startsWith("command:")) {
+            String commandData = message.substring(8);
+            String response = localCommandService.execute(commandData);
+            if (response != null && nodeManager.getRedisMessagePublisher() != null) {
+                try {
+                    nodeManager.getRedisMessagePublisher().publishRelay(CommandBroker.CATEGORY_COMMANDS, response);
+                } catch (Exception e) {
+                    logger.error("Failed to relay daemon command response to cluster", e);
+                }
+            }
+        } else {
+            broadcast(message);
+        }
+    }
+
+    /**
+     * Broadcasts a command execution result to all connected clients on this node.
+     * @param response the result payload
+     */
+    public void broadcast(String response) {
         if (logger.isTraceEnabled()) {
-            logger.trace("Received command result, bridging to clients: {}", resultData);
+            logger.trace("Broadcasting command result to local clients: {}", response);
         }
         if (broker != null) {
-            broker.bridge(resultData);
+            broker.bridge(response);
         }
     }
 

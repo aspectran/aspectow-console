@@ -30,15 +30,19 @@ import org.slf4j.LoggerFactory;
 import java.util.Set;
 
 /**
- * LocalSchedulerService handles the actual collection and control of schedulers
- * within the local node's active CoreServices.
+ * LocalSchedulerService provides refined methods to collect and control
+ * schedulers within the local node.
  */
 @Component
 public class LocalSchedulerService {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalSchedulerService.class);
 
-    public String getSchedulerListJson() {
+    /**
+     * Collects all schedule information from active CoreServices and returns as JSON.
+     * @return the JSON string containing all services and their schedules
+     */
+    public String getSchedulesAsJson() {
         JsonBuilder jsonBuilder = new JsonBuilder().object();
         jsonBuilder.put("type", "list");
         jsonBuilder.array("services");
@@ -72,19 +76,16 @@ public class LocalSchedulerService {
         return jsonBuilder.toString();
     }
 
-    public String changeActiveState(String target, boolean disabled) {
-        String[] parts = target.split(":");
-        if (parts.length < 3) {
-            return null;
-        }
-
-        String serviceName = parts[0];
-        String type = parts[1];
-        String id = parts[2];
-
+    /**
+     * Updates the enabled/disabled state of a specific schedule or job.
+     * @param serviceName the name of the service
+     * @param type either 'schedule' or 'job'
+     * @param id the ID of the schedule or the translet name of the job
+     * @param disabled true to disable, false to enable
+     * @return the result message as JSON
+     */
+    public String updateState(String serviceName, String type, String id, boolean disabled) {
         boolean changed = false;
-        String resultMessage;
-
         for (CoreService service : CoreServiceHolder.getAllServices()) {
             if (service.getServiceName().equals(serviceName) && service.getServiceLifeCycle().isActive()) {
                 ScheduleRuleRegistry registry = service.getActivityContext().getScheduleRuleRegistry();
@@ -111,19 +112,19 @@ public class LocalSchedulerService {
             }
         }
 
+        String resultMessage;
         if (changed) {
             resultMessage = (disabled ? "Disabled" : "Enabled") + " " + type + " '" + id + "' in service '" + serviceName + "'";
         } else {
             resultMessage = "Failed to change state for " + type + " '" + id + "' in service '" + serviceName + "' (Not found or isolated)";
         }
 
-        JsonBuilder jsonBuilder = new JsonBuilder().object();
-        jsonBuilder.put("type", "result");
-        jsonBuilder.put("success", changed);
-        jsonBuilder.put("message", resultMessage);
-        jsonBuilder.endObject();
-
-        return jsonBuilder.toString();
+        return new JsonBuilder().object()
+                .put("type", "result")
+                .put("success", changed)
+                .put("message", resultMessage)
+                .endObject()
+                .toString();
     }
 
 }

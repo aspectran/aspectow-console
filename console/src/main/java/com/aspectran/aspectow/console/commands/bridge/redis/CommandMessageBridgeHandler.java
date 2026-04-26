@@ -42,10 +42,7 @@ public class CommandMessageBridgeHandler implements RedisMessageListener {
 
     @Override
     public void onRelayMessage(String nodeId, String message) {
-        if (logger.isTraceEnabled()) {
-            logger.trace("Forwarding bridge message to RemoteCommandManager: {}", message);
-        }
-        remoteCommandManager.handleCommandResult(message);
+        remoteCommandManager.process(message);
     }
 
 }

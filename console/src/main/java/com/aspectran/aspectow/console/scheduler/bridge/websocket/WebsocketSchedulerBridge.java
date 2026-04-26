@@ -140,7 +140,7 @@ public class WebsocketSchedulerBridge extends SimplifiedEndpoint implements Sche
             try {
                 Thread.ofVirtual().start(() -> {
                     try {
-                        schedulerManager.sendCommand(finalTargetNodeId, command);
+                        schedulerManager.dispatch(finalTargetNodeId, command);
                     } catch (Exception e) {
                         logger.error("Failed to execute scheduler command from session {}", session.getId(), e);
                         sendText(session, "[ERROR] " + e.getMessage());

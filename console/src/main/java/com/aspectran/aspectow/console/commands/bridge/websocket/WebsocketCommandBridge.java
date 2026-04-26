@@ -142,7 +142,7 @@ public class WebsocketCommandBridge extends SimplifiedEndpoint implements Comman
             try {
                 Thread.ofVirtual().start(() -> {
                     try {
-                        remoteCommandManager.executeCommand(finalTargetNodeId, commandParameters.toString());
+                        remoteCommandManager.dispatch(finalTargetNodeId, commandParameters.toString());
                     } catch (Exception e) {
                         logger.error("Failed to execute command from session {}", session.getId(), e);
                         sendText(session, "[ERROR] " + e.getMessage());
