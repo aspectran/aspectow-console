@@ -16,14 +16,16 @@
 package com.aspectran.aspectow.console.commands.bridge.websocket;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
-import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
 import com.aspectran.aspectow.console.commands.bridge.CommandBridge;
-import com.aspectran.aspectow.console.commands.bridge.CommandResultParameters;
 import com.aspectran.aspectow.console.commands.bridge.CommandSession;
+import com.aspectran.aspectow.console.commands.bridge.RemoteCommandParameters;
+import com.aspectran.aspectow.console.commands.bridge.RemoteCommandResultParameters;
+import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
 import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Initialize;
+import com.aspectran.daemon.command.CommandParameters;
 import com.aspectran.utils.StringUtils;
 import com.aspectran.utils.apon.JsonToParameters;
 import com.aspectran.utils.security.InvalidPBTokenException;
@@ -94,8 +96,7 @@ public class WebsocketCommandBridge extends SimplifiedEndpoint implements Comman
         }
 
         try {
-            com.aspectran.aspectow.console.commands.bridge.CommandParameters parameters =
-                    JsonToParameters.from(message, com.aspectran.aspectow.console.commands.bridge.CommandParameters.class);
+            RemoteCommandParameters parameters = JsonToParameters.from(message, RemoteCommandParameters.class);
 
             String header = parameters.getHeader();
             if ("execute".equals(header)) {
@@ -115,7 +116,7 @@ public class WebsocketCommandBridge extends SimplifiedEndpoint implements Comman
         WebsocketCommandSession commandSession = new WebsocketCommandSession(session);
         commandSession.setNodeId(nodeManager.getNodeId());
         if (addSession(session)) {
-            CommandResultParameters resultParameters = new CommandResultParameters()
+            RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
                     .setHeader("joined")
                     .setNodeId(nodeManager.getNodeId());
             sendText(session, resultParameters.toString());
@@ -124,13 +125,13 @@ public class WebsocketCommandBridge extends SimplifiedEndpoint implements Comman
     }
 
     private void pong(Session session) {
-        CommandResultParameters resultParameters = new CommandResultParameters()
+        RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
                 .setHeader("pong");
         sendText(session, resultParameters.toString());
     }
 
-    private void execute(Session session, com.aspectran.aspectow.console.commands.bridge.CommandParameters messageParameters) {
-        com.aspectran.daemon.command.CommandParameters commandParameters = messageParameters.getCommandParameters();
+    private void execute(Session session, @NonNull RemoteCommandParameters messageParameters) {
+        CommandParameters commandParameters = messageParameters.getCommandParameters();
         if (commandParameters != null) {
             String targetNodeId = messageParameters.getTargetNodeId();
             if (targetNodeId == null || targetNodeId.isEmpty()) {
@@ -164,7 +165,7 @@ public class WebsocketCommandBridge extends SimplifiedEndpoint implements Comman
     @Override
     public void bridge(String data) {
         if (data != null) {
-            CommandResultParameters resultParameters = new CommandResultParameters()
+            RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
                     .setHeader("result")
                     .setNodeId(nodeManager.getNodeId())
                     .setResult(data);
@@ -175,7 +176,7 @@ public class WebsocketCommandBridge extends SimplifiedEndpoint implements Comman
     @Override
     public void bridge(@NonNull CommandSession session, String data) {
         if (session instanceof WebsocketCommandSession websocketCommandSession) {
-            CommandResultParameters resultParameters = new CommandResultParameters()
+            RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
                     .setHeader("result")
                     .setNodeId(nodeManager.getNodeId())
                     .setResult(data);

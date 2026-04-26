@@ -23,7 +23,7 @@ import com.aspectran.utils.json.JsonBuilder;
 /**
  * Represents a structured outgoing message for remote command results.
  */
-public class CommandResultParameters extends DefaultParameters {
+public class RemoteCommandResultParameters extends DefaultParameters {
 
     public static final ParameterKey header;
     public static final ParameterKey nodeId;
@@ -46,26 +46,26 @@ public class CommandResultParameters extends DefaultParameters {
         };
     }
 
-    public CommandResultParameters() {
+    public RemoteCommandResultParameters() {
         super(parameterKeys);
     }
 
-    public CommandResultParameters setHeader(String headerValue) {
+    public RemoteCommandResultParameters setHeader(String headerValue) {
         putValue(header, headerValue);
         return this;
     }
 
-    public CommandResultParameters setNodeId(String nodeIdValue) {
+    public RemoteCommandResultParameters setNodeId(String nodeIdValue) {
         putValue(nodeId, nodeIdValue);
         return this;
     }
 
-    public CommandResultParameters setResult(String resultValue) {
+    public RemoteCommandResultParameters setResult(String resultValue) {
         putValue(result, resultValue);
         return this;
     }
 
-    public CommandResultParameters setError(String errorValue) {
+    public RemoteCommandResultParameters setError(String errorValue) {
         putValue(error, errorValue);
         return this;
     }

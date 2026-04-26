@@ -15,6 +15,7 @@
  */
 package com.aspectran.aspectow.console.commands.bridge;
 
+import com.aspectran.daemon.command.CommandParameters;
 import com.aspectran.utils.apon.DefaultParameters;
 import com.aspectran.utils.apon.ParameterKey;
 import com.aspectran.utils.apon.ValueType;
@@ -23,7 +24,7 @@ import com.aspectran.utils.apon.ValueType;
  * Represents a structured message for remote command execution.
  * It encapsulates the command type, routing information, and the command payload.
  */
-public class CommandParameters extends DefaultParameters {
+public class RemoteCommandParameters extends DefaultParameters {
 
     public static final ParameterKey header;
     public static final ParameterKey targetNodeId;
@@ -39,7 +40,7 @@ public class CommandParameters extends DefaultParameters {
         targetNodeId = new ParameterKey("targetNodeId", ValueType.STRING);
         targetGroup = new ParameterKey("targetGroup", ValueType.STRING);
         targetAll = new ParameterKey("targetAll", ValueType.BOOLEAN);
-        command = new ParameterKey("command", com.aspectran.daemon.command.CommandParameters.class);
+        command = new ParameterKey("command", CommandParameters.class);
         timeZone = new ParameterKey("timeZone", ValueType.STRING);
 
         parameterKeys = new ParameterKey[] {
@@ -52,7 +53,7 @@ public class CommandParameters extends DefaultParameters {
         };
     }
 
-    public CommandParameters() {
+    public RemoteCommandParameters() {
         super(parameterKeys);
     }
 
@@ -72,7 +73,7 @@ public class CommandParameters extends DefaultParameters {
         return getBoolean(targetAll, false);
     }
 
-    public com.aspectran.daemon.command.CommandParameters getCommandParameters() {
+    public CommandParameters getCommandParameters() {
         return getParameters(command);
     }
 
