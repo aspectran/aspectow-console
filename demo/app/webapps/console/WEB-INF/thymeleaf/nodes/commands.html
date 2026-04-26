@@ -172,7 +172,7 @@ arguments: {
     <th:block layout:fragment="script">
         <script th:src="@{/assets/js/console-client.js}"></script>
         <script th:inline="javascript">
-            const nodes = [[${page.nodes}]];
+            let nodes = [[${page.nodes}]];
             const currentNodeId = [[${page.node?.id}]];
             const BASE_PATH = [[@{/}]].replace(/\/$/, '');
 
@@ -185,23 +185,95 @@ arguments: {
                 restart: 'command: restart\nrequeuable: false'
             };
 
-            function onTargetTypeChange() {
+            function refreshNodeList() {
+                return fetch(BASE_PATH + "/nodes/commands/list")
+                    .then(res => res.json())
+                    .then(data => {
+                        nodes = data;
+                        return data;
+                    });
+            }
+
+            function onTargetTypeChange(forceCheck = false) {
+                if (forceCheck) {
+                    refreshNodeList().then(() => doTargetTypeChange());
+                } else {
+                    doTargetTypeChange();
+                }
+            }
+
+            function doTargetTypeChange() {
                 const type = $('#target-type').val();
                 const $container = $('#target-value-container');
                 const $select = $('#target-value');
+                const prevValue = $select.val();
                 $select.empty();
 
                 if (type === 'all') {
                     $container.hide();
+                    const url = new URL(window.location);
+                    url.searchParams.delete('nodeId');
+                    window.history.replaceState({}, '', url);
+                    resetDeadStatus();
                 } else if (type === 'group') {
                     $container.show();
                     const groups = [...new Set(nodes.map(n => n.group).filter(g => g))];
                     groups.forEach(g => $select.append(new Option(g, g)));
+                    resetDeadStatus();
                 } else {
                     $container.show();
-                    nodes.forEach(n => $select.append(new Option(n.title + ' (' + n.id + ')', n.id)));
-                    $select.val(currentNodeId);
+                    nodes.forEach(n => {
+                        const option = new Option(n.title + ' (' + n.id + ')', n.id);
+                        if (n.status && n.status.toUpperCase() === 'DEAD') {
+                            $(option).addClass('text-danger');
+                            option.text += ' [DEAD]';
+                        }
+                        $select.append(option);
+                    });
+                    
+                    const targetNodeId = prevValue || currentNodeId;
+                    if (targetNodeId) {
+                        $select.val(targetNodeId);
+                        updateUrl(targetNodeId);
+                        checkSelectedNodeStatus(targetNodeId);
+                    }
                 }
+            }
+
+            function updateUrl(nodeId) {
+                const url = new URL(window.location);
+                url.searchParams.set('nodeId', nodeId);
+                window.history.replaceState({}, '', url);
+            }
+
+            function checkSelectedNodeStatus(nodeId) {
+                const nodeInfo = nodes.find(n => n.id === nodeId);
+                if (nodeInfo && nodeInfo.status && nodeInfo.status.toUpperCase() === 'DEAD') {
+                    $('#connection-indicator').text("TARGET DEAD").removeClass("bg-success bg-warning bg-secondary").addClass("bg-danger");
+                    $('#result-view').html(`
+                        <div class="text-center py-4">
+                            <i class="bi bi-exclamation-octagon fs-2 text-danger mb-2"></i>
+                            <h6 class="fw-bold">Target Node Unreachable</h6>
+                            <p class="text-muted small">Node <strong>${nodeId}</strong> is currently DEAD.</p>
+                            <button class="btn btn-xs btn-outline-primary" onclick="onTargetTypeChange(true)">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh Status
+                            </button>
+                        </div>
+                    `);
+                    return false;
+                } else {
+                    if (client && client.established) {
+                        $('#connection-indicator').text("CONNECTED").removeClass("bg-danger bg-warning bg-secondary").addClass("bg-success");
+                    }
+                    return true;
+                }
+            }
+
+            function resetDeadStatus() {
+                if (client && client.established) {
+                    $('#connection-indicator').text("CONNECTED").removeClass("bg-danger bg-warning bg-secondary").addClass("bg-success");
+                }
+                $('#result-view').html('<div class="text-muted small">Select a command from history or dispatch a new one to see results.</div>');
             }
 
             function loadTemplate(key) {
@@ -214,6 +286,11 @@ arguments: {
 
                 const targetType = $('#target-type').val();
                 const targetValue = $('#target-value').val();
+                
+                if (targetType === 'node' && !checkSelectedNodeStatus(targetValue)) {
+                    return;
+                }
+
                 let targetDisplay = 'All Nodes';
                 if (targetType === 'group') targetDisplay = 'Group: ' + targetValue;
                 if (targetType === 'node') targetDisplay = 'Node: ' + targetValue;
@@ -308,8 +385,17 @@ arguments: {
             $(function() {
                 onTargetTypeChange();
 
+                $('#target-value').on('change', function() {
+                    const type = $('#target-type').val();
+                    if (type === 'node') {
+                        const nodeId = $(this).val();
+                        updateUrl(nodeId);
+                        checkSelectedNodeStatus(nodeId);
+                    }
+                });
+
                 const commandsNode = {
-                    id: currentNodeId,
+                    id: currentNodeId || 'gateway',
                     endpoint: {
                         path: BASE_PATH + "/remote-commands"
                     }
@@ -326,6 +412,11 @@ arguments: {
                     },
                     onEstablished: () => {
                         $('#connection-indicator').text("CONNECTED").removeClass("bg-secondary bg-danger bg-warning").addClass("bg-success");
+                        const type = $('#target-type').val();
+                        const val = $('#target-value').val();
+                        if (type === 'node' && val) {
+                            checkSelectedNodeStatus(val);
+                        }
                     },
                     onRetry: (count, max) => {
                         $('#connection-indicator').text(`RECONNECTING (${count}/${max})...`).removeClass("bg-success bg-danger").addClass("bg-warning");
@@ -364,7 +455,7 @@ arguments: {
                                 target.status = 'failed';
                                 target.result = error;
                             } else {
-                                target.status = result.includes('[FAILED]') ? 'failed' : 'completed';
+                                target.status = result && result.includes('[FAILED]') ? 'failed' : 'completed';
                                 target.result = result;
                             }
                             updateHistoryUI();

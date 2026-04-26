@@ -72,7 +72,7 @@
                 </div>
                 <div class="col-md-3">
                     <select id="node-selector" class="form-select form-select-sm">
-                        <option th:each="n : ${page.nodes}" th:value="${n.id}" th:text="${n.title}" th:selected="${n.id == page.node.id}">Node Name</option>
+                        <!-- Dynamic options -->
                     </select>
                 </div>
                 <div class="col-auto">
@@ -138,8 +138,23 @@
                     .then(res => res.json())
                     .then(data => {
                         nodes = data;
+                        renderNodeSelector();
                         return data;
                     });
+            }
+
+            function renderNodeSelector() {
+                const $select = $('#node-selector');
+                $select.empty();
+                nodes.forEach(n => {
+                    const option = new Option(n.title + ' (' + n.id + ')', n.id);
+                    if (n.status && n.status.toUpperCase() === 'DEAD') {
+                        $(option).addClass('text-danger');
+                        option.text += ' [DEAD]';
+                    }
+                    $select.append(option);
+                });
+                $select.val(currentNodeId);
             }
 
             function connectToNode(nodeId, forceStatusCheck = false) {
@@ -386,6 +401,7 @@
             }
 
             $(function() {
+                renderNodeSelector();
                 connectToNode(currentNodeId);
 
                 $('#node-selector').on('change', function() {
@@ -397,16 +413,18 @@
                 });
 
                 $('#refresh-btn').on('click', function() {
-                    if (consoleClient && consoleClient.established && consoleClient.mode === 'websocket') {
-                        const message = {
-                            header: "execute",
-                            command: "list",
-                            targetNodeId: currentNodeId
-                        };
-                        consoleClient.sendMessage(JSON.stringify(message));
-                    } else {
-                        connectToNode(currentNodeId, true);
-                    }
+                    refreshNodeList().then(() => {
+                        if (consoleClient && consoleClient.established && consoleClient.mode === 'websocket') {
+                            const message = {
+                                header: "execute",
+                                command: "list",
+                                targetNodeId: currentNodeId
+                            };
+                            consoleClient.sendMessage(JSON.stringify(message));
+                        } else {
+                            doConnectToNode(currentNodeId);
+                        }
+                    });
                 });
             });
         </script>
