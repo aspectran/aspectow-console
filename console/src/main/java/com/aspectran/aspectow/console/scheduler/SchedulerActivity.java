@@ -17,21 +17,31 @@ package com.aspectran.aspectow.console.scheduler;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.console.cluster.NodeConsoleHelper;
+import com.aspectran.aspectow.console.scheduler.bridge.polling.PollingSchedulerBridge;
+import com.aspectran.aspectow.console.scheduler.bridge.polling.PollingSchedulerSession;
+import com.aspectran.aspectow.console.scheduler.manager.SchedulerManager;
 import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.manager.NodeManager;
+import com.aspectran.core.activity.Translet;
 import com.aspectran.core.component.bean.annotation.Action;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Dispatch;
 import com.aspectran.core.component.bean.annotation.Request;
+import com.aspectran.core.component.bean.annotation.RequestToPost;
+import com.aspectran.core.component.bean.annotation.Transform;
+import com.aspectran.core.context.rule.type.FormatType;
+import com.aspectran.utils.StringUtils;
+import org.jspecify.annotations.NonNull;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.aspectran.aspectow.node.manager.NodeMessageProtocol.NODES_BASE_PATH;
 
 /**
- * SchedulerActivity provides views and data for managing schedulers across cluster nodes.
+ * SchedulerActivity provides views and API endpoints for scheduler management.
  *
  * <p>Created: 2026-04-26</p>
  */
@@ -40,11 +50,20 @@ public class SchedulerActivity {
 
     private final NodeManager nodeManager;
 
+    private final SchedulerManager schedulerManager;
+
+    private final PollingSchedulerBridge pollingSchedulerBridge;
+
     private final NodeConsoleHelper nodeConsoleHelper;
 
     @Autowired
-    public SchedulerActivity(NodeManager nodeManager, NodeConsoleHelper nodeConsoleHelper) {
+    public SchedulerActivity(NodeManager nodeManager,
+                             SchedulerManager schedulerManager,
+                             PollingSchedulerBridge pollingSchedulerBridge,
+                             NodeConsoleHelper nodeConsoleHelper) {
         this.nodeManager = nodeManager;
+        this.schedulerManager = schedulerManager;
+        this.pollingSchedulerBridge = pollingSchedulerBridge;
         this.nodeConsoleHelper = nodeConsoleHelper;
     }
 
@@ -65,6 +84,65 @@ public class SchedulerActivity {
                 "node", nodeConsoleHelper.createNodeMap(nodeInfo, true, true),
                 "token", AppMonTokenIssuer.issueToken(30)
         );
+    }
+
+    /**
+     * Joins a polling session.
+     * @param nodeId the node ID to join
+     * @return the node ID
+     */
+    @Request("/join")
+    @Transform(format = FormatType.TEXT)
+    public String join(String nodeId) {
+        if (StringUtils.isEmpty(nodeId)) {
+            nodeId = nodeManager.getNodeId();
+        }
+        PollingSchedulerSession session = pollingSchedulerBridge.createSession(nodeId);
+        return session.getNodeId();
+    }
+
+    /**
+     * Pulls new scheduler messages for a polling session.
+     * @param translet the translet
+     * @return an array of messages
+     */
+    @Request("/pull")
+    @Transform(format = FormatType.JSON)
+    public String[] pull(@NonNull Translet translet) {
+        String sessionId = translet.getParameter("sessionId");
+        if (sessionId == null) {
+            sessionId = translet.getParameter("nodeId");
+        }
+        PollingSchedulerSession session = pollingSchedulerBridge.getSession(sessionId);
+        if (session != null) {
+            return pollingSchedulerBridge.pull(session);
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Executes a scheduler command via HTTP POST (for polling clients).
+     * @param translet the translet
+     * @return a success message
+     */
+    @RequestToPost("/execute")
+    public Map<String, String> execute(@NonNull Translet translet) {
+        String targetNodeId = translet.getParameter("nodeId");
+        String command = translet.getParameter("command");
+
+        if (StringUtils.isEmpty(command)) {
+            throw new IllegalArgumentException("Command is required");
+        }
+        if (StringUtils.isEmpty(targetNodeId)) {
+            targetNodeId = nodeManager.getNodeId();
+        }
+
+        schedulerManager.sendCommand(targetNodeId, command);
+
+        Map<String, String> result = new HashMap<>();
+        result.put("message", "Scheduler command initiated successfully");
+        return result;
     }
 
 }
