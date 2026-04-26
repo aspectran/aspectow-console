@@ -39,6 +39,8 @@ public class RedisScheduledJobLockProvider implements ScheduledJobLockProvider {
 
     private long lockTimeoutSeconds = 60; // Default 1 minute
 
+    private boolean releasedOnUnlock = false;
+
     public RedisScheduledJobLockProvider(RedisConnectionPool connectionPool, String clusterId) {
         Assert.notNull(connectionPool, "connectionPool must not be null");
         this.connectionPool = connectionPool;
@@ -47,6 +49,18 @@ public class RedisScheduledJobLockProvider implements ScheduledJobLockProvider {
 
     public void setLockTimeoutSeconds(long lockTimeoutSeconds) {
         this.lockTimeoutSeconds = lockTimeoutSeconds;
+    }
+
+    /**
+     * Sets whether to immediately release the lock upon calling unlock.
+     * <p>If set to {@code false} (default), the lock key is preserved in Redis
+     * until it expires naturally via TTL. This is highly recommended when
+     * using timestamp-based lock keys to prevent nodes with clock drifts
+     * from re-executing the same time slot.</p>
+     * @param releasedOnUnlock true to delete the key immediately, false otherwise
+     */
+    public void setReleasedOnUnlock(boolean releasedOnUnlock) {
+        this.releasedOnUnlock = releasedOnUnlock;
     }
 
     @Override
@@ -68,6 +82,9 @@ public class RedisScheduledJobLockProvider implements ScheduledJobLockProvider {
 
     @Override
     public void unlock(String lockKey) {
+        if (!releasedOnUnlock) {
+            return;
+        }
         String fullKey = getFullKey(lockKey);
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             connection.sync().del(fullKey);

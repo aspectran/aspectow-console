@@ -19,6 +19,7 @@ import com.aspectran.aspectow.node.config.ClusterConfig;
 import com.aspectran.aspectow.node.config.NodeConfig;
 import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.config.NodeInfoHolder;
+import com.aspectran.aspectow.node.config.SchedulerConfig;
 import com.aspectran.aspectow.node.config.SecretConfig;
 import com.aspectran.aspectow.node.redis.RedisConnectionPool;
 import com.aspectran.aspectow.node.redis.RedisConnectionPoolConfig;
@@ -150,6 +151,10 @@ public abstract class NodeManagerBuilder {
             nodeManager.setRedisMessageSubscriber(redisMessageSubscriber);
 
             RedisScheduledJobLockProvider jobLockProvider = new RedisScheduledJobLockProvider(connectionPool, clusterId);
+            SchedulerConfig schedulerConfig = clusterConfig.getSchedulerConfig();
+            if (schedulerConfig != null) {
+                jobLockProvider.setReleasedOnUnlock(schedulerConfig.isReleasedOnUnlock());
+            }
             CoreServiceHolder.setJobLockProvider(jobLockProvider);
             logger.info("Registered RedisScheduledJobLockProvider for cluster-wide job locking");
         }

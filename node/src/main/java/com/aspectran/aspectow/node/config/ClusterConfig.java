@@ -32,6 +32,7 @@ public class ClusterConfig extends DefaultParameters {
     private static final ParameterKey secret;
     private static final ParameterKey heartbeatInterval;
     private static final ParameterKey endpoint;
+    private static final ParameterKey scheduler;
 
     private static final ParameterKey[] parameterKeys;
 
@@ -41,13 +42,15 @@ public class ClusterConfig extends DefaultParameters {
         secret = new ParameterKey("secret", SecretConfig.class);
         heartbeatInterval = new ParameterKey("heartbeatInterval", ValueType.LONG);
         endpoint = new ParameterKey("endpoint", EndpointConfig.class);
+        scheduler = new ParameterKey("scheduler", SchedulerConfig.class);
 
         parameterKeys = new ParameterKey[] {
                 id,
                 mode,
                 secret,
                 heartbeatInterval,
-                endpoint
+                endpoint,
+                scheduler
         };
     }
 
@@ -109,6 +112,18 @@ public class ClusterConfig extends DefaultParameters {
 
     public void setEndpointConfig(EndpointConfig endpointConfig) {
         putValue(endpoint, endpointConfig);
+    }
+
+    public SchedulerConfig getSchedulerConfig() {
+        return getParameters(scheduler);
+    }
+
+    public SchedulerConfig touchSchedulerConfig() {
+        return touchParameters(scheduler);
+    }
+
+    public void setSchedulerConfig(SchedulerConfig schedulerConfig) {
+        putValue(scheduler, schedulerConfig);
     }
 
 }
