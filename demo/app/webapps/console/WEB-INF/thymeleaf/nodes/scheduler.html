@@ -128,18 +128,54 @@
     <th:block layout:fragment="script">
         <script th:src="@{/assets/js/console-client.js}"></script>
         <script th:inline="javascript">
+            let nodes = [[${page.nodes}]];
             const BASE_PATH = [[@{/}]].replace(/\/$/, '');
             let consoleClient = null;
             let currentNodeId = [[${page.node.id}]];
 
-            function connectToNode(nodeId) {
+            function refreshNodeList() {
+                return fetch(BASE_PATH + "/nodes/scheduler/list")
+                    .then(res => res.json())
+                    .then(data => {
+                        nodes = data;
+                        return data;
+                    });
+            }
+
+            function connectToNode(nodeId, forceStatusCheck = false) {
+                if (forceStatusCheck) {
+                    refreshNodeList().then(() => doConnectToNode(nodeId));
+                } else {
+                    doConnectToNode(nodeId);
+                }
+            }
+
+            function doConnectToNode(nodeId) {
                 if (consoleClient) {
                     consoleClient.stop();
                 }
 
                 currentNodeId = nodeId;
-                $('#stat-current-node').text(nodeId);
+                updateStats('-', '-', '-', nodeId);
+
+                const nodeInfo = nodes.find(n => n.id === nodeId);
+                if (nodeInfo && nodeInfo.status && nodeInfo.status.toUpperCase() === 'DEAD') {
+                    $('#connection-indicator').text("NODE DEAD").removeClass("bg-success bg-warning bg-secondary").addClass("bg-danger");
+                    $('#scheduler-container').html(`
+                        <div class="text-center py-5">
+                            <i class="bi bi-exclamation-triangle fs-1 text-danger mb-3"></i>
+                            <h5 class="fw-bold">Node Unreachable</h5>
+                            <p class="text-muted">The target node <strong>${nodeId}</strong> is currently in DEAD state.</p>
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="connectToNode('${nodeId}', true)">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Try Again
+                            </button>
+                        </div>
+                    `);
+                    return;
+                }
+
                 $('#connection-indicator').text("CONNECTING...").removeClass("bg-success bg-danger bg-warning").addClass("bg-secondary");
+                $('#scheduler-container').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Fetching data from ' + nodeId + '...</p></div>');
 
                 const node = {
                     id: nodeId,
@@ -353,11 +389,15 @@
                 connectToNode(currentNodeId);
 
                 $('#node-selector').on('change', function() {
-                    connectToNode($(this).val());
+                    const nodeId = $(this).val();
+                    const url = new URL(window.location);
+                    url.searchParams.set('nodeId', nodeId);
+                    window.history.replaceState({}, '', url);
+                    connectToNode(nodeId);
                 });
 
                 $('#refresh-btn').on('click', function() {
-                    if (consoleClient) {
+                    if (consoleClient && consoleClient.established && consoleClient.mode === 'websocket') {
                         const message = {
                             header: "execute",
                             command: "list",
@@ -365,7 +405,7 @@
                         };
                         consoleClient.sendMessage(JSON.stringify(message));
                     } else {
-                        connectToNode($('#node-selector').val());
+                        connectToNode(currentNodeId, true);
                     }
                 });
             });

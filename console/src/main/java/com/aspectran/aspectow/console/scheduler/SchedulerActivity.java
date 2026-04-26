@@ -70,21 +70,36 @@ public class SchedulerActivity {
 
     /**
      * Displays the scheduler management page.
+     * @param nodeId the node ID
      * @return a map of attributes for rendering the view
      */
     @Request("/")
     @Dispatch("nodes/scheduler")
     @Action("page")
-    public Map<String, Object> scheduler() {
-        List<Map<String, Object>> nodes = nodeConsoleHelper.getNodes(false);
-        NodeInfo nodeInfo = nodeManager.getNodeInfoHolder().getNodeInfo(nodeManager.getNodeId());
+    public Map<String, Object> scheduler(String nodeId) {
+        String clusterMode = nodeManager.getClusterConfig().getMode();
+        List<Map<String, Object>> nodes = nodeConsoleHelper.getNodes(true);
+        NodeInfo nodeInfo = (nodeId != null ? nodeManager.getNodeInfoHolder().getNodeInfo(nodeId) : null);
+        if (nodeInfo == null) {
+            nodeInfo = nodeManager.getNodeInfoHolder().getNodeInfo(nodeManager.getNodeId());
+        }
         return Map.of(
                 "title", "Scheduler Management",
                 "style", "cluster-page",
                 "nodes", nodes,
                 "node", nodeConsoleHelper.createNodeMap(nodeInfo, true, true),
-                "token", AppMonTokenIssuer.issueToken(30)
+                "token", AppMonTokenIssuer.issueToken(30),
+                "clusterMode", clusterMode
         );
+    }
+
+    /**
+     * Lists all registered nodes with their current status.
+     * @return a list of node information maps
+     */
+    @Request("/list")
+    public List<Map<String, Object>> listNodes() {
+        return nodeConsoleHelper.getNodes(true);
     }
 
     /**
