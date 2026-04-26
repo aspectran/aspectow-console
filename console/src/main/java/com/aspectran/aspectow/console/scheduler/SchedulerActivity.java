@@ -88,6 +88,16 @@ public class SchedulerActivity {
     }
 
     /**
+     * Issues a new authentication token for WebSocket connection.
+     * @return the issued token
+     */
+    @Request("/token")
+    @Transform(format = FormatType.TEXT)
+    public String refreshToken() {
+        return AppMonTokenIssuer.issueToken(30);
+    }
+
+    /**
      * Joins a polling session.
      * @param nodeId the node ID to join
      * @return the node ID
