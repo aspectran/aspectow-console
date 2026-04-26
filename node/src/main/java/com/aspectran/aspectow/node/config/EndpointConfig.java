@@ -20,8 +20,8 @@ import com.aspectran.utils.apon.ParameterKey;
 import com.aspectran.utils.apon.ValueType;
 
 /**
- * EndpointConfig defines the communication settings for a node or cluster,
- * including the mode (auto, websocket, or polling) and the endpoint URL.
+ * Defines the configuration for a communication endpoint, including
+ * the preferred communication mode and the base path for the endpoint.
  *
  * <p>Created: 2026-04-18</p>
  */
@@ -46,18 +46,34 @@ public class EndpointConfig extends DefaultParameters {
         super(parameterKeys);
     }
 
+    /**
+     * Returns the preferred communication mode (e.g., "auto", "websocket", "polling").
+     * @return the communication mode
+     */
     public String getMode() {
         return getString(mode);
     }
 
+    /**
+     * Sets the preferred communication mode.
+     * @param mode the communication mode
+     */
     public void setMode(String mode) {
         putValue(EndpointConfig.mode, mode);
     }
 
+    /**
+     * Returns the base path of the communication endpoint.
+     * @return the endpoint path
+     */
     public String getPath() {
         return getString(path);
     }
 
+    /**
+     * Sets the base path of the communication endpoint.
+     * @param path the endpoint path
+     */
     public void setPath(String path) {
         putValue(EndpointConfig.path, path);
     }

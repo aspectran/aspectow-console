@@ -20,8 +20,9 @@ import com.aspectran.utils.apon.ParameterKey;
 import com.aspectran.utils.apon.ValueType;
 
 /**
- * SecretConfig defines the settings for secure communication within the cluster,
- * including the shared password, encryption algorithm, and salt.
+ * Defines the security settings for encrypted communication within the cluster,
+ * including the shared password, encryption algorithm, and salt for
+ * Password-Based Encryption (PBE).
  *
  * <p>Created: 2026-04-18</p>
  */
@@ -49,26 +50,50 @@ public class SecretConfig extends DefaultParameters {
         super(parameterKeys);
     }
 
+    /**
+     * Returns the shared password used for encryption.
+     * @return the encryption password
+     */
     public String getPassword() {
         return getString(password);
     }
 
+    /**
+     * Sets the shared password to be used for encryption.
+     * @param password the encryption password
+     */
     public void setPassword(String password) {
         putValue(SecretConfig.password, password);
     }
 
+    /**
+     * Returns the algorithm used for Password-Based Encryption (PBE).
+     * @return the encryption algorithm
+     */
     public String getAlgorithm() {
         return getString(algorithm);
     }
 
+    /**
+     * Sets the algorithm to be used for Password-Based Encryption (PBE).
+     * @param algorithm the encryption algorithm
+     */
     public void setAlgorithm(String algorithm) {
         putValue(SecretConfig.algorithm, algorithm);
     }
 
+    /**
+     * Returns the salt used for Password-Based Encryption (PBE).
+     * @return the encryption salt
+     */
     public String getSalt() {
         return getString(salt);
     }
 
+    /**
+     * Sets the salt to be used for Password-Based Encryption (PBE).
+     * @param salt the encryption salt
+     */
     public void setSalt(String salt) {
         putValue(SecretConfig.salt, salt);
     }

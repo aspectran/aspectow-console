@@ -20,8 +20,9 @@ import com.aspectran.utils.apon.ParameterKey;
 import com.aspectran.utils.apon.ValueType;
 
 /**
- * ClusterConfig defines cluster-wide settings, including the cluster name
- * and PBE (Password-Based Encryption) configuration for secure communication.
+ * Defines cluster-wide settings, including the cluster identification,
+ * communication mode, shared secret for secure communication, and
+ * configurations for endpoints and distributed scheduling.
  *
  * <p>Created: 2026-04-16</p>
  */
@@ -58,70 +59,139 @@ public class ClusterConfig extends DefaultParameters {
         super(parameterKeys);
     }
 
+    /**
+     * Returns the unique identifier for the cluster.
+     * @return the cluster ID
+     */
     public String getId() {
         return getString(id);
     }
 
+    /**
+     * Sets the unique identifier for the cluster.
+     * @param id the cluster ID
+     */
     public void setId(String id) {
         putValue(ClusterConfig.id, id);
     }
 
+    /**
+     * Returns the communication mode of the cluster (e.g., "gateway", "direct", "autoscaling").
+     * @return the cluster mode
+     */
     public String getMode() {
         return getString(mode);
     }
 
+    /**
+     * Sets the communication mode of the cluster.
+     * @param mode the cluster mode
+     */
     public void setMode(String mode) {
         putValue(ClusterConfig.mode, mode);
     }
 
+    /**
+     * Returns whether the cluster is in direct communication mode.
+     * @return true if in direct mode, false otherwise
+     */
     public boolean isDirectMode() {
         return (!isGatewayMode() && !isAutoscalingMode());
     }
 
+    /**
+     * Returns whether the cluster is in gateway communication mode.
+     * @return true if in gateway mode, false otherwise
+     */
     public boolean isGatewayMode() {
         return "gateway".equals(getString(mode));
     }
 
+    /**
+     * Returns whether the cluster is in autoscaling communication mode.
+     * @return true if in autoscaling mode, false otherwise
+     */
     public boolean isAutoscalingMode() {
         return "autoscaling".equals(getString(mode));
     }
 
+    /**
+     * Returns the security configuration for shared secrets.
+     * @return the secret configuration
+     */
     public SecretConfig getSecretConfig() {
         return getParameters(secret);
     }
 
+    /**
+     * Returns the interval between heartbeat signals in milliseconds.
+     * @return the heartbeat interval
+     */
     public long getHeartbeatInterval() {
         return getLong(heartbeatInterval);
     }
 
+    /**
+     * Returns the interval between heartbeat signals with a fallback default value.
+     * @param defaultValue the default interval to return if not specified
+     * @return the heartbeat interval
+     */
     public long getHeartbeatInterval(long defaultValue) {
         return getLong(heartbeatInterval, defaultValue);
     }
 
+    /**
+     * Sets the interval between heartbeat signals in milliseconds.
+     * @param heartbeatInterval the heartbeat interval
+     */
     public void setHeartbeatInterval(long heartbeatInterval) {
         putValue(ClusterConfig.heartbeatInterval, heartbeatInterval);
     }
 
+    /**
+     * Returns the configuration for communication endpoints.
+     * @return the endpoint configuration
+     */
     public EndpointConfig getEndpointConfig() {
         return getParameters(endpoint);
     }
 
+    /**
+     * Returns the endpoint configuration, creating it if it does not exist.
+     * @return the endpoint configuration
+     */
     public EndpointConfig touchEndpointConfig() {
         return touchParameters(endpoint);
     }
 
+    /**
+     * Sets the configuration for communication endpoints.
+     * @param endpointConfig the endpoint configuration
+     */
     public void setEndpointConfig(EndpointConfig endpointConfig) {
         putValue(endpoint, endpointConfig);
     }
 
+    /**
+     * Returns the configuration for the distributed scheduler.
+     * @return the scheduler configuration
+     */
     public SchedulerConfig getSchedulerConfig() {
         return getParameters(scheduler);
     }
 
+    /**
+     * Returns the scheduler configuration, creating it if it does not exist.
+     * @return the scheduler configuration
+     */
     public SchedulerConfig touchSchedulerConfig() {
         return touchParameters(scheduler);
     }
 
+    /**
+     * Sets the configuration for the distributed scheduler.
+     * @param schedulerConfig the scheduler configuration
+     */
     public void setSchedulerConfig(SchedulerConfig schedulerConfig) {
         putValue(scheduler, schedulerConfig);
     }

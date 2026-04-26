@@ -32,8 +32,9 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * The main manager for Aspectow Node Management.
- * This class orchestrates node status reporting, message relaying, and cluster coordination.
+ * The core orchestrator for Node Management within the cluster.
+ * <p>This class centralizes the management of node status reporting, inter-node
+ * message relaying, and secure cluster coordination using Redis and PBE-based tokens.</p>
  */
 public class NodeManager {
 
@@ -55,6 +56,12 @@ public class NodeManager {
 
     private RedisMessageSubscriber redisMessageSubscriber;
 
+    /**
+     * Instantiates a new NodeManager.
+     * @param nodeId the unique identifier of the current node
+     * @param clusterConfig the cluster-wide configuration
+     * @param nodeInfoHolder the holder for node-specific information
+     */
     public NodeManager(String nodeId, ClusterConfig clusterConfig, NodeInfoHolder nodeInfoHolder) {
         this.nodeId = nodeId;
         this.clusterConfig = clusterConfig;
@@ -62,7 +69,7 @@ public class NodeManager {
     }
 
     /**
-     * Gets the ID of the current node.
+     * Returns the unique identifier of the current node.
      * @return the node ID
      */
     public String getNodeId() {
@@ -70,43 +77,63 @@ public class NodeManager {
     }
 
     /**
-     * Gets the cluster configuration.
+     * Returns the cluster configuration.
      * @return the cluster configuration
      */
     public ClusterConfig getClusterConfig() {
         return clusterConfig;
     }
 
+    /**
+     * Returns the holder for node information.
+     * @return the node info holder
+     */
     public NodeInfoHolder getNodeInfoHolder() {
         return nodeInfoHolder;
     }
 
     /**
-     * Gets the list of all node information.
+     * Returns a list of information for all registered nodes in the cluster.
      * @return the list of node information
      */
     public List<NodeInfo> getNodeInfoList() {
         return nodeInfoHolder.getNodeInfoList();
     }
 
+    /**
+     * Returns the Redis connection pool.
+     * @return the Redis connection pool
+     */
     public RedisConnectionPool getRedisConnectionPool() {
         return redisConnectionPool;
     }
 
+    /**
+     * Sets the Redis connection pool.
+     * @param redisConnectionPool the Redis connection pool
+     */
     public void setRedisConnectionPool(RedisConnectionPool redisConnectionPool) {
         this.redisConnectionPool = redisConnectionPool;
     }
 
+    /**
+     * Returns the node registry used for tracking active nodes.
+     * @return the node registry
+     */
     public NodeRegistry getNodeRegistry() {
         return nodeRegistry;
     }
 
+    /**
+     * Sets the node registry.
+     * @param nodeRegistry the node registry
+     */
     public void setNodeRegistry(NodeRegistry nodeRegistry) {
         this.nodeRegistry = nodeRegistry;
     }
 
     /**
-     * Gets the node reporter.
+     * Returns the node reporter responsible for status broadcasts.
      * @return the node reporter
      */
     public NodeReporter getNodeReporter() {
@@ -121,24 +148,40 @@ public class NodeManager {
         this.nodeReporter = nodeReporter;
     }
 
+    /**
+     * Returns the publisher for sending relay messages via Redis.
+     * @return the Redis message publisher
+     */
     public RedisMessagePublisher getRedisMessagePublisher() {
         return redisMessagePublisher;
     }
 
+    /**
+     * Sets the Redis message publisher.
+     * @param redisMessagePublisher the Redis message publisher
+     */
     public void setRedisMessagePublisher(RedisMessagePublisher redisMessagePublisher) {
         this.redisMessagePublisher = redisMessagePublisher;
     }
 
+    /**
+     * Returns the subscriber for receiving relay messages via Redis.
+     * @return the Redis message subscriber
+     */
     public RedisMessageSubscriber getRedisMessageSubscriber() {
         return redisMessageSubscriber;
     }
 
+    /**
+     * Sets the Redis message subscriber.
+     * @param redisMessageSubscriber the Redis message subscriber
+     */
     public void setRedisMessageSubscriber(RedisMessageSubscriber redisMessageSubscriber) {
         this.redisMessageSubscriber = redisMessageSubscriber;
     }
 
     /**
-     * Shuts down all managed components and releases resources.
+     * Gracefully shuts down all managed components and releases resources.
      */
     public void destroy() {
         if (nodeReporter != null) {
@@ -154,7 +197,9 @@ public class NodeManager {
     }
 
     /**
-     * Creates a time-limited authentication token for this node.
+     * Generates a time-limited, encrypted authentication token for this node.
+     * <p>The token contains identity information and is secured using the cluster's
+     * shared secret and Password-Based Encryption (PBE).</p>
      * @return an encrypted token string
      */
     public String generateToken() {
@@ -177,7 +222,7 @@ public class NodeManager {
     }
 
     /**
-     * Validates the given authentication token.
+     * Validates the provided authentication token.
      * @param token the token string to validate
      * @throws InvalidPBTokenException if the token is invalid or expired
      */

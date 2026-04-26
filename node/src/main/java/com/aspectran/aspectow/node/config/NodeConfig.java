@@ -24,8 +24,9 @@ import java.io.Reader;
 import java.util.List;
 
 /**
- * NodeConfig defines the configuration for an Aspectow node,
- * including its identity, group, and communication settings.
+ * Root configuration for the Node Manager.
+ * <p>It encapsulates cluster-wide settings and a list of node information,
+ * serving as the primary configuration entry point for managing cluster nodes.</p>
  *
  * <p>Created: 2026-04-16</p>
  */
@@ -60,22 +61,42 @@ public class NodeConfig extends DefaultParameters {
         readFrom(configFile);
     }
 
+    /**
+     * Returns the cluster-wide configuration.
+     * @return the cluster configuration
+     */
     public ClusterConfig getClusterConfig() {
         return getParameters(cluster);
     }
 
-    public  ClusterConfig touchClusterConfig() {
+    /**
+     * Returns the cluster configuration, creating it if it does not exist.
+     * @return the cluster configuration
+     */
+    public ClusterConfig touchClusterConfig() {
         return touchParameters(cluster);
     }
 
+    /**
+     * Sets the cluster-wide configuration.
+     * @param clusterConfig the cluster configuration
+     */
     public void setClusterConfig(ClusterConfig clusterConfig) {
         putValue(cluster, clusterConfig);
     }
 
+    /**
+     * Returns a list of information for all registered nodes.
+     * @return the list of node information
+     */
     public List<NodeInfo> getNodeInfoList() {
         return getParametersList(node);
     }
 
+    /**
+     * Adds node information to the configuration.
+     * @param nodeInfo the node information to add
+     */
     public void putNodeInfo(NodeInfo nodeInfo) {
         putValue(node, nodeInfo);
     }

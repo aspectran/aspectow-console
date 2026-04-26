@@ -25,14 +25,17 @@ import com.aspectran.utils.apon.ValueType;
  */
 public class SchedulerConfig extends DefaultParameters {
 
+    private static final ParameterKey lockTimeout;
     private static final ParameterKey releasedOnUnlock;
 
     private static final ParameterKey[] parameterKeys;
 
     static {
+        lockTimeout = new ParameterKey("lockTimeout", ValueType.LONG);
         releasedOnUnlock = new ParameterKey("releasedOnUnlock", ValueType.BOOLEAN);
 
         parameterKeys = new ParameterKey[] {
+                lockTimeout,
                 releasedOnUnlock
         };
     }
@@ -41,8 +44,24 @@ public class SchedulerConfig extends DefaultParameters {
         super(parameterKeys);
     }
 
+    public long getLockTimeout() {
+        return getLong(lockTimeout, 60);
+    }
+
+    public boolean hasLockTimeout() {
+        return hasValue(lockTimeout);
+    }
+
+    public void setLockTimeout(long lockTimeout) {
+        putValue(SchedulerConfig.lockTimeout, lockTimeout);
+    }
+
     public boolean isReleasedOnUnlock() {
         return getBoolean(releasedOnUnlock, false);
+    }
+
+    public boolean hasReleasedOnUnlock() {
+        return hasValue(releasedOnUnlock);
     }
 
     public void setReleasedOnUnlock(boolean releasedOnUnlock) {
