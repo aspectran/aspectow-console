@@ -2,6 +2,9 @@
 cluster: {
     id: cluster1
     mode: gateway  # direct or gateway or autoscaling
+    scheduler: {
+        releasedOnUnlock: false
+    }
 }
 node: {
     id: node1
