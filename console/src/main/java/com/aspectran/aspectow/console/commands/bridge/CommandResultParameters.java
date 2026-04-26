@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay;
+package com.aspectran.aspectow.console.commands.bridge;
 
 import com.aspectran.utils.apon.DefaultParameters;
 import com.aspectran.utils.apon.ParameterKey;
@@ -23,7 +23,7 @@ import com.aspectran.utils.json.JsonBuilder;
 /**
  * Represents a structured outgoing message for remote command results.
  */
-public class RemoteCommandResultParameters extends DefaultParameters {
+public class CommandResultParameters extends DefaultParameters {
 
     public static final ParameterKey header;
     public static final ParameterKey nodeId;
@@ -46,26 +46,26 @@ public class RemoteCommandResultParameters extends DefaultParameters {
         };
     }
 
-    public RemoteCommandResultParameters() {
+    public CommandResultParameters() {
         super(parameterKeys);
     }
 
-    public RemoteCommandResultParameters setHeader(String headerValue) {
+    public CommandResultParameters setHeader(String headerValue) {
         putValue(header, headerValue);
         return this;
     }
 
-    public RemoteCommandResultParameters setNodeId(String nodeIdValue) {
+    public CommandResultParameters setNodeId(String nodeIdValue) {
         putValue(nodeId, nodeIdValue);
         return this;
     }
 
-    public RemoteCommandResultParameters setResult(String resultValue) {
+    public CommandResultParameters setResult(String resultValue) {
         putValue(result, resultValue);
         return this;
     }
 
-    public RemoteCommandResultParameters setError(String errorValue) {
+    public CommandResultParameters setError(String errorValue) {
         putValue(error, errorValue);
         return this;
     }

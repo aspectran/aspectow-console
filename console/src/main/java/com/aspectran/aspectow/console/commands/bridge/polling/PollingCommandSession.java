@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay.polling;
+package com.aspectran.aspectow.console.commands.bridge.polling;
 
-import com.aspectran.aspectow.console.commands.relay.RelaySession;
+import com.aspectran.aspectow.console.commands.bridge.CommandSession;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A {@link RelaySession} implementation for HTTP polling.
+ * A {@link CommandSession} implementation for HTTP polling.
  * It tracks the last message index retrieved by the client.
  */
-public class PollingRelaySession implements RelaySession {
+public class PollingCommandSession implements CommandSession {
 
-    private final PollingRemoteCommandRelayer relayer;
+    private final PollingCommandBridge bridge;
 
     private String nodeId;
 
@@ -37,8 +37,8 @@ public class PollingRelaySession implements RelaySession {
 
     private volatile boolean expired;
 
-    public PollingRelaySession(PollingRemoteCommandRelayer relayer) {
-        this.relayer = relayer;
+    public PollingCommandSession(PollingCommandBridge bridge) {
+        this.bridge = bridge;
     }
 
     @Override
@@ -66,8 +66,8 @@ public class PollingRelaySession implements RelaySession {
 
     public void access(boolean first) {
         this.lastAccessTime = System.currentTimeMillis();
-        if (first && relayer != null) {
-            this.lastLineIndex.set(relayer.getBufferedMessages().getCurrentLineIndex());
+        if (first && bridge != null) {
+            this.lastLineIndex.set(bridge.getBufferedMessages().getCurrentLineIndex());
         }
     }
 

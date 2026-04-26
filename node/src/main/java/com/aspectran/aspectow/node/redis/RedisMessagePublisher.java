@@ -43,7 +43,18 @@ public class RedisMessagePublisher {
      * @throws Exception if an error occurs during publication
      */
     public void publishControl(String message) throws Exception {
-        String channel = NodeMessageProtocol.getControlChannel(clusterId, nodeId);
+        publishControl(this.nodeId, message);
+    }
+
+    /**
+     * Publishes a management control message to a specific node.
+     * This method waits for the publication to complete.
+     * @param targetNodeId the ID of the node to receive the message
+     * @param message the message to publish
+     * @throws Exception if an error occurs during publication
+     */
+    public void publishControl(String targetNodeId, String message) throws Exception {
+        String channel = NodeMessageProtocol.getControlChannel(clusterId, targetNodeId);
         syncPublish(channel, message);
     }
 

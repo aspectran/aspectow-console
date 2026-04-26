@@ -13,25 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay;
+package com.aspectran.aspectow.console.scheduler.bridge;
 
 /**
- * Interface for relaying command results to clients.
- * This can be implemented using various communication protocols like WebSocket or polling.
+ * Interface for bridging scheduler management data to clients.
  */
-public interface RemoteCommandRelayer {
+public interface SchedulerBridge {
 
     /**
-     * Relays a message to all connected sessions.
-     * @param message the message to relay
+     * Bridges a message to all connected sessions.
+     * @param message the message to bridge
      */
-    void relay(String message);
+    void bridge(String message);
 
     /**
-     * Relays a message to a specific session.
-     * @param relaySession the session to send the message to
-     * @param message the message to relay
+     * Bridges a message to a specific session.
+     * @param session the session to send the message to
+     * @param message the message to bridge
      */
-    void relay(RelaySession relaySession, String message);
+    void bridge(SchedulerSession session, String message);
 
 }

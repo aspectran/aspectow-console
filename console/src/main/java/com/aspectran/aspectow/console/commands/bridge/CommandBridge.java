@@ -13,30 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay;
+package com.aspectran.aspectow.console.commands.bridge;
 
 /**
- * An interface representing a client session for relaying commands.
- * It provides a protocol-agnostic way to manage session state.
+ * Interface for bridging command results to clients.
+ * This can be implemented using various communication protocols like WebSocket or polling.
  */
-public interface RelaySession {
+public interface CommandBridge {
 
     /**
-     * Gets the ID of the node that this session is interacting with.
-     * @return the node ID
+     * Bridges a message to all connected sessions.
+     * @param message the message to bridge
      */
-    String getNodeId();
+    void bridge(String message);
 
     /**
-     * Sets the ID of the node that this session is interacting with.
-     * @param nodeId the node ID
+     * Bridges a message to a specific session.
+     * @param session the session to send the message to
+     * @param message the message to bridge
      */
-    void setNodeId(String nodeId);
-
-    /**
-     * Checks if the session is still valid.
-     * @return {@code true} if the session is valid, {@code false} otherwise
-     */
-    boolean isValid();
+    void bridge(CommandSession session, String message);
 
 }

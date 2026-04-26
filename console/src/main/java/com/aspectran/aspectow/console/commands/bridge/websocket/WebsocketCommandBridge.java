@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay.websocket;
+package com.aspectran.aspectow.console.commands.bridge.websocket;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
-import com.aspectran.aspectow.console.commands.relay.RelaySession;
-import com.aspectran.aspectow.console.commands.relay.RemoteCommandParameters;
-import com.aspectran.aspectow.console.commands.relay.RemoteCommandRelayer;
-import com.aspectran.aspectow.console.commands.relay.RemoteCommandResultParameters;
+import com.aspectran.aspectow.console.commands.bridge.CommandBridge;
+import com.aspectran.aspectow.console.commands.bridge.CommandResultParameters;
+import com.aspectran.aspectow.console.commands.bridge.CommandSession;
 import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
 import com.aspectran.core.component.bean.annotation.Initialize;
-import com.aspectran.daemon.command.CommandParameters;
 import com.aspectran.utils.StringUtils;
 import com.aspectran.utils.apon.JsonToParameters;
 import com.aspectran.utils.security.InvalidPBTokenException;
@@ -38,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * WebsocketRemoteCommandRelayer provides a WebSocket endpoint for real-time
+ * WebsocketCommandBridge provides a WebSocket endpoint for real-time
  * remote command result delivery.
  */
 @Component
@@ -46,25 +44,25 @@ import org.slf4j.LoggerFactory;
         value = "/remote-commands/websocket/{token}",
         configurator = AspectranConfigurator.class
 )
-public class WebsocketRemoteCommandRelayer extends SimplifiedEndpoint implements RemoteCommandRelayer {
+public class WebsocketCommandBridge extends SimplifiedEndpoint implements CommandBridge {
 
-    private static final Logger logger = LoggerFactory.getLogger(WebsocketRemoteCommandRelayer.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebsocketCommandBridge.class);
 
     private final RemoteCommandManager remoteCommandManager;
 
     private final NodeManager nodeManager;
 
     @Autowired
-    public WebsocketRemoteCommandRelayer(RemoteCommandManager remoteCommandManager, NodeManager nodeManager) {
+    public WebsocketCommandBridge(RemoteCommandManager remoteCommandManager, NodeManager nodeManager) {
         this.remoteCommandManager = remoteCommandManager;
         this.nodeManager = nodeManager;
     }
 
     @Initialize
     public void register() {
-        if (remoteCommandManager.getRelayManager() != null) {
-            remoteCommandManager.getRelayManager().addRelayer(this);
-            logger.info("WebsocketRemoteCommandRelayer registered with RemoteCommandManager");
+        if (remoteCommandManager.getBroker() != null) {
+            remoteCommandManager.getBroker().addBridge(this);
+            logger.info("WebsocketCommandBridge registered with CommandBroker");
         }
     }
 
@@ -96,7 +94,8 @@ public class WebsocketRemoteCommandRelayer extends SimplifiedEndpoint implements
         }
 
         try {
-            RemoteCommandParameters parameters = JsonToParameters.from(message, RemoteCommandParameters.class);
+            com.aspectran.aspectow.console.commands.bridge.CommandParameters parameters =
+                    JsonToParameters.from(message, com.aspectran.aspectow.console.commands.bridge.CommandParameters.class);
 
             String header = parameters.getHeader();
             if ("execute".equals(header)) {
@@ -113,10 +112,10 @@ public class WebsocketRemoteCommandRelayer extends SimplifiedEndpoint implements
     }
 
     private void join(Session session) {
-        WebsocketRelaySession relaySession = new WebsocketRelaySession(session);
-        relaySession.setNodeId(nodeManager.getNodeId());
+        WebsocketCommandSession commandSession = new WebsocketCommandSession(session);
+        commandSession.setNodeId(nodeManager.getNodeId());
         if (addSession(session)) {
-            RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
+            CommandResultParameters resultParameters = new CommandResultParameters()
                     .setHeader("joined")
                     .setNodeId(nodeManager.getNodeId());
             sendText(session, resultParameters.toString());
@@ -125,13 +124,13 @@ public class WebsocketRemoteCommandRelayer extends SimplifiedEndpoint implements
     }
 
     private void pong(Session session) {
-        RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
+        CommandResultParameters resultParameters = new CommandResultParameters()
                 .setHeader("pong");
         sendText(session, resultParameters.toString());
     }
 
-    private void execute(Session session, RemoteCommandParameters messageParameters) {
-        CommandParameters commandParameters = messageParameters.getCommandParameters();
+    private void execute(Session session, com.aspectran.aspectow.console.commands.bridge.CommandParameters messageParameters) {
+        com.aspectran.daemon.command.CommandParameters commandParameters = messageParameters.getCommandParameters();
         if (commandParameters != null) {
             String targetNodeId = messageParameters.getTargetNodeId();
             if (targetNodeId == null || targetNodeId.isEmpty()) {
@@ -163,9 +162,9 @@ public class WebsocketRemoteCommandRelayer extends SimplifiedEndpoint implements
     }
 
     @Override
-    public void relay(String data) {
+    public void bridge(String data) {
         if (data != null) {
-            RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
+            CommandResultParameters resultParameters = new CommandResultParameters()
                     .setHeader("result")
                     .setNodeId(nodeManager.getNodeId())
                     .setResult(data);
@@ -174,15 +173,14 @@ public class WebsocketRemoteCommandRelayer extends SimplifiedEndpoint implements
     }
 
     @Override
-    public void relay(@NonNull RelaySession relaySession, String data) {
-        if (relaySession instanceof WebsocketRelaySession websocketRelaySession) {
-            RemoteCommandResultParameters resultParameters = new RemoteCommandResultParameters()
+    public void bridge(@NonNull CommandSession session, String data) {
+        if (session instanceof WebsocketCommandSession websocketCommandSession) {
+            CommandResultParameters resultParameters = new CommandResultParameters()
                     .setHeader("result")
                     .setNodeId(nodeManager.getNodeId())
                     .setResult(data);
-            sendText(websocketRelaySession.getSession(), resultParameters.toString());
+            sendText(websocketCommandSession.getSession(), resultParameters.toString());
         }
     }
 
 }
-

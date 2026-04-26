@@ -13,37 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay.redis;
+package com.aspectran.aspectow.console.commands.bridge.redis;
 
+import com.aspectran.aspectow.console.commands.bridge.CommandBroker;
 import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
-import com.aspectran.aspectow.console.commands.relay.RemoteCommandRelayManager;
 import com.aspectran.aspectow.node.redis.RedisMessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * RemoteCommandMessageRelayHandler listens to Redis relay messages and forwards
+ * CommandMessageBridgeHandler listens to Redis relay messages and forwards
  * them to the RemoteCommandManager.
  */
-public class RemoteCommandMessageRelayHandler implements RedisMessageListener {
+public class CommandMessageBridgeHandler implements RedisMessageListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(RemoteCommandMessageRelayHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(CommandMessageBridgeHandler.class);
 
     private final RemoteCommandManager remoteCommandManager;
 
-    public RemoteCommandMessageRelayHandler(RemoteCommandManager remoteCommandManager) {
+    public CommandMessageBridgeHandler(RemoteCommandManager remoteCommandManager) {
         this.remoteCommandManager = remoteCommandManager;
     }
 
     @Override
     public String getCategory() {
-        return RemoteCommandRelayManager.CATEGORY_COMMANDS;
+        return CommandBroker.CATEGORY_COMMANDS;
     }
 
     @Override
-    public void onRelayMessage(String message) {
+    public void onRelayMessage(String nodeId, String message) {
         if (logger.isTraceEnabled()) {
-            logger.trace("Forwarding relay message to RemoteCommandManager: {}", message);
+            logger.trace("Forwarding bridge message to RemoteCommandManager: {}", message);
         }
         remoteCommandManager.handleCommandResult(message);
     }

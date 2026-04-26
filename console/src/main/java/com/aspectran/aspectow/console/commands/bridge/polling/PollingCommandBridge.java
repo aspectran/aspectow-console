@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay.polling;
+package com.aspectran.aspectow.console.commands.bridge.polling;
 
 import com.aspectran.aspectow.console.commands.manager.RemoteCommandManager;
-import com.aspectran.aspectow.console.commands.relay.RelaySession;
-import com.aspectran.aspectow.console.commands.relay.RemoteCommandRelayer;
+import com.aspectran.aspectow.console.commands.bridge.CommandBridge;
+import com.aspectran.aspectow.console.commands.bridge.CommandSession;
 import com.aspectran.core.component.AbstractComponent;
 import com.aspectran.core.component.bean.annotation.Autowired;
 import com.aspectran.core.component.bean.annotation.Component;
@@ -32,50 +32,50 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * PollingRemoteCommandRelayer manages client sessions for HTTP long-polling
+ * PollingCommandBridge manages client sessions for HTTP long-polling
  * and uses a central message buffer to distribute command results.
  */
 @Component
-public class PollingRemoteCommandRelayer extends AbstractComponent implements RemoteCommandRelayer {
+public class PollingCommandBridge extends AbstractComponent implements CommandBridge {
 
-    private static final Logger logger = LoggerFactory.getLogger(PollingRemoteCommandRelayer.class);
+    private static final Logger logger = LoggerFactory.getLogger(PollingCommandBridge.class);
 
     private final SessionIdGenerator sessionIdGenerator = new SessionIdGenerator();
 
-    private final Map<String, PollingRelaySession> sessions = new CopyOnWriteMap<>();
+    private final Map<String, PollingCommandSession> sessions = new CopyOnWriteMap<>();
 
     private final RemoteCommandManager remoteCommandManager;
 
     private final BufferedMessages bufferedMessages;
 
     @Autowired
-    public PollingRemoteCommandRelayer(RemoteCommandManager remoteCommandManager) {
+    public PollingCommandBridge(RemoteCommandManager remoteCommandManager) {
         this.remoteCommandManager = remoteCommandManager;
         this.bufferedMessages = new BufferedMessages(100);
     }
 
     @Override
     protected void doInitialize() throws Exception {
-        if (remoteCommandManager.getRelayManager() != null) {
-            remoteCommandManager.getRelayManager().addRelayer(this);
-            logger.info("PollingRemoteCommandRelayer registered with RemoteCommandManager");
+        if (remoteCommandManager.getBroker() != null) {
+            remoteCommandManager.getBroker().addBridge(this);
+            logger.info("PollingCommandBridge registered with CommandBroker");
         } else {
-            logger.warn("Failed to register PollingRemoteCommandRelayer: RelayManager is null");
+            logger.warn("Failed to register PollingCommandBridge: CommandBroker is null");
         }
     }
 
     @Override
     protected void doDestroy() throws Exception {
-        if (remoteCommandManager.getRelayManager() != null) {
-            remoteCommandManager.getRelayManager().removeRelayer(this);
+        if (remoteCommandManager.getBroker() != null) {
+            remoteCommandManager.getBroker().removeBridge(this);
         }
         bufferedMessages.clear();
         sessions.clear();
     }
 
-    public PollingRelaySession createSession(String nodeId) {
+    public PollingCommandSession createSession(String nodeId) {
         String sessionId = sessionIdGenerator.createSessionId();
-        PollingRelaySession newSession = new PollingRelaySession(this);
+        PollingCommandSession newSession = new PollingCommandSession(this);
         newSession.setNodeId(nodeId);
         newSession.setSessionTimeout(60); // 1 minute default
         newSession.access(true);
@@ -83,8 +83,8 @@ public class PollingRemoteCommandRelayer extends AbstractComponent implements Re
         return newSession;
     }
 
-    public PollingRelaySession getSession(String sessionId) {
-        PollingRelaySession session = sessions.get(sessionId);
+    public PollingCommandSession getSession(String sessionId) {
+        PollingCommandSession session = sessions.get(sessionId);
         if (session != null) {
             session.access(false);
         }
@@ -92,20 +92,20 @@ public class PollingRemoteCommandRelayer extends AbstractComponent implements Re
     }
 
     @Override
-    public void relay(String data) {
+    public void bridge(String data) {
         if (!sessions.isEmpty()) {
             bufferedMessages.push(data);
         }
     }
 
     @Override
-    public void relay(@NonNull RelaySession relaySession, String data) {
-        // For individual relaying, we might need a separate mechanism
+    public void bridge(@NonNull CommandSession session, String data) {
+        // For individual bridging, we might need a separate mechanism
         // but typically commands are broadcasted or targeted via NodeId
-        relay(data);
+        bridge(data);
     }
 
-    public String[] pull(PollingRelaySession session) {
+    public String[] pull(PollingCommandSession session) {
         String[] messages = bufferedMessages.pop(session);
         if (messages != null && messages.length > 0) {
             shrinkBuffer();
@@ -122,7 +122,7 @@ public class PollingRemoteCommandRelayer extends AbstractComponent implements Re
 
     private int getMinLineIndex() {
         int minLineIndex = -1;
-        for (PollingRelaySession session : sessions.values()) {
+        for (PollingCommandSession session : sessions.values()) {
             if (minLineIndex == -1) {
                 minLineIndex = session.getLastLineIndex();
             } else if (session.getLastLineIndex() < minLineIndex) {
@@ -137,13 +137,13 @@ public class PollingRemoteCommandRelayer extends AbstractComponent implements Re
      */
     public void scavenge() {
         List<String> expiredSessions = new ArrayList<>();
-        for (Map.Entry<String, PollingRelaySession> entry : sessions.entrySet()) {
+        for (Map.Entry<String, PollingCommandSession> entry : sessions.entrySet()) {
             if (entry.getValue().isExpired()) {
                 expiredSessions.add(entry.getKey());
             }
         }
         for (String id : expiredSessions) {
-            PollingRelaySession session = sessions.remove(id);
+            PollingCommandSession session = sessions.remove(id);
             if (session != null) {
                 session.destroy();
             }

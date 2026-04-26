@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay.polling;
+package com.aspectran.aspectow.console.commands.bridge.polling;
 
 import org.jspecify.annotations.NonNull;
 
@@ -46,7 +46,7 @@ public class BufferedMessages {
         }
     }
 
-    public String[] pop(@NonNull PollingRelaySession session) {
+    public String[] pop(@NonNull PollingCommandSession session) {
         synchronized (messages) {
             int lastLineIndex = session.getLastLineIndex();
             int currentLineIndex = getCurrentLineIndex();

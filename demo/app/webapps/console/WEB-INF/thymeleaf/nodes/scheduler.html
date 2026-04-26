@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{templates/default}">
+<head>
+    <style>
+        .scheduler-card {
+            border: 1px solid var(--bs-border-color);
+            border-radius: 12px;
+            background: var(--bs-body-bg);
+            margin-bottom: 2rem;
+        }
+        .service-header {
+            background: var(--bs-tertiary-bg);
+            border-bottom: 1px solid var(--bs-border-color);
+            padding: 1rem 1.5rem;
+            border-radius: 12px 12px 0 0;
+        }
+        .schedule-row {
+            transition: background-color 0.2s;
+        }
+        .schedule-row:hover {
+            background-color: var(--bs-tertiary-bg);
+        }
+        .job-table {
+            background: var(--bs-secondary-bg);
+            border-radius: 8px;
+            margin: 0.5rem 0;
+        }
+        .isolated-icon {
+            color: var(--bs-warning);
+        }
+        .status-badge {
+            width: 80px;
+            display: inline-block;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Scheduler Management</h2>
+                <p class="text-muted mb-0">Monitor and control scheduled jobs across the cluster.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <select id="node-selector" class="form-select form-select-sm" style="width: auto;">
+                    <option th:each="n : ${page.nodes}" th:value="${n.id}" th:text="${n.title}" th:selected="${n.id == page.node.id}">Node Name</option>
+                </select>
+                <button id="refresh-btn" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm p-3">
+                    <div class="small text-muted text-uppercase fw-bold">Active Schedules</div>
+                    <div class="h3 fw-bold mb-0" id="stat-active-schedules">-</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm p-3">
+                    <div class="small text-muted text-uppercase fw-bold">Active Jobs</div>
+                    <div class="h3 fw-bold mb-0" id="stat-active-jobs">-</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm p-3 text-warning">
+                    <div class="small text-uppercase fw-bold">Isolated Items</div>
+                    <div class="h3 fw-bold mb-0" id="stat-isolated">-</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm p-3 text-info">
+                    <div class="small text-uppercase fw-bold">Connected Node</div>
+                    <div class="h3 fw-bold mb-0 text-truncate" id="stat-current-node">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="scheduler-container">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Connecting to node and fetching data...</p>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block layout:fragment="script">
+        <script th:src="@{/assets/js/console-client.js}"></script>
+        <script th:inline="javascript">
+            const BASE_PATH = [[@{/}]].replace(/\/$/, '');
+            const TOKEN = [[${page.token}]];
+            let consoleClient = null;
+            let currentNodeId = [[${page.node.id}]];
+
+            function connectToNode(nodeId) {
+                if (consoleClient) {
+                    consoleClient.stop();
+                }
+
+                currentNodeId = nodeId;
+                $('#stat-current-node').text(nodeId);
+                $('#scheduler-container').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Fetching data from ' + nodeId + '...</p></div>');
+
+                const node = {
+                    id: nodeId,
+                    endpoint: {
+                        path: BASE_PATH + "/nodes/scheduler",
+                        token: TOKEN
+                    }
+                };
+
+                consoleClient = new ConsoleClient(node, {
+                    onMessage: (event) => {
+                        if (event.type === 'list' || event.type === 'result') {
+                            handleRelayMessage(event);
+                        }
+                    },
+                    onOpen: () => {
+                        consoleClient.sendCommand('scheduler:list', [currentNodeId]);
+                    }
+                });
+                consoleClient.start('');
+            }
+
+            function handleRelayMessage(data) {
+                if (data.type === 'list') {
+                    renderSchedulerList(data.services);
+                } else if (data.type === 'result') {
+                    if (data.success) {
+                        // Success message toast could be added here
+                    } else {
+                        alert(data.message);
+                    }
+                }
+            }
+
+            function renderSchedulerList(services) {
+                let html = '';
+                let totalSchedules = 0;
+                let totalActiveSchedules = 0;
+                let totalActiveJobs = 0;
+                let totalIsolated = 0;
+
+                if (!services || services.length === 0) {
+                    $('#scheduler-container').html('<div class="alert alert-info">No active services or schedulers found on this node.</div>');
+                    updateStats(0, 0, 0, 0);
+                    return;
+                }
+
+                services.forEach(service => {
+                    const serviceId = service.serviceName.replace(/[^a-zA-Z0-9]/g, '_');
+                    html += `<div class="scheduler-card shadow-sm">
+                        <div class="service-header d-flex align-items-center gap-3">
+                            <i class="bi bi-gear-wide-connected fs-4 text-primary"></i>
+                            <div>
+                                <h5 class="fw-bold mb-0">${service.serviceName}</h5>
+                                <small class="text-muted">Context: ${service.contextName}</small>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px;"></th>
+                                        <th>Schedule ID</th>
+                                        <th>Trigger / Expression</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-end" style="width: 150px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
+                    if (!service.schedules || service.schedules.length === 0) {
+                        html += `<tr><td colspan="5" class="text-center text-muted py-4">No schedules defined in this service.</td></tr>`;
+                    } else {
+                        service.schedules.forEach(schedule => {
+                            totalSchedules++;
+                            const isScheduleEnabled = !schedule.disabled;
+                            const isScheduleIsolated = schedule.isolated;
+                            if (isScheduleEnabled) totalActiveSchedules++;
+                            if (isScheduleIsolated) totalIsolated++;
+
+                            html += `<tr class="schedule-row">
+                                <td class="text-center">
+                                    <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#jobs-${serviceId}-${schedule.id}">
+                                        <i class="bi bi-chevron-down"></i>
+                                    </button>
+                                </td>
+                                <td class="fw-medium">
+                                    ${isScheduleIsolated ? '<i class="bi bi-lock-fill isolated-icon me-1" title="Isolated"></i>' : ''}
+                                    ${schedule.id}
+                                </td>
+                                <td>
+                                    <code class="small px-2 py-1 bg-body-tertiary rounded">${schedule.scheduler?.trigger?.expression?.expression || schedule.scheduler?.trigger?.type || 'N/A'}</code>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill status-badge ${isScheduleEnabled ? 'text-bg-success' : 'text-bg-danger'}">
+                                        ${isScheduleEnabled ? 'ACTIVE' : 'DISABLED'}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="form-check form-switch d-inline-block">
+                                        <input class="form-check-input" type="checkbox" role="switch" 
+                                            ${isScheduleEnabled ? 'checked' : ''} 
+                                            ${isScheduleIsolated ? 'disabled' : ''}
+                                            onclick="toggleState('${service.serviceName}', 'schedule', '${schedule.id}', this.checked)">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="jobs-${serviceId}-${schedule.id}">
+                                <td colspan="5" class="p-0">
+                                    <div class="p-3">
+                                        <div class="job-table p-3">
+                                            <div class="small fw-bold text-muted mb-2 text-uppercase">Jobs in this Schedule</div>
+                                            <div class="list-group list-group-flush border-top border-bottom">`;
+                            
+                            if (schedule.job) {
+                                (Array.isArray(schedule.job) ? schedule.job : [schedule.job]).forEach(job => {
+                                    const isJobEnabled = !job.disabled;
+                                    const isJobIsolated = job.isolated;
+                                    if (isJobEnabled && isScheduleEnabled) totalActiveJobs++;
+                                    if (isJobIsolated) totalIsolated++;
+
+                                    html += `<div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0 py-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-play-circle small ${isJobEnabled ? 'text-success' : 'text-muted'}"></i>
+                                            <span class="${isJobEnabled ? '' : 'text-muted'}">${job.translet}</span>
+                                            ${isJobIsolated ? '<i class="bi bi-lock-fill isolated-icon small" title="Isolated"></i>' : ''}
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" role="switch" 
+                                                ${isJobEnabled ? 'checked' : ''} 
+                                                ${isJobIsolated ? 'disabled' : ''}
+                                                onclick="toggleState('${service.serviceName}', 'job', '${job.translet}', this.checked)">
+                                        </div>
+                                    </div>`;
+                                });
+                            }
+
+                            html += `       </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>`;
+                        });
+                    }
+
+                    html += `   </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                });
+
+                $('#scheduler-container').html(html);
+                updateStats(totalActiveSchedules, totalActiveJobs, totalIsolated, currentNodeId);
+            }
+
+            function updateStats(schedules, jobs, isolated, node) {
+                $('#stat-active-schedules').text(schedules);
+                $('#stat-active-jobs').text(jobs);
+                $('#stat-isolated').text(isolated);
+                $('#stat-current-node').text(node);
+            }
+
+            function toggleState(serviceName, type, id, checked) {
+                const command = checked ? 'scheduler:enable' : 'scheduler:disable';
+                consoleClient.sendCommand(`${command}:${serviceName}:${type}:${id}`, [currentNodeId]);
+            }
+
+            $(function() {
+                connectToNode(currentNodeId);
+
+                $('#node-selector').on('change', function() {
+                    connectToNode($(this).val());
+                });
+
+                $('#refresh-btn').on('click', function() {
+                    if (consoleClient) {
+                        consoleClient.sendCommand('scheduler:list', [currentNodeId]);
+                    } else {
+                        connectToNode($('#node-selector').val());
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html>

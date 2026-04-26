@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay;
+package com.aspectran.aspectow.console.commands.bridge;
 
 import com.aspectran.aspectow.node.redis.RedisMessagePublisher;
 import org.slf4j.Logger;
@@ -23,12 +23,12 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * RemoteCommandRelayManager handles the distribution of command results
+ * CommandBroker handles the distribution of command results
  * to connected clients (via WebSockets or Polling).
  */
-public class RemoteCommandRelayManager {
+public class CommandBroker {
 
-    private static final Logger logger = LoggerFactory.getLogger(RemoteCommandRelayManager.class);
+    private static final Logger logger = LoggerFactory.getLogger(CommandBroker.class);
 
     public static final String CATEGORY_COMMANDS = "commands";
 
@@ -36,9 +36,9 @@ public class RemoteCommandRelayManager {
 
     private final RedisMessagePublisher messagePublisher;
 
-    private final Set<RemoteCommandRelayer> relayers = new CopyOnWriteArraySet<>();
+    private final Set<CommandBridge> bridges = new CopyOnWriteArraySet<>();
 
-    public RemoteCommandRelayManager(String nodeId, RedisMessagePublisher messagePublisher) {
+    public CommandBroker(String nodeId, RedisMessagePublisher messagePublisher) {
         this.nodeId = nodeId;
         this.messagePublisher = messagePublisher;
     }
@@ -51,41 +51,41 @@ public class RemoteCommandRelayManager {
         return messagePublisher;
     }
 
-    public void addRelayer(RemoteCommandRelayer relayer) {
-        relayers.add(relayer);
+    public void addBridge(CommandBridge bridge) {
+        bridges.add(bridge);
     }
 
-    public void removeRelayer(RemoteCommandRelayer relayer) {
-        relayers.remove(relayer);
+    public void removeBridge(CommandBridge bridge) {
+        bridges.remove(bridge);
     }
 
     /**
-     * Relays a command result to all connected clients.
+     * Bridges a command result to all connected clients.
      * @param resultData the result payload to send
      */
-    public void relay(String resultData) {
-        for (RemoteCommandRelayer relayer : relayers) {
+    public void bridge(String resultData) {
+        for (CommandBridge bridge : bridges) {
             try {
-                relayer.relay(resultData);
+                bridge.bridge(resultData);
             } catch (Exception e) {
-                logger.warn("Failed to relay command result via {}: {}",
-                        relayer.getClass().getSimpleName(), e.getMessage());
+                logger.warn("Failed to bridge command result via {}: {}",
+                        bridge.getClass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     /**
-     * Relays a command result to a specific session.
-     * @param session the target relay session
+     * Bridges a command result to a specific session.
+     * @param session the target session
      * @param resultData the result payload to send
      */
-    public void relay(RelaySession session, String resultData) {
-        for (RemoteCommandRelayer relayer : relayers) {
+    public void bridge(CommandSession session, String resultData) {
+        for (CommandBridge bridge : bridges) {
             try {
-                relayer.relay(session, resultData);
+                bridge.bridge(session, resultData);
             } catch (Exception e) {
-                logger.warn("Failed to relay command result via {}: {}",
-                        relayer.getClass().getSimpleName(), e.getMessage());
+                logger.warn("Failed to bridge command result via {}: {}",
+                        bridge.getClass().getSimpleName(), e.getMessage());
             }
         }
     }

@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay;
+package com.aspectran.aspectow.console.commands.bridge;
 
-import com.aspectran.daemon.command.CommandParameters;
 import com.aspectran.utils.apon.DefaultParameters;
 import com.aspectran.utils.apon.ParameterKey;
 import com.aspectran.utils.apon.ValueType;
@@ -24,7 +23,7 @@ import com.aspectran.utils.apon.ValueType;
  * Represents a structured message for remote command execution.
  * It encapsulates the command type, routing information, and the command payload.
  */
-public class RemoteCommandParameters extends DefaultParameters {
+public class CommandParameters extends DefaultParameters {
 
     public static final ParameterKey header;
     public static final ParameterKey targetNodeId;
@@ -40,7 +39,7 @@ public class RemoteCommandParameters extends DefaultParameters {
         targetNodeId = new ParameterKey("targetNodeId", ValueType.STRING);
         targetGroup = new ParameterKey("targetGroup", ValueType.STRING);
         targetAll = new ParameterKey("targetAll", ValueType.BOOLEAN);
-        command = new ParameterKey("command", CommandParameters.class);
+        command = new ParameterKey("command", com.aspectran.daemon.command.CommandParameters.class);
         timeZone = new ParameterKey("timeZone", ValueType.STRING);
 
         parameterKeys = new ParameterKey[] {
@@ -53,7 +52,7 @@ public class RemoteCommandParameters extends DefaultParameters {
         };
     }
 
-    public RemoteCommandParameters() {
+    public CommandParameters() {
         super(parameterKeys);
     }
 
@@ -73,7 +72,7 @@ public class RemoteCommandParameters extends DefaultParameters {
         return getBoolean(targetAll, false);
     }
 
-    public CommandParameters getCommandParameters() {
+    public com.aspectran.daemon.command.CommandParameters getCommandParameters() {
         return getParameters(command);
     }
 

@@ -15,8 +15,8 @@
  */
 package com.aspectran.aspectow.console.commands.manager;
 
-import com.aspectran.aspectow.console.commands.relay.RemoteCommandRelayManager;
-import com.aspectran.aspectow.console.commands.relay.redis.RemoteCommandMessageRelayHandler;
+import com.aspectran.aspectow.console.commands.bridge.CommandBroker;
+import com.aspectran.aspectow.console.commands.bridge.redis.CommandMessageBridgeHandler;
 import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.core.component.bean.ablility.InitializableBean;
 import com.aspectran.core.component.bean.annotation.Bean;
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * RemoteCommandManager manages commands across the cluster.
- * It handles local command execution in direct mode and relays commands
+ * It handles local command execution in direct mode and bridges commands
  * via Redis in gateway/autoscaling modes.
  */
 @Component
@@ -46,7 +46,7 @@ public class RemoteCommandManager implements ActivityContextAware, Initializable
 
     private final NodeManager nodeManager;
 
-    private final RemoteCommandRelayManager relayManager;
+    private final CommandBroker broker;
 
     private ActivityContext activityContext;
 
@@ -54,7 +54,7 @@ public class RemoteCommandManager implements ActivityContextAware, Initializable
 
     public RemoteCommandManager(@NonNull NodeManager nodeManager) {
         this.nodeManager = nodeManager;
-        this.relayManager = new RemoteCommandRelayManager(nodeManager.getNodeId(), nodeManager.getRedisMessagePublisher());
+        this.broker = new CommandBroker(nodeManager.getNodeId(), nodeManager.getRedisMessagePublisher());
     }
 
     @Override
@@ -68,8 +68,8 @@ public class RemoteCommandManager implements ActivityContextAware, Initializable
 
         // Register a listener for command results from Redis
         if (nodeManager.getRedisMessageSubscriber() != null) {
-            RemoteCommandMessageRelayHandler relayHandler = new RemoteCommandMessageRelayHandler(this);
-            nodeManager.getRedisMessageSubscriber().addListener(relayHandler);
+            CommandMessageBridgeHandler bridgeHandler = new CommandMessageBridgeHandler(this);
+            nodeManager.getRedisMessageSubscriber().addListener(bridgeHandler);
         }
     }
 
@@ -115,8 +115,8 @@ public class RemoteCommandManager implements ActivityContextAware, Initializable
         }
     }
 
-    public RemoteCommandRelayManager getRelayManager() {
-        return relayManager;
+    public CommandBroker getBroker() {
+        return broker;
     }
 
     /**
@@ -132,7 +132,7 @@ public class RemoteCommandManager implements ActivityContextAware, Initializable
             // Relay via Redis
             if (nodeManager.getRedisMessagePublisher() != null) {
                 logger.debug("Relaying command to node {}: {}", targetNodeId, commandData);
-                nodeManager.getRedisMessagePublisher().publishRelay(RemoteCommandRelayManager.CATEGORY_COMMANDS, commandData);
+                nodeManager.getRedisMessagePublisher().publishRelay(CommandBroker.CATEGORY_COMMANDS, commandData);
             } else {
                 throw new IllegalStateException("Redis publisher is not available for relaying commands");
             }
@@ -172,10 +172,10 @@ public class RemoteCommandManager implements ActivityContextAware, Initializable
      */
     public void handleCommandResult(String resultData) {
         if (logger.isTraceEnabled()) {
-            logger.trace("Received command result, relaying to clients: {}", resultData);
+            logger.trace("Received command result, bridging to clients: {}", resultData);
         }
-        if (relayManager != null) {
-            relayManager.relay(resultData);
+        if (broker != null) {
+            broker.bridge(resultData);
         }
     }
 

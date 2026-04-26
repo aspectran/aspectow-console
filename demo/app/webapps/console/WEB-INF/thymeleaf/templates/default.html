@@ -46,7 +46,7 @@
                     <a th:href="@{/appmon/dashboard/}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'monitoring-page' ? 'active' : ''}">
                         Monitoring
                     </a>
-                    <a href="#" class="nav-link ps-5 py-2 small">
+                    <a th:href="@{/nodes/scheduler/}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'nodes/scheduler' ? 'active' : ''}">
                         Scheduler
                     </a>
                 </div>

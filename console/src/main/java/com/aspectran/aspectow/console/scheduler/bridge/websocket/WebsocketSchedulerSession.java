@@ -13,25 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.aspectran.aspectow.console.commands.relay.websocket;
+package com.aspectran.aspectow.console.scheduler.bridge.websocket;
 
-import com.aspectran.aspectow.console.commands.relay.RelaySession;
+import com.aspectran.aspectow.console.scheduler.bridge.SchedulerSession;
 import com.aspectran.web.websocket.jsr356.WrappedSession;
 import jakarta.websocket.Session;
 
 /**
- * A {@link RelaySession} implementation that wraps a JSR-356 {@link Session}.
- * It stores session-specific data in the WebSocket session's user properties.
+ * A {@link SchedulerSession} implementation that wraps a JSR-356 {@link Session}.
  */
-public class WebsocketRelaySession extends WrappedSession implements RelaySession {
+public class WebsocketSchedulerSession extends WrappedSession implements SchedulerSession {
 
-    private static final String NODE_ID_PROPERTY = "console:nodeId";
+    private static final String NODE_ID_PROPERTY = "console:scheduler:nodeId";
 
-    /**
-     * Instantiates a new WebsocketRelaySession.
-     * @param session the underlying WebSocket session
-     */
-    public WebsocketRelaySession(Session session) {
+    public WebsocketSchedulerSession(Session session) {
         super(session);
     }
 
