@@ -16,6 +16,7 @@
 package com.aspectran.aspectow.console.scheduler.manager;
 
 import com.aspectran.aspectow.console.scheduler.bridge.SchedulerBroker;
+import com.aspectran.aspectow.console.scheduler.bridge.SchedulerRequestParameters;
 import com.aspectran.aspectow.console.scheduler.bridge.redis.SchedulerMessageBridgeHandler;
 import com.aspectran.aspectow.node.manager.NodeManager;
 import com.aspectran.aspectow.node.manager.NodeMessageProtocol;
@@ -38,9 +39,9 @@ public class SchedulerManager implements InitializableBean {
 
     private static final Logger logger = LoggerFactory.getLogger(SchedulerManager.class);
 
-    private static final String OP_LIST = "scheduler:list";
-    private static final String OP_ENABLE = "scheduler:enable";
-    private static final String OP_DISABLE = "scheduler:disable";
+    private static final String OP_LIST = "list";
+    private static final String OP_ENABLE = "enable";
+    private static final String OP_DISABLE = "disable";
 
     private final NodeManager nodeManager;
 
@@ -71,11 +72,11 @@ public class SchedulerManager implements InitializableBean {
     /**
      * Dispatches a management request to a specific node or handles it locally.
      * @param targetNodeId the ID of the node to receive the request
-     * @param request the management request string
+     * @param request the structured request parameters
      */
-    public void dispatch(String targetNodeId, String request) {
+    public void dispatch(String targetNodeId, SchedulerRequestParameters request) {
         if (nodeManager.getNodeId().equals(targetNodeId)) {
-            logger.debug("Executing local scheduler request: {}", request);
+            logger.debug("Executing local scheduler request: {}", request.getCommand());
             String response = execute(request);
             if (response != null) {
                 broadcast(response);
@@ -83,9 +84,10 @@ public class SchedulerManager implements InitializableBean {
         } else {
             if (nodeManager.getRedisMessagePublisher() != null) {
                 try {
-                    String message = "command:" + request + ";" + targetNodeId;
+                    // Convert to string only when sending over the network (Redis)
+                    String message = "command:" + request.toString() + ";" + targetNodeId;
                     nodeManager.getRedisMessagePublisher().publishRelay(NodeMessageProtocol.CATEGORY_SCHEDULER, message);
-                    logger.debug("Scheduler request dispatched to node {}: {}", targetNodeId, request);
+                    logger.debug("Scheduler request dispatched to node {}: {}", targetNodeId, request.getCommand());
                 } catch (Exception e) {
                     logger.error("Failed to dispatch scheduler request to node {}", targetNodeId, e);
                 }
@@ -106,54 +108,63 @@ public class SchedulerManager implements InitializableBean {
 
         String payload = message.substring(8);
         int idx = payload.indexOf(';');
-        String request;
+        String requestData;
         String targetNodeId = null;
 
         if (idx != -1) {
-            request = payload.substring(0, idx);
+            requestData = payload.substring(0, idx);
             targetNodeId = payload.substring(idx + 1);
         } else {
-            request = payload;
+            requestData = payload;
         }
 
         if (targetNodeId == null || targetNodeId.equals(nodeManager.getNodeId())) {
-            String response = execute(request);
-            if (response != null && nodeManager.getRedisMessagePublisher() != null) {
-                try {
+            try {
+                SchedulerRequestParameters request = new SchedulerRequestParameters();
+                request.readFrom(requestData);
+
+                String response = execute(request);
+                if (response != null && nodeManager.getRedisMessagePublisher() != null) {
                     nodeManager.getRedisMessagePublisher().publishRelay(NodeMessageProtocol.CATEGORY_SCHEDULER, response);
-                } catch (Exception e) {
-                    logger.error("Failed to relay scheduler response to cluster", e);
                 }
+            } catch (Exception e) {
+                logger.error("Failed to process scheduler relay message", e);
             }
         }
     }
 
     /**
      * Executes the management logic for a given request on the local node.
-     * @param request the request string
+     * @param request the structured request parameters
      * @return the execution result as JSON string, or null if unhandled
      */
-    private String execute(String request) {
+    private String execute(SchedulerRequestParameters request) {
         try {
-            if (request.startsWith(OP_LIST)) {
+            String command = request.getCommand();
+            if (OP_LIST.equals(command)) {
                 return localSchedulerService.getSchedulesAsJson();
-            } else if (request.startsWith(OP_ENABLE)) {
-                return performStateChange(request.substring(OP_ENABLE.length() + 1), false);
-            } else if (request.startsWith(OP_DISABLE)) {
-                return performStateChange(request.substring(OP_DISABLE.length() + 1), true);
+            } else if (OP_ENABLE.equals(command)) {
+                return performStateChange(request, false);
+            } else if (OP_DISABLE.equals(command)) {
+                return performStateChange(request, true);
             }
         } catch (Exception e) {
-            logger.error("Failed to execute local scheduler request: {}", request, e);
+            logger.error("Failed to execute scheduler request", e);
         }
         return null;
     }
 
-    private String performStateChange(String target, boolean disabled) {
-        String[] parts = target.split(":");
-        if (parts.length < 3) {
-            return null;
+    private String performStateChange(SchedulerRequestParameters request, boolean disabled) {
+        String serviceName = request.getServiceName();
+        String scheduleId = request.getScheduleId();
+        String jobName = request.getJobName();
+
+        if (jobName != null) {
+            return localSchedulerService.updateState(serviceName, "job", jobName, disabled);
+        } else if (scheduleId != null) {
+            return localSchedulerService.updateState(serviceName, "schedule", scheduleId, disabled);
         }
-        return localSchedulerService.updateState(parts[0], parts[1], parts[2], disabled);
+        return null;
     }
 
     /**

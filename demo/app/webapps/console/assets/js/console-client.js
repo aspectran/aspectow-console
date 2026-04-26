@@ -127,8 +127,7 @@ class ConsoleClient {
                 this.pendingMessages.push("Socket connection successful");
 
                 const joinMessage = {
-                    header: "join",
-                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    header: "join"
                 };
                 this.socket.send(JSON.stringify(joinMessage));
                 this.heartbeatPing();

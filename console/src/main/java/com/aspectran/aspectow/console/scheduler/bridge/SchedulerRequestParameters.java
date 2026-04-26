@@ -20,14 +20,16 @@ import com.aspectran.utils.apon.ParameterKey;
 import com.aspectran.utils.apon.ValueType;
 
 /**
- * Represents a structured message for scheduler management commands.
+ * Represents a structured request for scheduler management.
  */
-public class SchedulerParameters extends DefaultParameters {
+public class SchedulerRequestParameters extends DefaultParameters {
 
     public static final ParameterKey header;
     public static final ParameterKey targetNodeId;
     public static final ParameterKey command;
-    public static final ParameterKey timeZone;
+    public static final ParameterKey serviceName;
+    public static final ParameterKey scheduleId;
+    public static final ParameterKey jobName;
 
     private static final ParameterKey[] parameterKeys;
 
@@ -35,17 +37,21 @@ public class SchedulerParameters extends DefaultParameters {
         header = new ParameterKey("header", ValueType.STRING);
         targetNodeId = new ParameterKey("targetNodeId", ValueType.STRING);
         command = new ParameterKey("command", ValueType.STRING);
-        timeZone = new ParameterKey("timeZone", ValueType.STRING);
+        serviceName = new ParameterKey("serviceName", ValueType.STRING);
+        scheduleId = new ParameterKey("scheduleId", ValueType.STRING);
+        jobName = new ParameterKey("jobName", ValueType.STRING);
 
         parameterKeys = new ParameterKey[] {
                 header,
                 targetNodeId,
                 command,
-                timeZone
+                serviceName,
+                scheduleId,
+                jobName
         };
     }
 
-    public SchedulerParameters() {
+    public SchedulerRequestParameters() {
         super(parameterKeys);
     }
 
@@ -59,6 +65,18 @@ public class SchedulerParameters extends DefaultParameters {
 
     public String getCommand() {
         return getString(command);
+    }
+
+    public String getServiceName() {
+        return getString(serviceName);
+    }
+
+    public String getScheduleId() {
+        return getString(scheduleId);
+    }
+
+    public String getJobName() {
+        return getString(jobName);
     }
 
 }

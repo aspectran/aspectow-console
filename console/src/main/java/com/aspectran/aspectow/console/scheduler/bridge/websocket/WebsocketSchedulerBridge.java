@@ -17,8 +17,8 @@ package com.aspectran.aspectow.console.scheduler.bridge.websocket;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.console.scheduler.bridge.SchedulerBridge;
-import com.aspectran.aspectow.console.scheduler.bridge.SchedulerParameters;
-import com.aspectran.aspectow.console.scheduler.bridge.SchedulerResultParameters;
+import com.aspectran.aspectow.console.scheduler.bridge.SchedulerRequestParameters;
+import com.aspectran.aspectow.console.scheduler.bridge.SchedulerResponseParameters;
 import com.aspectran.aspectow.console.scheduler.bridge.SchedulerSession;
 import com.aspectran.aspectow.console.scheduler.manager.SchedulerManager;
 import com.aspectran.aspectow.node.manager.NodeManager;
@@ -95,7 +95,7 @@ public class WebsocketSchedulerBridge extends SimplifiedEndpoint implements Sche
         }
 
         try {
-            SchedulerParameters parameters = JsonToParameters.from(message, SchedulerParameters.class);
+            SchedulerRequestParameters parameters = JsonToParameters.from(message, SchedulerRequestParameters.class);
             String header = parameters.getHeader();
             if ("execute".equals(header)) {
                 execute(session, parameters);
@@ -105,8 +105,8 @@ public class WebsocketSchedulerBridge extends SimplifiedEndpoint implements Sche
                 pong(session);
             }
         } catch (Exception e) {
-            logger.error("Failed to parse incoming scheduler management message: {}", message, e);
-            sendText(session, "[ERROR] Invalid message format");
+            logger.error("Failed to parse incoming scheduler management request: {}", message, e);
+            sendText(session, "[ERROR] Invalid request format");
         }
     }
 
@@ -114,24 +114,24 @@ public class WebsocketSchedulerBridge extends SimplifiedEndpoint implements Sche
         WebsocketSchedulerSession schedulerSession = new WebsocketSchedulerSession(session);
         schedulerSession.setNodeId(nodeManager.getNodeId());
         if (addSession(session)) {
-            SchedulerResultParameters resultParameters = new SchedulerResultParameters()
+            SchedulerResponseParameters responseParameters = new SchedulerResponseParameters()
                     .setHeader("joined")
                     .setNodeId(nodeManager.getNodeId());
-            sendText(session, resultParameters.toString());
+            sendText(session, responseParameters.toString());
             logger.debug("ConsoleClient joined scheduler management: session {}", session.getId());
         }
     }
 
     private void pong(Session session) {
-        SchedulerResultParameters resultParameters = new SchedulerResultParameters()
+        SchedulerResponseParameters responseParameters = new SchedulerResponseParameters()
                 .setHeader("pong");
-        sendText(session, resultParameters.toString());
+        sendText(session, responseParameters.toString());
     }
 
-    private void execute(Session session, @NonNull SchedulerParameters messageParameters) {
-        String command = messageParameters.getCommand();
+    private void execute(Session session, @NonNull SchedulerRequestParameters requestParameters) {
+        String command = requestParameters.getCommand();
         if (command != null) {
-            String targetNodeId = messageParameters.getTargetNodeId();
+            String targetNodeId = requestParameters.getTargetNodeId();
             if (targetNodeId == null || targetNodeId.isEmpty()) {
                 targetNodeId = nodeManager.getNodeId();
             }
@@ -140,16 +140,16 @@ public class WebsocketSchedulerBridge extends SimplifiedEndpoint implements Sche
             try {
                 Thread.ofVirtual().start(() -> {
                     try {
-                        schedulerManager.dispatch(finalTargetNodeId, command);
+                        schedulerManager.dispatch(finalTargetNodeId, requestParameters);
                     } catch (Exception e) {
-                        logger.error("Failed to execute scheduler command from session {}", session.getId(), e);
+                        logger.error("Failed to execute scheduler request from session {}", session.getId(), e);
                         sendText(session, "[ERROR] " + e.getMessage());
                     }
                 });
-                logger.debug("Scheduler command execution initiated from session {}: target={}, command={}",
+                logger.debug("Scheduler request execution initiated from session {}: target={}, command={}",
                         session.getId(), finalTargetNodeId, command);
             } catch (Exception e) {
-                logger.error("Failed to initiate scheduler command execution from session {}", session.getId(), e);
+                logger.error("Failed to initiate scheduler request execution from session {}", session.getId(), e);
                 sendText(session, "[ERROR] " + e.getMessage());
             }
         }
@@ -163,22 +163,22 @@ public class WebsocketSchedulerBridge extends SimplifiedEndpoint implements Sche
     @Override
     public void bridge(String data) {
         if (data != null) {
-            SchedulerResultParameters resultParameters = new SchedulerResultParameters()
+            SchedulerResponseParameters responseParameters = new SchedulerResponseParameters()
                     .setHeader("result")
                     .setNodeId(nodeManager.getNodeId())
                     .setResult(data);
-            broadcast(resultParameters.toString());
+            broadcast(responseParameters.toString());
         }
     }
 
     @Override
     public void bridge(@NonNull SchedulerSession session, String data) {
         if (session instanceof WebsocketSchedulerSession websocketSchedulerSession) {
-            SchedulerResultParameters resultParameters = new SchedulerResultParameters()
+            SchedulerResponseParameters responseParameters = new SchedulerResponseParameters()
                     .setHeader("result")
                     .setNodeId(nodeManager.getNodeId())
                     .setResult(data);
-            sendText(websocketSchedulerSession.getSession(), resultParameters.toString());
+            sendText(websocketSchedulerSession.getSession(), responseParameters.toString());
         }
     }
 

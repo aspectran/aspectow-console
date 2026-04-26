@@ -21,9 +21,9 @@ import com.aspectran.utils.apon.ValueType;
 import com.aspectran.utils.json.JsonBuilder;
 
 /**
- * Represents a structured outgoing message for scheduler management results.
+ * Represents a structured response for scheduler management.
  */
-public class SchedulerResultParameters extends DefaultParameters {
+public class SchedulerResponseParameters extends DefaultParameters {
 
     public static final ParameterKey header;
     public static final ParameterKey nodeId;
@@ -46,26 +46,26 @@ public class SchedulerResultParameters extends DefaultParameters {
         };
     }
 
-    public SchedulerResultParameters() {
+    public SchedulerResponseParameters() {
         super(parameterKeys);
     }
 
-    public SchedulerResultParameters setHeader(String headerValue) {
+    public SchedulerResponseParameters setHeader(String headerValue) {
         putValue(header, headerValue);
         return this;
     }
 
-    public SchedulerResultParameters setNodeId(String nodeIdValue) {
+    public SchedulerResponseParameters setNodeId(String nodeIdValue) {
         putValue(nodeId, nodeIdValue);
         return this;
     }
 
-    public SchedulerResultParameters setResult(String resultValue) {
+    public SchedulerResponseParameters setResult(String resultValue) {
         putValue(result, resultValue);
         return this;
     }
 
-    public SchedulerResultParameters setError(String errorValue) {
+    public SchedulerResponseParameters setError(String errorValue) {
         putValue(error, errorValue);
         return this;
     }

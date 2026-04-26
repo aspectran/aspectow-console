@@ -145,7 +145,7 @@
                         $('#connection-indicator').text("CONNECTED").removeClass("bg-secondary bg-danger bg-warning").addClass("bg-success");
                         const message = {
                             header: "execute",
-                            command: "scheduler:list",
+                            command: "list",
                             targetNodeId: currentNodeId
                         };
                         consoleClient.sendMessage(JSON.stringify(message));
@@ -269,7 +269,7 @@
                                         <div class="form-check form-switch">
                                             <input class="form-check-input" type="checkbox" role="switch" 
                                                 ${isJobEnabled ? 'checked' : ''} 
-                                                ${isJobIsolated ? 'disabled' : ''}
+                                                ${(isJobIsolated || isScheduleIsolated) ? 'disabled' : ''}
                                                 onclick="toggleState('${service.serviceName}', 'job', '${job.translet}', this.checked)">
                                         </div>
                                     </div>`;
@@ -302,12 +302,16 @@
             }
 
             function toggleState(serviceName, type, id, checked) {
-                const command = (checked ? 'scheduler:enable' : 'scheduler:disable') + ':' + serviceName + ':' + type + ':' + id;
+                const command = checked ? 'enable' : 'disable';
                 const message = {
                     header: "execute",
                     command: command,
-                    targetNodeId: currentNodeId
+                    targetNodeId: currentNodeId,
+                    serviceName: serviceName
                 };
+                if (type === 'schedule') message.scheduleId = id;
+                if (type === 'job') message.jobName = id;
+
                 consoleClient.sendMessage(JSON.stringify(message));
             }
 
@@ -322,7 +326,7 @@
                     if (consoleClient) {
                         const message = {
                             header: "execute",
-                            command: "scheduler:list",
+                            command: "list",
                             targetNodeId: currentNodeId
                         };
                         consoleClient.sendMessage(JSON.stringify(message));

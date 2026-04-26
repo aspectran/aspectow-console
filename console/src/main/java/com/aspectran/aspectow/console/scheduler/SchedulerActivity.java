@@ -17,6 +17,7 @@ package com.aspectran.aspectow.console.scheduler;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
 import com.aspectran.aspectow.console.cluster.NodeConsoleHelper;
+import com.aspectran.aspectow.console.scheduler.bridge.SchedulerRequestParameters;
 import com.aspectran.aspectow.console.scheduler.bridge.polling.PollingSchedulerBridge;
 import com.aspectran.aspectow.console.scheduler.bridge.polling.PollingSchedulerSession;
 import com.aspectran.aspectow.console.scheduler.manager.SchedulerManager;
@@ -130,6 +131,9 @@ public class SchedulerActivity {
     public Map<String, String> execute(@NonNull Translet translet) {
         String targetNodeId = translet.getParameter("nodeId");
         String command = translet.getParameter("command");
+        String serviceName = translet.getParameter("serviceName");
+        String scheduleId = translet.getParameter("scheduleId");
+        String jobName = translet.getParameter("jobName");
 
         if (StringUtils.isEmpty(command)) {
             throw new IllegalArgumentException("Command is required");
@@ -138,7 +142,13 @@ public class SchedulerActivity {
             targetNodeId = nodeManager.getNodeId();
         }
 
-        schedulerManager.dispatch(targetNodeId, command);
+        SchedulerRequestParameters parameters = new SchedulerRequestParameters();
+        parameters.putValue(SchedulerRequestParameters.command, command);
+        if (serviceName != null) parameters.putValue(SchedulerRequestParameters.serviceName, serviceName);
+        if (scheduleId != null) parameters.putValue(SchedulerRequestParameters.scheduleId, scheduleId);
+        if (jobName != null) parameters.putValue(SchedulerRequestParameters.jobName, jobName);
+
+        schedulerManager.dispatch(targetNodeId, parameters);
 
         Map<String, String> result = new HashMap<>();
         result.put("message", "Scheduler command initiated successfully");

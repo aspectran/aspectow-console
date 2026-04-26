@@ -31,7 +31,6 @@ public class RemoteCommandParameters extends DefaultParameters {
     public static final ParameterKey targetGroup;
     public static final ParameterKey targetAll;
     public static final ParameterKey command;
-    public static final ParameterKey timeZone;
 
     private static final ParameterKey[] parameterKeys;
 
@@ -41,15 +40,13 @@ public class RemoteCommandParameters extends DefaultParameters {
         targetGroup = new ParameterKey("targetGroup", ValueType.STRING);
         targetAll = new ParameterKey("targetAll", ValueType.BOOLEAN);
         command = new ParameterKey("command", CommandParameters.class);
-        timeZone = new ParameterKey("timeZone", ValueType.STRING);
 
         parameterKeys = new ParameterKey[] {
                 header,
                 targetNodeId,
                 targetGroup,
                 targetAll,
-                command,
-                timeZone
+                command
         };
     }
 
