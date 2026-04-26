@@ -153,7 +153,12 @@ public abstract class NodeManagerBuilder {
             RedisScheduledJobLockProvider jobLockProvider = new RedisScheduledJobLockProvider(connectionPool, clusterId);
             SchedulerConfig schedulerConfig = clusterConfig.getSchedulerConfig();
             if (schedulerConfig != null) {
-                jobLockProvider.setReleasedOnUnlock(schedulerConfig.isReleasedOnUnlock());
+                if (schedulerConfig.hasLockTimeout()) {
+                    jobLockProvider.setLockTimeoutSeconds(schedulerConfig.getLockTimeout());
+                }
+                if (schedulerConfig.hasReleasedOnUnlock()) {
+                    jobLockProvider.setReleasedOnUnlock(schedulerConfig.isReleasedOnUnlock());
+                }
             }
             CoreServiceHolder.setJobLockProvider(jobLockProvider);
             logger.info("Registered RedisScheduledJobLockProvider for cluster-wide job locking");
