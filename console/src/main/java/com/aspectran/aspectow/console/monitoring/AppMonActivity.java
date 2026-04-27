@@ -66,6 +66,7 @@ public class AppMonActivity {
         return Map.of(
                 "title", "Application Monitoring",
                 "style", "monitoring-page",
+                "group", "cluster-menu",
                 "instances", StringUtils.nullToEmpty(instances),
                 "layout", "default"
         );

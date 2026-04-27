@@ -403,7 +403,7 @@ arguments: {
 
                 client = new ConsoleClient(commandsNode, {
                     onBeforeConnect: () => {
-                        return fetch(BASE_PATH + "/nodes/commands/token")
+                        return fetch(BASE_PATH + "/nodes/token")
                             .then(response => response.text())
                             .catch(err => {
                                 console.error("Failed to fetch new token:", err);

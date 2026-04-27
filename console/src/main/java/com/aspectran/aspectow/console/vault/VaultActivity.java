@@ -55,7 +55,7 @@ public class VaultActivity {
         return Map.of(
             "title", "Vault",
             "style", "vault-page",
-            "include", "vault",
+            "group", "security-menu",
             "vaultList", vaultList,
             "encryptionAlgorithm", PBEncryptionUtils.getAlgorithm(),
             "encryptionSalt", StringUtils.nullToEmpty(PBEncryptionUtils.getSalt()),
@@ -88,7 +88,7 @@ public class VaultActivity {
         return Map.of(
             "title", "Vault Tool",
             "style", "vault-tool-page",
-            "include", "vault",
+            "group", "tools-menu",
             "algorithms", algorithms,
             "defaultAlgorithm", PBEncryptionUtils.DEFAULT_ALGORITHM
         );

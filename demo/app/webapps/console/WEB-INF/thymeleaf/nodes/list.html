@@ -100,7 +100,6 @@
 
             $(function() {
                 const clusterMode = [[${page.clusterMode}]];
-                const token = [[${page.token}]];
 
                 let isUnloading = false;
                 $(window).on('beforeunload', function() {
@@ -135,6 +134,14 @@
                             }
                         };
                         const client = new ConsoleClient(node, {
+                            onBeforeConnect: () => {
+                                return fetch(BASE_PATH + "/nodes/token")
+                                    .then(response => response.text())
+                                    .catch(err => {
+                                        console.error("Failed to fetch new token:", err);
+                                        return null;
+                                    });
+                            },
                             onMessage: (msg) => {
                                 try {
                                     const event = JSON.parse(msg);
@@ -156,7 +163,14 @@
                     const node = [[${page.node}]];
                     node.endpoint.path = BASE_PATH + "/nodes/" + node.id;
                     const client = new ConsoleClient(node, {
-                        token: token,
+                        onBeforeConnect: () => {
+                            return fetch(BASE_PATH + "/nodes/token")
+                                .then(response => response.text())
+                                .catch(err => {
+                                    console.error("Failed to fetch new token:", err);
+                                    return null;
+                                });
+                        },
                         onMessage: (msg) => {
                             if (isUnloading) return;
                             try {

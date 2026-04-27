@@ -72,8 +72,8 @@ public class AnatomyActivity {
         }
         return Map.of(
                 "title", "Framework Anatomy",
-                "include", "anatomy/viewer",
                 "style", "anatomy-page",
+                "group", "framework-menu",
                 "allContextNames", allContextNames,
                 "contextName", contextName
         );

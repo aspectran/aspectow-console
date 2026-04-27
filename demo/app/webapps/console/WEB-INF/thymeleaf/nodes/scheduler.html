@@ -208,7 +208,7 @@
 
                 consoleClient = new ConsoleClient(node, {
                     onBeforeConnect: () => {
-                        return fetch(BASE_PATH + "/nodes/scheduler/token")
+                        return fetch(BASE_PATH + "/nodes/token")
                             .then(response => response.text())
                             .catch(err => {
                                 console.error("Failed to fetch new token:", err);

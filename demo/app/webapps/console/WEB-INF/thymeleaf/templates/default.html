@@ -31,19 +31,19 @@
             <!-- Cluster Group -->
             <div class="nav-group">
                 <a class="nav-link d-flex justify-content-between align-items-center"
-                   th:classappend="${page.style == 'cluster-page' || page.style == 'monitoring-page' || page.style == 'commands-page' ? 'active' : 'collapsed'}"
+                   th:classappend="${page.group == 'cluster-menu' ? 'active' : 'collapsed'}"
                    data-bs-toggle="collapse" href="#cluster-menu" role="button" aria-expanded="false">
                     <span><i class="bi bi-cpu"></i> Cluster</span>
                     <i class="bi bi-chevron-down small"></i>
                 </a>
-                <div class="collapse" th:classappend="${page.style == 'cluster-page' || page.style == 'monitoring-page' || page.style == 'commands-page' ? 'show' : ''}" id="cluster-menu">
-                    <a th:href="@{/nodes/list}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'nodes/list' ? 'active' : ''}">
+                <div class="collapse" th:classappend="${page.group == 'cluster-menu' ? 'show' : ''}" id="cluster-menu">
+                    <a th:href="@{/nodes/list}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'nodes-page' ? 'active' : ''}">
                         Nodes
                     </a>
                     <a th:href="@{/nodes/commands}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'commands-page' ? 'active' : ''}">
                         Remote Commands
                     </a>
-                    <a th:href="@{/nodes/scheduler/}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'nodes/scheduler' ? 'active' : ''}">
+                    <a th:href="@{/nodes/scheduler}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'scheduler-page' ? 'active' : ''}">
                         Scheduler Manager
                     </a>
                     <a th:href="@{/appmon/dashboard/}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'monitoring-page' ? 'active' : ''}">
@@ -54,13 +54,13 @@
 
             <!-- Security Group -->
             <div class="nav-group">
-                <a class="nav-link d-flex justify-content-between align-items-center" th:classappend="${page.style == 'vault-page' ? 'active' : 'collapsed'}"
+                <a class="nav-link d-flex justify-content-between align-items-center" th:classappend="${page.group == 'security-menu' ? 'active' : 'collapsed'}"
                    data-bs-toggle="collapse" href="#security-menu" role="button" aria-expanded="false">
                     <span><i class="bi bi-shield-lock"></i> Security</span>
                     <i class="bi bi-chevron-down small"></i>
                 </a>
-                <div class="collapse" th:classappend="${page.style == 'vault-page' ? 'show' : ''}" id="security-menu">
-                    <a th:href="@{/vault}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'vault' ? 'active' : ''}">
+                <div class="collapse" th:classappend="${page.group == 'security-menu' ? 'show' : ''}" id="security-menu">
+                    <a th:href="@{/vault}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'vault-page' ? 'active' : ''}">
                         Vault
                     </a>
                 </div>
@@ -68,13 +68,13 @@
 
             <!-- Framework Group -->
             <div class="nav-group">
-                <a class="nav-link d-flex justify-content-between align-items-center" th:classappend="${page.style == 'anatomy-page' ? 'active' : 'collapsed'}"
+                <a class="nav-link d-flex justify-content-between align-items-center" th:classappend="${page.group == 'framework-menu' ? 'active' : 'collapsed'}"
                    data-bs-toggle="collapse" href="#framework-menu" role="button" aria-expanded="false">
                     <span><i class="bi bi-diagram-3"></i> Framework</span>
                     <i class="bi bi-chevron-down small"></i>
                 </a>
-                <div class="collapse" th:classappend="${page.style == 'anatomy-page' ? 'show' : ''}" id="framework-menu">
-                    <a th:href="@{/framework/anatomy/}" class="nav-link ps-5 py-2 small" th:classappend="${page.include == 'anatomy/viewer' ? 'active' : ''}">
+                <div class="collapse" th:classappend="${page.group == 'framework-menu' ? 'show' : ''}" id="framework-menu">
+                    <a th:href="@{/framework/anatomy/}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'anatomy-page' ? 'active' : ''}">
                         Anatomy
                     </a>
                     <a href="#" class="nav-link ps-5 py-2 small">
@@ -91,12 +91,12 @@
             <!-- Developer Tools Group -->
             <div class="nav-group">
                 <a class="nav-link d-flex justify-content-between align-items-center"
-                   th:classappend="${page.style == 'vault-tool-page' || page.style == 'wildcard-page' || page.style == 'asel-page' || page.style == 'apon-page' ? 'active' : 'collapsed'}"
+                   th:classappend="${page.group == 'tools-menu' ? 'active' : 'collapsed'}"
                    data-bs-toggle="collapse" href="#tools-menu" role="button" aria-expanded="false">
                     <span><i class="bi bi-wrench-adjustable"></i> Developer Tools</span>
                     <i class="bi bi-chevron-down small"></i>
                 </a>
-                <div class="collapse" th:classappend="${page.style == 'vault-tool-page' || page.style == 'wildcard-page' || page.style == 'asel-page' || page.style == 'apon-page' ? 'show' : ''}" id="tools-menu">
+                <div class="collapse" th:classappend="${page.group == 'tools-menu' ? 'show' : ''}" id="tools-menu">
                     <a th:href="@{/vault/tool}" class="nav-link ps-5 py-2 small" th:classappend="${page.style == 'vault-tool-page' ? 'active' : ''}">
                         Vault Tool
                     </a>

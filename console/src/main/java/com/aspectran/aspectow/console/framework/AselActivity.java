@@ -47,7 +47,7 @@ public class AselActivity extends InstantActivitySupport {
         return Map.of(
             "title", "AsEL Tester",
             "style", "asel-page",
-            "include", "asel/tester"
+            "group", "tools-menu"
         );
     }
 

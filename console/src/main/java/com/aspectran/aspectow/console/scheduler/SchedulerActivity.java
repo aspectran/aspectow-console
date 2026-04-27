@@ -86,11 +86,12 @@ public class SchedulerActivity {
         }
         return Map.of(
                 "title", "Scheduler Manager",
-                "style", "cluster-page",
+                "style", "scheduler-page",
+                "group", "cluster-menu",
+                "clusterMode", clusterMode,
                 "nodes", nodes,
                 "node", nodeConsoleHelper.createNodeMap(nodeInfo, true, true),
                 "token", AppMonTokenIssuer.issueToken(30),
-                "clusterMode", clusterMode,
                 "jobLockProvider", (CoreServiceHolder.getJobLockProvider() != null)
         );
     }
@@ -102,16 +103,6 @@ public class SchedulerActivity {
     @Request("/list")
     public List<Map<String, Object>> listNodes() {
         return nodeConsoleHelper.getNodes(true);
-    }
-
-    /**
-     * Issues a new authentication token for WebSocket connection.
-     * @return the issued token
-     */
-    @Request("/token")
-    @Transform(format = FormatType.TEXT)
-    public String refreshToken() {
-        return AppMonTokenIssuer.issueToken(30);
     }
 
     /**

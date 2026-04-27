@@ -46,7 +46,7 @@ public class WildcardActivity {
         return Map.of(
             "title", "Wildcard Tester",
             "style", "wildcard-page",
-            "include", "wildcard/tester"
+            "group", "tools-menu"
         );
     }
 

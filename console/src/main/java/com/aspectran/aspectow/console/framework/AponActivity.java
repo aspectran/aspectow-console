@@ -37,7 +37,7 @@ public class AponActivity {
         return Map.of(
             "title", "APON Converter",
             "style", "apon-page",
-            "include", "apon/converter"
+            "group", "tools-menu"
         );
     }
 
