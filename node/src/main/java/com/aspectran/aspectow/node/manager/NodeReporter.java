@@ -20,6 +20,7 @@ import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.aspectow.node.config.SecretConfig;
 import com.aspectran.aspectow.node.redis.RedisConnectionPool;
 import com.aspectran.utils.PBEncryptionUtils;
+import com.aspectran.utils.ToStringBuilder;
 import com.aspectran.utils.apon.AponWriter;
 import com.aspectran.utils.apon.VariableParameters;
 import com.aspectran.utils.security.TimeLimitedPBTokenIssuer;
@@ -108,12 +109,16 @@ public class NodeReporter {
         // Convert NodeInfo to APON string for storage
         String aponData = new AponWriter().nullWritable(false).write(nodeInfo).toString();
         
-        logger.debug("Registering node {} in Redis hash {}:\n{}", nodeInfo.getNodeId(), key, aponData);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Registering node '{}' in Redis hash '{}': {}", nodeInfo.getNodeId(), key,
+                    ToStringBuilder.toString(nodeInfo));
+        }
+
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             RedisCommands<String, String> sync = connection.sync();
             sync.hset(key, nodeInfo.getNodeId(), aponData);
         } catch (Exception e) {
-            logger.error("Failed to register node {} in Redis registry", nodeInfo.getNodeId(), e);
+            logger.error("Failed to register node '{}' in Redis registry", nodeInfo.getNodeId(), e);
         }
     }
 
@@ -139,24 +144,31 @@ public class NodeReporter {
         String key = NodeMessageProtocol.getPulsesHashKey(clusterConfig.getId());
         long timestamp = System.currentTimeMillis();
         
-        logger.trace("Sending pulse for node {} to {}: {}", nodeInfo.getNodeId(), key, timestamp);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Sending pulse for node '{}' to '{}': {}", nodeInfo.getNodeId(), key, timestamp);
+        }
+
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             RedisCommands<String, String> sync = connection.sync();
             sync.hset(key, nodeInfo.getNodeId(), String.valueOf(timestamp));
         } catch (Exception e) {
-            logger.error("Failed to send pulse for node {} to Redis registry", nodeInfo.getNodeId(), e);
+            logger.error("Failed to send pulse for node '{}' to Redis registry", nodeInfo.getNodeId(), e);
         }
     }
 
     private void unregisterNode() {
         String key = NodeMessageProtocol.getNodesHashKey(clusterConfig.getId());
-        logger.debug("Unregistering node {} from Redis hash {}", nodeInfo.getNodeId(), key);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Unregistering node '{}' from Redis hash '{}'", nodeInfo.getNodeId(), key);
+        }
+
         try (StatefulRedisConnection<String, String> connection = connectionPool.getConnection()) {
             RedisCommands<String, String> sync = connection.sync();
             sync.hset(key, nodeInfo.getNodeId(), "");
             sync.hdel(key, nodeInfo.getNodeId());
         } catch (Exception e) {
-            logger.error("Failed to unregister node {} from Redis registry", nodeInfo.getNodeId(), e);
+            logger.error("Failed to unregister node '{}' from Redis registry", nodeInfo.getNodeId(), e);
         }
     }
 
