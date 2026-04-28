@@ -16,7 +16,7 @@
 package com.aspectran.aspectow.console.monitoring;
 
 import com.aspectran.aspectow.appmon.common.auth.AppMonTokenIssuer;
-import com.aspectran.aspectow.appmon.engine.config.InstanceInfo;
+import com.aspectran.aspectow.appmon.engine.config.AppInfo;
 import com.aspectran.aspectow.appmon.engine.manager.AppMonManager;
 import com.aspectran.aspectow.node.config.NodeInfo;
 import com.aspectran.core.component.bean.annotation.Action;
@@ -56,62 +56,62 @@ public class AppMonActivity {
 
     /**
      * Displays the main monitoring page.
-     * @param instances the comma-separated list of instances to monitor
+     * @param apps the comma-separated list of apps to monitor
      * @return a map of attributes for rendering the view
      */
-    @Request("/dashboard/${instances}")
+    @Request("/dashboard/${apps}")
     @Dispatch("appmon/dashboard")
     @Action("page")
-    public Map<String, String> dashboard(String instances) {
+    public Map<String, String> dashboard(String apps) {
         return Map.of(
                 "title", "Application Monitoring",
                 "style", "monitoring-page",
                 "group", "cluster-menu",
-                "instances", StringUtils.nullToEmpty(instances),
+                "apps", StringUtils.nullToEmpty(apps),
                 "layout", "default"
         );
     }
 
     /**
      * Displays the monitoring page as a popup.
-     * @param instances the comma-separated list of instances to monitor
+     * @param apps the comma-separated list of apps to monitor
      * @return a map of attributes for rendering the view
      */
-    @Request("/dashboard/popup/${instances}")
+    @Request("/dashboard/popup/${apps}")
     @Dispatch("appmon/dashboard")
     @Action("page")
     @Hint(type = "layout", value = "layout: popup")
-    public Map<String, String> dashboardPopup(String instances) {
+    public Map<String, String> dashboardPopup(String apps) {
         return Map.of(
                 "title", "Application Monitoring",
                 "style", "monitoring-page",
-                "instances", StringUtils.nullToEmpty(instances),
+                "apps", StringUtils.nullToEmpty(apps),
                 "layout", "popup"
         );
     }
 
     /**
      * Provides configuration data to a backend agent.
-     * @param instances a comma-separated list of instance names to get configuration for
+     * @param apps a comma-separated list of app names to get configuration for
      * @return a {@link RestResponse} containing the configuration data
      */
     @RequestToGet("/config/data")
-    public RestResponse getConfigData(String instances) {
+    public RestResponse getConfigData(String apps) {
         Map<String, Object> settings = Map.of(
                 "counterPersistInterval", appMonManager.getCounterPersistInterval()
         );
 
         List<NodeInfo> nodeInfoList = appMonManager.getNodeInfoList();
 
-        String[] instanceIds = StringUtils.splitWithComma(instances);
-        instanceIds = appMonManager.getVerifiedInstanceIds(instanceIds);
-        List<InstanceInfo> instanceInfoList = appMonManager.getInstanceInfoList(instanceIds);
+        String[] appIds = StringUtils.splitWithComma(apps);
+        appIds = appMonManager.getVerifiedAppIds(appIds);
+        List<AppInfo> appInfoList = appMonManager.getAppInfoList(appIds);
 
         Map<String, Object> data = Map.of(
                 "token", AppMonTokenIssuer.issueToken(30),
                 "settings", settings,
                 "nodes", nodeInfoList,
-                "instances", instanceInfoList
+                "apps", appInfoList
         );
         return new DefaultRestResponse(data).nullWritable(false).ok();
     }
