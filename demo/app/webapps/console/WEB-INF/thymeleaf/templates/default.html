@@ -162,6 +162,11 @@
                 <nav aria-label="breadcrumb" class="d-none d-sm-block">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+                        <li th:if="${page.group == 'cluster-menu'}" class="breadcrumb-item">Cluster</li>
+                        <li th:if="${page.group == 'security-menu'}" class="breadcrumb-item">Security</li>
+                        <li th:if="${page.group == 'framework-menu'}" class="breadcrumb-item">Framework</li>
+                        <li th:if="${page.group == 'tools-menu'}" class="breadcrumb-item">Developer Tools</li>
+                        <li th:if="${page.group == 'accounts-menu'}" class="breadcrumb-item">Accounts</li>
                         <li class="breadcrumb-item active" aria-current="page" th:text="${page.title}">Dashboard</li>
                     </ol>
                 </nav>

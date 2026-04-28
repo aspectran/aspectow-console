@@ -87,9 +87,11 @@
             <div>
                 <h2 class="fw-bold mb-0">Remote Commands</h2>
             </div>
-            <div class="text-end">
-                <span class="text-muted small">Target Mode:</span>
-                <span class="fw-bold d-block text-primary" th:text="${page.clusterMode.toUpperCase()}">GATEWAY</span>
+            <div class="d-flex gap-1 align-items-center">
+                <div>
+                    <span class="text-muted small">Target Mode:</span>
+                    <span class="fw-bold text-primary" th:text="${page.clusterMode.toUpperCase()}">GATEWAY</span>
+                </div>
             </div>
         </div>
 

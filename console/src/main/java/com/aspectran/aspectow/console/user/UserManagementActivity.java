@@ -58,7 +58,7 @@ public class UserManagementActivity {
         return Map.of(
             "title", "Users",
             "style", "user-page",
-            "include", "user",
+            "group", "accounts-menu",
             "userList", userList,
             "roleList", roleList
         );
@@ -80,7 +80,7 @@ public class UserManagementActivity {
         return Map.of(
             "title", "Login History",
             "style", "user-page",
-            "include", "login-history",
+                "group", "accounts-menu",
             "historyList", historyList,
             "username", (targetUsername != null ? targetUsername : "")
         );
@@ -123,4 +123,5 @@ public class UserManagementActivity {
         userService.deleteUser(userId);
         return new SuccessResponse("Deleted").ok();
     }
+
 }
