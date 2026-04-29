@@ -5,7 +5,7 @@ cluster: {
 }
 node: {
     id: node1
-    group: appmon
+    group: group1
     title: Node-1
     endpoint: {
         mode: auto
@@ -13,7 +13,7 @@ node: {
 }
 node: {
     id: node2
-    group: appmon
+    group: group1
     title: Node-2
     endpoint: {
         mode: auto
